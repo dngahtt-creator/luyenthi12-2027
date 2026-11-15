@@ -193,13 +193,12 @@ export default function TestCloudinaryPage() {
 
         {/* Status Banner */}
         <div
-          className={`${styles.statusBanner} ${
-            testing
-              ? styles.statusPending
-              : isConnected
+          className={`${styles.statusBanner} ${testing
+            ? styles.statusPending
+            : isConnected
               ? styles.statusSuccess
               : styles.statusError
-          }`}
+            }`}
         >
           <div className={styles.statusLeft}>
             <span className={styles.statusIcon}>
@@ -210,15 +209,15 @@ export default function TestCloudinaryPage() {
                 {testing
                   ? "Đang kiểm tra kết nối Cloudinary..."
                   : isConnected
-                  ? "Kết Nối Cloudinary Đang Hoạt Động Bình Thường!"
-                  : "Chưa thể kết nối tới Cloudinary"}
+                    ? "Kết Nối Cloudinary Đang Hoạt Động Bình Thường!"
+                    : "Chưa thể kết nối tới Cloudinary"}
               </div>
               <div className={styles.statusText}>
                 {testing
                   ? "Vui lòng đợi giây lát trong khi gửi ping tới máy chủ Cloudinary..."
                   : isConnected
-                  ? `Máy chủ và hệ thống CDN phân phối ảnh đã sẵn sàng (Độ trễ phản hồi: ${pingLatency || 0}ms).`
-                  : "Có lỗi khi kết nối với máy chủ Cloudinary. Vui lòng xem log chi tiết."}
+                    ? `Máy chủ và hệ thống CDN phân phối ảnh đã sẵn sàng (Độ trễ phản hồi: ${pingLatency || 0}ms).`
+                    : "Có lỗi khi kết nối với máy chủ Cloudinary. Vui lòng xem log chi tiết."}
               </div>
             </div>
           </div>
@@ -257,13 +256,12 @@ export default function TestCloudinaryPage() {
                 <span>⚡</span> API Gateway
               </div>
               <span
-                className={`${styles.badge} ${
-                  apiPingStatus === "success"
-                    ? styles.badgeSuccess
-                    : apiPingStatus === "error"
+                className={`${styles.badge} ${apiPingStatus === "success"
+                  ? styles.badgeSuccess
+                  : apiPingStatus === "error"
                     ? styles.badgeError
                     : styles.badgePending
-                }`}
+                  }`}
               >
                 {apiPingStatus === "success" ? "Online" : apiPingStatus === "error" ? "Lỗi" : "Đang kiểm tra"}
               </span>
@@ -283,13 +281,12 @@ export default function TestCloudinaryPage() {
                 <span>🌍</span> CDN Delivery
               </div>
               <span
-                className={`${styles.badge} ${
-                  cdnStatus === "success"
-                    ? styles.badgeSuccess
-                    : cdnStatus === "error"
+                className={`${styles.badge} ${cdnStatus === "success"
+                  ? styles.badgeSuccess
+                  : cdnStatus === "error"
                     ? styles.badgeError
                     : styles.badgePending
-                }`}
+                  }`}
               >
                 {cdnStatus === "success" ? "Sẵn sàng" : "Lỗi"}
               </span>
@@ -412,10 +409,10 @@ export default function TestCloudinaryPage() {
                     log.type === "success"
                       ? styles.logSuccess
                       : log.type === "error"
-                      ? styles.logError
-                      : log.type === "warn"
-                      ? styles.logWarn
-                      : styles.logInfo
+                        ? styles.logError
+                        : log.type === "warn"
+                          ? styles.logWarn
+                          : styles.logInfo
                   }
                 >
                   {log.text}

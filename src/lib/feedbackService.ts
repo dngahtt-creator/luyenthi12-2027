@@ -151,7 +151,7 @@ export function subscribeEvaluations(callback: (list: StudentEvaluation[]) => vo
     return unsubscribe;
   } catch (err) {
     console.warn("Failed to subscribe student_evaluations:", err);
-    return () => {};
+    return () => { };
   }
 }
 
