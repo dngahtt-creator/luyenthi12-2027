@@ -191,6 +191,351 @@ const SIMULATOR_QUESTIONS: SimulatorQuestion[] = [
   },
 ];
 
+// =========================================================
+// HELPER: TỰ ĐỘNG XÁC ĐỊNH TÊN MÔN HỌC, BIỂU TƯỢNG VÀ MÀU SẮC ĐỒ HỌA
+// =========================================================
+interface SubjectVisualInfo {
+  subjectName: string;
+  gradeBadge: string;
+  mainIcon: string;
+  subIcons: string[];
+  gradient: string;
+  badgeBg: string;
+  badgeColor: string;
+}
+
+function getSubjectVisualInfo(name: string, type?: string): SubjectVisualInfo {
+  const lower = (name || "").toLowerCase();
+
+  // 1. Phân loại khối lớp
+  let gradeBadge = "";
+  if (lower.includes("12") || lower.startsWith("12")) gradeBadge = "LỚP 12";
+  else if (lower.includes("11") || lower.startsWith("11")) gradeBadge = "LỚP 11";
+  else if (lower.includes("10") || lower.startsWith("10")) gradeBadge = "LỚP 10";
+
+  // 2. MÔN TOÁN HỌC
+  if (lower.includes("toán")) {
+    return {
+      subjectName: "TOÁN HỌC",
+      gradeBadge: gradeBadge || "MÔN TOÁN",
+      mainIcon: "📐",
+      subIcons: ["🔢", "🧮", "∑"],
+      gradient: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 3. MÔN NGỮ VĂN
+  if (lower.includes("văn") || lower.includes("ngữ văn")) {
+    return {
+      subjectName: "NGỮ VĂN",
+      gradeBadge: gradeBadge || "MÔN VĂN",
+      mainIcon: "📖",
+      subIcons: ["✍️", "📜", "🖋️"],
+      gradient: "linear-gradient(135deg, #881337 0%, #be123c 50%, #fb7185 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 4. MÔN TIẾNG ANH
+  if (lower.includes("anh") || lower.includes("tiếng anh") || lower.includes("english")) {
+    return {
+      subjectName: "TIẾNG ANH",
+      gradeBadge: gradeBadge || "NGOẠI NGỮ",
+      mainIcon: "🇬🇧",
+      subIcons: ["🗣️", "🎧", "🌍"],
+      gradient: "linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #38bdf8 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 5. MÔN VẬT LÍ
+  if (lower.includes("vật lí") || lower.includes("vật lý") || lower.includes("lí") || lower.includes("lý")) {
+    return {
+      subjectName: "VẬT LÍ",
+      gradeBadge: gradeBadge || "VẬT LÍ",
+      mainIcon: "⚡",
+      subIcons: ["⚛️", "🔭", "🧲"],
+      gradient: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #c084fc 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 6. MÔN HOÁ HỌC
+  if (lower.includes("hóa") || lower.includes("hoá")) {
+    return {
+      subjectName: "HOÁ HỌC",
+      gradeBadge: gradeBadge || "HOÁ HỌC",
+      mainIcon: "🧪",
+      subIcons: ["⚗️", "🔬", "💥"],
+      gradient: "linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 7. MÔN SINH HỌC
+  if (lower.includes("sinh")) {
+    return {
+      subjectName: "SINH HỌC",
+      gradeBadge: gradeBadge || "SINH HỌC",
+      mainIcon: "🧬",
+      subIcons: ["🌿", "🦠", "🔬"],
+      gradient: "linear-gradient(135deg, #14532d 0%, #16a34a 50%, #4ade80 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 8. MÔN LỊCH SỬ
+  if (lower.includes("sử") || lower.includes("lịch sử")) {
+    return {
+      subjectName: "LỊCH SỬ",
+      gradeBadge: gradeBadge || "LỊCH SỬ",
+      mainIcon: "🏛️",
+      subIcons: ["📜", "⚔️", "🚩"],
+      gradient: "linear-gradient(135deg, #78350f 0%, #b45309 50%, #fbbf24 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 9. MÔN ĐỊA LÍ
+  if (lower.includes("địa") || lower.includes("địa lí") || lower.includes("địa lý")) {
+    return {
+      subjectName: "ĐỊA LÍ",
+      gradeBadge: gradeBadge || "ĐỊA LÍ",
+      mainIcon: "🌍",
+      subIcons: ["🧭", "🗺️", "⛰️"],
+      gradient: "linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #2dd4bf 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 10. MÔN GDKT & PHÁP LUẬT
+  if (lower.includes("pháp luật") || lower.includes("gdkt") || lower.includes("kinh tế")) {
+    return {
+      subjectName: "GDKT & PHÁP LUẬT",
+      gradeBadge: gradeBadge || "GDKT&PL",
+      mainIcon: "⚖️",
+      subIcons: ["🏛️", "💼", "📜"],
+      gradient: "linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #fb923c 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 11. MÔN TIN HỌC / PYTHON / WEBSITE / AI
+  if (lower.includes("tin") || lower.includes("python") || lower.includes("thuật toán") || lower.includes("website") || lower.includes("ai")) {
+    return {
+      subjectName: "TIN HỌC",
+      gradeBadge: gradeBadge || "TIN HỌC",
+      mainIcon: "💻",
+      subIcons: ["💾", "⚡", "🖥️"],
+      gradient: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #3b82f6 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 12. MÔN CÔNG NGHỆ
+  if (lower.includes("công nghệ")) {
+    return {
+      subjectName: "CÔNG NGHỆ",
+      gradeBadge: gradeBadge || "CÔNG NGHỆ",
+      mainIcon: "⚙️",
+      subIcons: ["🔧", "💡", "🔌"],
+      gradient: "linear-gradient(135deg, #334155 0%, #475569 50%, #94a3b8 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 13. TỔ HỢP KHOA HỌC TỰ NHIÊN
+  if (lower.includes("khtn") || lower.includes("tự nhiên")) {
+    return {
+      subjectName: "TỔ HỢP KHTN",
+      gradeBadge: "LÍ - HÓA - SINH",
+      mainIcon: "🔬",
+      subIcons: ["⚡", "🧪", "🧬"],
+      gradient: "linear-gradient(135deg, #065f46 0%, #0284c7 50%, #6366f1 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // 14. TỔ HỢP KHOA HỌC XÃ HỘI
+  if (lower.includes("khxh") || lower.includes("xã hội")) {
+    return {
+      subjectName: "TỔ HỢP KHXH",
+      gradeBadge: "SỬ - ĐỊA - GDKTPL",
+      mainIcon: "🏛️",
+      subIcons: ["📜", "🌍", "⚖️"],
+      gradient: "linear-gradient(135deg, #78350f 0%, #b45309 50%, #0d9488 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  // Phân loại dự phòng theo Loại
+  if (type === "video") {
+    return {
+      subjectName: "VIDEO BÀI GIẢNG",
+      gradeBadge: "BÀI GIẢNG",
+      mainIcon: "🎬",
+      subIcons: ["▶️", "🎥", "📺"],
+      gradient: "linear-gradient(135deg, #831843 0%, #be185d 50%, #f472b6 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  if (type === "exam") {
+    return {
+      subjectName: "ĐỀ THI THỬ",
+      gradeBadge: "LUYỆN ĐỀ",
+      mainIcon: "📝",
+      subIcons: ["🎯", "⏱️", "⭐"],
+      gradient: "linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #6366f1 100%)",
+      badgeBg: "rgba(255, 255, 255, 0.22)",
+      badgeColor: "#ffffff",
+    };
+  }
+
+  return {
+    subjectName: (name || "CHUYÊN ĐỀ").replace(/^\d+\s*-\s*/, "").toUpperCase(),
+    gradeBadge: gradeBadge || "TÀI LIỆU",
+    mainIcon: "📚",
+    subIcons: ["📖", "✏️", "💡"],
+    gradient: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #60a5fa 100%)",
+    badgeBg: "rgba(255, 255, 255, 0.22)",
+    badgeColor: "#ffffff",
+  };
+}
+
+function renderSubjectBanner(cat: LearningCategory) {
+  const visual = getSubjectVisualInfo(cat.name, cat.type);
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "115px",
+        background: visual.gradient,
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: "10px 12px",
+        boxSizing: "border-box",
+        userSelect: "none",
+      }}
+    >
+      {/* Background Watermark Icon */}
+      <div
+        style={{
+          position: "absolute",
+          right: "-10px",
+          bottom: "-10px",
+          fontSize: "64px",
+          opacity: 0.16,
+          lineHeight: 1,
+          pointerEvents: "none",
+          transform: "rotate(-12deg)",
+        }}
+      >
+        {visual.mainIcon}
+      </div>
+
+      {/* Top row: Grade badge & secondary icons */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <span
+          style={{
+            fontSize: "10px",
+            fontWeight: 800,
+            letterSpacing: "0.5px",
+            padding: "2px 8px",
+            borderRadius: "6px",
+            background: visual.badgeBg,
+            color: visual.badgeColor,
+            backdropFilter: "blur(4px)",
+            textTransform: "uppercase",
+          }}
+        >
+          {visual.gradeBadge}
+        </span>
+        <div style={{ display: "flex", gap: "3px", fontSize: "13px", opacity: 0.9 }}>
+          {visual.subIcons.map((ic, i) => (
+            <span key={i}>{ic}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom: Main Icon Box & Subject Title */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "8px" }}>
+        <div
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "8px",
+            background: "rgba(255, 255, 255, 0.24)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "20px",
+            backdropFilter: "blur(6px)",
+            flexShrink: 0,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
+          }}
+        >
+          {visual.mainIcon}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: "13px",
+              fontWeight: 900,
+              color: "#ffffff",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+              lineHeight: 1.2,
+              textShadow: "0 1px 3px rgba(0,0,0,0.35)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {visual.subjectName}
+          </div>
+          <div
+            style={{
+              fontSize: "10px",
+              color: "rgba(255, 255, 255, 0.9)",
+              fontWeight: 600,
+              letterSpacing: "0.2px",
+            }}
+          >
+            {cat.type === "video" ? "🎬 Video bài giảng" : cat.type === "exam" ? "📝 Bộ đề thi thử" : "📖 Chuyên đề ôn thi"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [activeNav, setActiveNav] = useState<string>("trang-chu");
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
@@ -1677,13 +2022,7 @@ export default function Home() {
                   }}
                 >
                   <div>
-                    <div style={{ width: "100%", height: "115px", background: "#f1f5f9", overflow: "hidden" }}>
-                      <img
-                        src={cat.thumbnailUrl || "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=600&auto=format&fit=crop&q=80"}
-                        alt={cat.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    </div>
+                    {renderSubjectBanner(cat)}
                     <div style={{ padding: "10px 12px 6px 12px" }}>
                       <div
                         style={{
@@ -1827,28 +2166,7 @@ export default function Home() {
                   }}
                 >
                   <div>
-                    <div style={{ width: "100%", height: "115px", background: "#f1f5f9", overflow: "hidden", position: "relative" }}>
-                      <img
-                        src={cat.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80"}
-                        alt={cat.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: "6px",
-                          right: "6px",
-                          background: "rgba(0,0,0,0.7)",
-                          color: "#ffffff",
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          padding: "2px 6px",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        🎬 Video
-                      </div>
-                    </div>
+                    {renderSubjectBanner(cat)}
                     <div style={{ padding: "10px 12px 6px 12px" }}>
                       <div
                         style={{
@@ -1992,13 +2310,7 @@ export default function Home() {
                   }}
                 >
                   <div>
-                    <div style={{ width: "100%", height: "115px", background: "#f1f5f9", overflow: "hidden" }}>
-                      <img
-                        src={cat.thumbnailUrl || "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&auto=format&fit=crop&q=80"}
-                        alt={cat.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    </div>
+                    {renderSubjectBanner(cat)}
                     <div style={{ padding: "10px 12px 6px 12px" }}>
                       <div
                         style={{
