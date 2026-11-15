@@ -1379,82 +1379,178 @@ export default function Home() {
                 }}
               />
               <div className={styles.bannerOverlay}>
-                {/* Dòng Header trên cùng của Banner: Huy hiệu & Trạng thái trực tuyến */}
-                <div className={styles.bannerTopHeader}>
-                  <div className={styles.bannerBadgeTop}>
-                    <span className={styles.pulseIcon}>✨</span>
-                    <span>KỲ THI THPT QUỐC GIA 2027 • BỨT PHÁ ĐIỂM 9+</span>
+                <div className={styles.bannerGridTwoCol}>
+                  {/* CỘT TRÁI: TIÊU ĐỀ, ĐẾM NGƯỢC & HÀNH ĐỘNG */}
+                  <div className={styles.bannerLeftCol}>
+                    <div className={styles.bannerBadgeTop}>
+                      <span className={styles.pulseIcon}>✨</span>
+                      <span>KỲ THI THPT QUỐC GIA 2027 • BỨT PHÁ ĐIỂM 9+</span>
+                    </div>
+
+                    <h2 className={styles.bannerHeadline}>
+                      Vào Thi Ngay – Đấu Trường Trực Tuyến Lớp 12
+                    </h2>
+                    <p className={styles.bannerSubtext}>
+                      Hệ thống thi thử chuẩn cấu trúc Bộ GD&ĐT dành cho học sinh trường <strong>THPT DTNT THCS & THPT Tuy Đức</strong>. Luyện đề bấm giờ, tự động chấm điểm và xếp hạng trực tiếp toàn trường!
+                    </p>
+
+                    {/* KHUNG ĐẾM NGƯỢC THỜI GIAN GỌN GÀNG */}
+                    <div className={styles.countdownBannerContainer}>
+                      <div className={styles.countdownTitle}>
+                        <span>⏳</span>
+                        <span>Đếm ngược ngày thi THPT 2027:</span>
+                      </div>
+
+                      <div className={styles.countdownGrid}>
+                        <div className={styles.countdownBox}>
+                          <span className={styles.countdownVal}>{timeLeft.days}</span>
+                          <span className={styles.countdownUnit}>ngày</span>
+                        </div>
+                        <span className={styles.countdownColon}>:</span>
+
+                        <div className={styles.countdownBox}>
+                          <span className={styles.countdownVal}>{String(timeLeft.hours).padStart(2, "0")}</span>
+                          <span className={styles.countdownUnit}>giờ</span>
+                        </div>
+                        <span className={styles.countdownColon}>:</span>
+
+                        <div className={styles.countdownBox}>
+                          <span className={styles.countdownVal}>{String(timeLeft.minutes).padStart(2, "0")}</span>
+                          <span className={styles.countdownUnit}>phút</span>
+                        </div>
+                        <span className={styles.countdownColon}>:</span>
+
+                        <div className={`${styles.countdownBox} ${styles.countdownBoxActive}`}>
+                          <span className={styles.countdownVal}>{String(timeLeft.seconds).padStart(2, "0")}</span>
+                          <span className={styles.countdownUnit}>giây</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* HÀNG HÀNH ĐỘNG */}
+                    <div className={styles.bannerActionRow}>
+                      <button
+                        className={styles.bannerFastBtn}
+                        onClick={() => {
+                          if (examsList.length > 0) {
+                            setSelectedExam(examsList[0]);
+                          } else {
+                            scrollToSection("de-thi", "de-thi");
+                          }
+                        }}
+                      >
+                        <span>⚡</span> Vào thi ngay
+                      </button>
+
+                      <button
+                        type="button"
+                        className={styles.bannerDocBtn}
+                        onClick={() => setShowDocLibraryModal(true)}
+                        title="Kho Tài Liệu Ôn Thi 12 Trọng Tâm Điểm 9+"
+                      >
+                        <span>🧾</span> Tài liệu ôn thi
+                      </button>
+                    </div>
                   </div>
 
-                  <div className={styles.bannerLiveIndicator}>
-                    <span className={styles.liveDotPulse}></span>
-                    <span><strong>24.850</strong> thí sinh đang trực tuyến</span>
+                  {/* CỘT PHẢI: TRẠNG THÁI & CỤM ICON CÁC MÔN HỌC LƠ LỬNG ĐÁNG YÊU */}
+                  <div className={styles.bannerRightCol}>
+                    <div className={styles.bannerLiveIndicator}>
+                      <span className={styles.liveDotPulse}></span>
+                      <span><strong>24.850</strong> thí sinh đang trực tuyến</span>
+                    </div>
+
+                    <div className={styles.cuteClusterWrap}>
+                      {/* Thẻ trung tâm lớn: Mũ tốt nghiệp & Bứt phá 9+ */}
+                      <div
+                        className={`${styles.cuteTile} ${styles.cuteTileCenter}`}
+                        onClick={() => scrollToSection("de-thi", "de-thi")}
+                        title="Luyện thi THPT Quốc Gia Điểm 9+"
+                      >
+                        <span className={styles.cuteTileEmoji}>🎓</span>
+                        <span className={styles.cuteTilePill}>Ôn Thi 9+ 🚀</span>
+                      </div>
+
+                      {/* 4 Thẻ bo góc 4 hướng: Toán 12, Hoá học, Ngữ văn, Vật lí */}
+                      <div
+                        className={`${styles.cuteTile} ${styles.cuteTileTL}`}
+                        onClick={() => { setSelectedSubject("toan"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Toán 12"
+                      >
+                        <span className={styles.cuteTileEmoji}>📐</span>
+                        <span className={styles.cuteTileLabel}>Toán 12</span>
+                      </div>
+
+                      <div
+                        className={`${styles.cuteTile} ${styles.cuteTileTR}`}
+                        onClick={() => { setSelectedSubject("hoa"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Hoá học 12"
+                      >
+                        <span className={styles.cuteTileEmoji}>🧪</span>
+                        <span className={styles.cuteTileLabel}>Hoá học</span>
+                      </div>
+
+                      <div
+                        className={`${styles.cuteTile} ${styles.cuteTileBL}`}
+                        onClick={() => { setSelectedSubject("van"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Ngữ văn 12"
+                      >
+                        <span className={styles.cuteTileEmoji}>📖</span>
+                        <span className={styles.cuteTileLabel}>Ngữ văn</span>
+                      </div>
+
+                      <div
+                        className={`${styles.cuteTile} ${styles.cuteTileBR}`}
+                        onClick={() => { setSelectedSubject("ly"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Vật lí 12"
+                      >
+                        <span className={styles.cuteTileEmoji}>⚡</span>
+                        <span className={styles.cuteTileLabel}>Vật lí</span>
+                      </div>
+
+                      {/* Các vệ tinh môn học nhỏ xinh xung quanh */}
+                      <div
+                        className={`${styles.cuteTileMini} ${styles.cuteMini1}`}
+                        onClick={() => { setSelectedSubject("sinh"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Sinh học 12"
+                      >
+                        <span>🧬</span>
+                        <span className={styles.miniTag}>Sinh</span>
+                      </div>
+
+                      <div
+                        className={`${styles.cuteTileMini} ${styles.cuteMini2}`}
+                        onClick={() => { setSelectedSubject("anh"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Tiếng Anh 12"
+                      >
+                        <span>🇬🇧</span>
+                        <span className={styles.miniTag}>Anh</span>
+                      </div>
+
+                      <div
+                        className={`${styles.cuteTileMini} ${styles.cuteMini3}`}
+                        onClick={() => scrollToSection("de-thi", "de-thi")}
+                        title="Mục tiêu Điểm 9+"
+                      >
+                        <span>🏆</span>
+                        <span className={styles.miniTag}>9+</span>
+                      </div>
+
+                      <div
+                        className={`${styles.cuteTileMini} ${styles.cuteMini4}`}
+                        onClick={() => { setSelectedSubject("tin"); scrollToSection("de-thi", "de-thi"); }}
+                        title="Môn Tin học 12"
+                      >
+                        <span>💻</span>
+                        <span className={styles.miniTag}>Tin</span>
+                      </div>
+
+                      {/* Hạt sao & tên lửa lơ lửng trang trí */}
+                      <div className={styles.cuteSparkle1}>✨</div>
+                      <div className={styles.cuteSparkle2}>⭐</div>
+                      <div className={styles.cuteSparkle3}>🚀</div>
+                    </div>
                   </div>
-                </div>
-
-                <h2 className={styles.bannerHeadline}>
-                  Vào Thi Ngay – Đấu Trường Trực Tuyến Lớp 12
-                </h2>
-                <p className={styles.bannerSubtext}>
-                  Hệ thống thi thử chuẩn cấu trúc Bộ GD&ĐT dành cho học sinh trường <strong>THPT DTNT THCS & THPT Tuy Đức</strong>. Luyện đề bấm giờ, tự động chấm điểm và xếp hạng trực tiếp toàn trường!
-                </p>
-
-                {/* KHUNG ĐẾM NGƯỢC THỜI GIAN GỌN GÀNG, SẮP XẾP CHỮ VỚI SỐ LIỀN MẠCH KHÔNG TRỐNG */}
-                <div className={styles.countdownBannerContainer}>
-                  <div className={styles.countdownTitle}>
-                    <span>⏳</span>
-                    <span>Đếm ngược ngày thi THPT 2027:</span>
-                  </div>
-
-                  <div className={styles.countdownGrid}>
-                    <div className={styles.countdownBox}>
-                      <span className={styles.countdownVal}>{timeLeft.days}</span>
-                      <span className={styles.countdownUnit}>ngày</span>
-                    </div>
-                    <span className={styles.countdownColon}>:</span>
-
-                    <div className={styles.countdownBox}>
-                      <span className={styles.countdownVal}>{String(timeLeft.hours).padStart(2, "0")}</span>
-                      <span className={styles.countdownUnit}>giờ</span>
-                    </div>
-                    <span className={styles.countdownColon}>:</span>
-
-                    <div className={styles.countdownBox}>
-                      <span className={styles.countdownVal}>{String(timeLeft.minutes).padStart(2, "0")}</span>
-                      <span className={styles.countdownUnit}>phút</span>
-                    </div>
-                    <span className={styles.countdownColon}>:</span>
-
-                    <div className={`${styles.countdownBox} ${styles.countdownBoxActive}`}>
-                      <span className={styles.countdownVal}>{String(timeLeft.seconds).padStart(2, "0")}</span>
-                      <span className={styles.countdownUnit}>giây</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* HÀNG HÀNH ĐỘNG GỌN GÀNG, SANG TRỌNG */}
-                <div className={styles.bannerActionRow}>
-                  <button
-                    className={styles.bannerFastBtn}
-                    onClick={() => {
-                      if (examsList.length > 0) {
-                        setSelectedExam(examsList[0]);
-                      } else {
-                        scrollToSection("de-thi", "de-thi");
-                      }
-                    }}
-                  >
-                    <span>⚡</span> Vào thi ngay
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.bannerDocBtn}
-                    onClick={() => setShowDocLibraryModal(true)}
-                    title="Kho Tài Liệu Ôn Thi 12 Trọng Tâm Điểm 9+"
-                  >
-                    <span>🧾</span> Tài liệu ôn thi
-                  </button>
                 </div>
               </div>
             </div>
