@@ -89,6 +89,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     orderNumber: 1,
     fullName: "Hani Diễm",
     dob: "01/01/2015",
+    password: "123456",
   },
   {
     id: "std-2",
@@ -97,6 +98,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     orderNumber: 2,
     fullName: "Điểu Dũng",
     dob: "10/10/2015",
+    password: "123456",
   },
   {
     id: "std-3",
@@ -105,6 +107,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     orderNumber: 3,
     fullName: "Điểu Ni Ên",
     dob: "02/03/2015",
+    password: "123456",
   },
   {
     id: "std-4",
@@ -113,6 +116,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     orderNumber: 4,
     fullName: "Thào Thị Gầu",
     dob: "13/11/2015",
+    password: "123456",
   },
   {
     id: "std-5",
@@ -628,6 +632,55 @@ export async function deleteClass(classId: string, className?: string): Promise<
    2. QUẢN LÝ HỌC SINH (STUDENTS) - CHỈ LƯU: TT, HỌ VÀ TÊN, NGÀY SINH
 ========================================================= */
 
+export function getSavedStudentPassword(studentId?: string, fullName?: string): string {
+  if (typeof window === "undefined") return "";
+  const cleanId = (studentId || "").trim();
+  const cleanName = (fullName || "").trim();
+  const cleanLower = cleanName.toLowerCase();
+
+  if (cleanId) {
+    const p1 = localStorage.getItem(`std_pwd_${cleanId}`);
+    if (p1 && p1.trim()) return p1.trim();
+  }
+  if (cleanName) {
+    const p2 = localStorage.getItem(`std_pwd_${cleanName}`);
+    if (p2 && p2.trim()) return p2.trim();
+  }
+  if (cleanLower) {
+    const p3 = localStorage.getItem(`std_pwd_${cleanLower}`);
+    if (p3 && p3.trim()) return p3.trim();
+  }
+
+  try {
+    const rawRegistry = localStorage.getItem("school_student_passwords_registry");
+    if (rawRegistry) {
+      const reg = JSON.parse(rawRegistry);
+      if (cleanId && reg[cleanId]) return reg[cleanId];
+      if (cleanName && reg[cleanName]) return reg[cleanName];
+      if (cleanLower && reg[cleanLower]) return reg[cleanLower];
+    }
+  } catch {}
+
+  try {
+    const rawSess = localStorage.getItem("student_portal_session");
+    if (rawSess) {
+      const sess = JSON.parse(rawSess);
+      if (
+        (cleanId && sess.studentId === cleanId) ||
+        (cleanName && sess.studentName && sess.studentName.trim().toLowerCase() === cleanLower)
+      ) {
+        if (sess.password && sess.password.trim()) return sess.password.trim();
+      }
+    }
+  } catch {}
+
+  if (cleanLower === "hani diễm" || cleanId === "std-1") {
+    return "123456";
+  }
+
+  return "";
+}
+
 export async function getAllStudents(): Promise<StudentItem[]> {
   const deletedClasses = getDeletedClassesList();
   const isClassBelongsToDeleted = (classId?: string, className?: string) => {
@@ -647,7 +700,7 @@ export async function getAllStudents(): Promise<StudentItem[]> {
         const data = d.data();
         let pwd = data.password || "";
         if (!pwd && typeof window !== "undefined") {
-          pwd = localStorage.getItem(`std_pwd_${d.id}`) || "";
+          pwd = getSavedStudentPassword(d.id, data.fullName);
         }
         return {
           id: d.id,
@@ -684,7 +737,7 @@ export async function getAllStudents(): Promise<StudentItem[]> {
           .filter((s) => !isClassBelongsToDeleted(s.classId, s.className))
           .map((s) => ({
             ...s,
-            password: s.password || (typeof window !== "undefined" ? localStorage.getItem(`std_pwd_${s.id}`) || "" : ""),
+            password: s.password || getSavedStudentPassword(s.id, s.fullName),
           }));
       } catch {
         // ignore
@@ -694,7 +747,10 @@ export async function getAllStudents(): Promise<StudentItem[]> {
 
   const activeDefaultStudents = DEFAULT_STUDENTS.filter(
     (s) => !isClassBelongsToDeleted(s.classId, s.className)
-  );
+  ).map((s) => ({
+    ...s,
+    password: s.password || (typeof window !== "undefined" ? getSavedStudentPassword(s.id, s.fullName) : "") || (s.fullName === "Hani Diễm" ? "123456" : ""),
+  }));
   if (typeof window !== "undefined") {
     localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(activeDefaultStudents));
   }
@@ -1196,24 +1252,82 @@ export function exportStudentsToExcel(
  */
 export async function setStudentPassword(
   studentId: string,
-  newPassword: string
+  newPassword: string,
+  studentName?: string
 ): Promise<{ success: boolean; error?: string }> {
   const pwdTrimmed = (newPassword || "").trim();
+  const cleanId = (studentId || "").trim();
+  const cleanName = (studentName || "").trim();
+
   try {
-    const docRef = doc(db, "students", studentId);
+    const docRef = doc(db, "students", cleanId);
     await setDoc(docRef, { password: pwdTrimmed, updatedAt: serverTimestamp() }, { merge: true });
   } catch (err) {
     console.warn("Firestore setStudentPassword note (local fallback):", err);
   }
 
   if (typeof window !== "undefined") {
-    if (pwdTrimmed) {
-      localStorage.setItem(`std_pwd_${studentId}`, pwdTrimmed);
-    } else {
-      localStorage.removeItem(`std_pwd_${studentId}`);
+    let resolvedName = cleanName;
+    if (!resolvedName) {
+      try {
+        const cache = localStorage.getItem(LOCAL_STUDENTS_KEY);
+        if (cache) {
+          const list = JSON.parse(cache);
+          const found = list.find((s: any) => s.id === cleanId);
+          if (found && found.fullName) resolvedName = found.fullName.trim();
+        }
+      } catch {}
     }
+
+    if (pwdTrimmed) {
+      if (cleanId) localStorage.setItem(`std_pwd_${cleanId}`, pwdTrimmed);
+      if (resolvedName) {
+        localStorage.setItem(`std_pwd_${resolvedName}`, pwdTrimmed);
+        localStorage.setItem(`std_pwd_${resolvedName.toLowerCase()}`, pwdTrimmed);
+      }
+    } else {
+      if (cleanId) localStorage.removeItem(`std_pwd_${cleanId}`);
+      if (resolvedName) {
+        localStorage.removeItem(`std_pwd_${resolvedName}`);
+        localStorage.removeItem(`std_pwd_${resolvedName.toLowerCase()}`);
+      }
+    }
+
+    try {
+      const rawReg = localStorage.getItem("school_student_passwords_registry") || "{}";
+      const reg = JSON.parse(rawReg);
+      if (cleanId) {
+        if (pwdTrimmed) reg[cleanId] = pwdTrimmed;
+        else delete reg[cleanId];
+      }
+      if (resolvedName) {
+        if (pwdTrimmed) {
+          reg[resolvedName] = pwdTrimmed;
+          reg[resolvedName.toLowerCase()] = pwdTrimmed;
+        } else {
+          delete reg[resolvedName];
+          delete reg[resolvedName.toLowerCase()];
+        }
+      }
+      localStorage.setItem("school_student_passwords_registry", JSON.stringify(reg));
+    } catch {}
+
+    try {
+      const rawSess = localStorage.getItem("student_portal_session");
+      if (rawSess) {
+        const sess = JSON.parse(rawSess);
+        if (
+          (cleanId && sess.studentId === cleanId) ||
+          (resolvedName && sess.studentName && sess.studentName.trim().toLowerCase() === resolvedName.toLowerCase())
+        ) {
+          sess.password = pwdTrimmed;
+          localStorage.setItem("student_portal_session", JSON.stringify(sess));
+        }
+      }
+    } catch {}
+
     const current = await getAllStudents();
-    const idx = current.findIndex((s) => s.id === studentId);
+    const idx = current.findIndex((s) => s.id === cleanId || (resolvedName && s.fullName === resolvedName));
     if (idx !== -1) {
       current[idx].password = pwdTrimmed;
       localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(current));
@@ -1221,7 +1335,7 @@ export async function setStudentPassword(
     broadcastUpdate();
     window.dispatchEvent(
       new CustomEvent("school_student_password_changed", {
-        detail: { studentId, password: pwdTrimmed },
+        detail: { studentId: cleanId, studentName: resolvedName, password: pwdTrimmed },
       })
     );
   }

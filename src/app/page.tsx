@@ -311,7 +311,6 @@ export default function Home() {
   const [authClass, setAuthClass] = useState<string>("12A1");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; name?: string } | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentAuthUser | null>(null);
 
   // Admin Firebase Users State
@@ -552,9 +551,11 @@ export default function Home() {
         }
 
         // Lưu mật khẩu vào Firestore & LocalStorage (để lần 2 không cần nhập)
-        await setStudentPassword(student.id, studentInputPassword.trim());
+        await setStudentPassword(student.id, studentInputPassword.trim(), student.fullName);
         if (typeof window !== "undefined") {
           localStorage.setItem(`std_pwd_${student.id}`, studentInputPassword.trim());
+          localStorage.setItem(`std_pwd_${student.fullName}`, studentInputPassword.trim());
+          localStorage.setItem(`std_pwd_${student.fullName.toLowerCase()}`, studentInputPassword.trim());
           localStorage.setItem(`std_remembered_${student.id}`, "true");
         }
         student.password = studentInputPassword.trim();
@@ -1125,107 +1126,99 @@ export default function Home() {
     try {
       const res = await loginWithGoogleFirebase();
       if (res.success && res.user) {
-        setCurrentUser({
-          const authUser: CurrentAuthUser = {
-            uid: res.user.uid,
-            email: res.user.email,
-            name: res.user.fullName,
-          });
-        fullName: res.user.fullName,
-          role: resolveAuthRole(res.user),
-            teacherCode: res.user.teacherCode,
-              studentClass: res.user.studentClass,
-                avatarUrl: res.user.avatarUrl,
-                  schoolName: res.user.schoolName,
-        };
-      setCurrentAuthUser(authUser);
-      setCurrentUser(authUser);
-      setShowLoginModal(false);
-      setFirebaseSaveFeedback(
-        `☁️ Đăng nhập thành công tài khoản "${res.user.fullName}" (Mã GV: ${res.user.teacherCode || "Chưa cấp"})!`
-          `☁️ Đăng nhập thành công tài khoản "${res.user.fullName}" (${authUser.role === "super_admin" ? "👑 Super Admin" : "👨‍🏫 Giáo viên"})!`
-      );
-      setTimeout(() => setFirebaseSaveFeedback(null), 5000);
-    } else {
-      alert(res.error || "Đăng nhập Google thất bại. Vui lòng thử lại!");
-    }
-  } catch (err: unknown) {
-    console.error("Google Auth Error:", err);
-    alert("Lỗi khi kết nối Google Authentication.");
-  } finally {
-    setAuthLoading(false);
-  }
-};
-
-// Email / Password Form Submit with Firebase Firestore saving
-const handleEmailAuthSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!authEmail || !authPassword) {
-    alert("Vui lòng điền đầy đủ Email và Mật khẩu!");
-    return;
-  }
-
-  setAuthLoading(true);
-  if (authTab === "register") {
-    const res = await registerWithEmail({
-      email: authEmail,
-      password: authPassword,
-      fullName: authName,
-      studentClass: authClass,
-    });
-    setAuthLoading(false);
-    if (res.success && res.user) {
-      setCurrentUser({
         const authUser: CurrentAuthUser = {
           uid: res.user.uid,
           email: res.user.email,
           name: res.user.fullName,
-        });
-      fullName: res.user.fullName,
-        role: resolveAuthRole(res.user),
+          fullName: res.user.fullName,
+          role: resolveAuthRole(res.user),
           teacherCode: res.user.teacherCode,
-            studentClass: res.user.studentClass,
-              avatarUrl: res.user.avatarUrl,
-                schoolName: res.user.schoolName,
-        };
-    setCurrentAuthUser(authUser);
-    setCurrentUser(authUser);
-    setShowLoginModal(false);
-    setFirebaseSaveFeedback(
-      `☁️ Đã đăng ký thành công "${res.user.fullName}"! Mã GV: ${res.user.teacherCode || "Chưa cấp"} - Ngày ĐK: ${res.user.registeredDate || "Hôm nay"} (Lưu Firebase Firestore)`
-    );
-    setTimeout(() => setFirebaseSaveFeedback(null), 6000);
-  } else {
-    alert("Lỗi đăng ký: " + (res.error || "Không thể tạo tài khoản"));
-  }
-} else {
-  const res = await loginWithEmail(authEmail, authPassword);
-setAuthLoading(false);
-if (res.success && res.user) {
-  setCurrentUser({
-    const authUser: CurrentAuthUser = {
-      uid: res.user.uid,
-      email: res.user.email,
-      name: res.user.fullName,
-    });
-  fullName: res.user.fullName,
-    role: resolveAuthRole(res.user),
-      teacherCode: res.user.teacherCode,
-        studentClass: res.user.studentClass,
+          studentClass: res.user.studentClass,
           avatarUrl: res.user.avatarUrl,
-            schoolName: res.user.schoolName,
+          schoolName: res.user.schoolName,
         };
-setCurrentAuthUser(authUser);
-setCurrentUser(authUser);
-setShowLoginModal(false);
-setFirebaseSaveFeedback(
-  `☁️ Đăng nhập thành công! Đã đồng bộ tài khoản "${res.user.email}" (Mã GV: ${res.user.teacherCode || "Chưa cấp"}) với Firebase Firestore!`
-    `☁️ Đăng nhập thành công! Tài khoản "${res.user.email}" (${authUser.role === "super_admin" ? "👑 Super Admin" : "👨‍🏫 Giáo viên"})`
-);
-setTimeout(() => setFirebaseSaveFeedback(null), 5000);
+        setCurrentAuthUser(authUser);
+        setCurrentUser(authUser);
+        setShowLoginModal(false);
+        setFirebaseSaveFeedback(
+          `☁️ Đăng nhập thành công tài khoản "${res.user.fullName}" (${authUser.role === "super_admin" ? "👑 Super Admin" : "👨‍🏫 Giáo viên"})!`
+        );
+        setTimeout(() => setFirebaseSaveFeedback(null), 5000);
       } else {
-  alert("Lỗi đăng nhập: " + (res.error || "Tài khoản hoặc mật khẩu không chính xác"));
-}
+        alert(res.error || "Đăng nhập Google thất bại. Vui lòng thử lại!");
+      }
+    } catch (err: unknown) {
+      console.error("Google Auth Error:", err);
+      alert("Lỗi khi kết nối Google Authentication.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Email / Password Form Submit with Firebase Firestore saving
+  const handleEmailAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail || !authPassword) {
+      alert("Vui lòng điền đầy đủ Email và Mật khẩu!");
+      return;
+    }
+
+    setAuthLoading(true);
+    if (authTab === "register") {
+      const res = await registerWithEmail({
+        email: authEmail,
+        password: authPassword,
+        fullName: authName,
+        studentClass: authClass,
+      });
+      setAuthLoading(false);
+      if (res.success && res.user) {
+        const authUser: CurrentAuthUser = {
+          uid: res.user.uid,
+          email: res.user.email,
+          name: res.user.fullName,
+          fullName: res.user.fullName,
+          role: resolveAuthRole(res.user),
+          teacherCode: res.user.teacherCode,
+          studentClass: res.user.studentClass,
+          avatarUrl: res.user.avatarUrl,
+          schoolName: res.user.schoolName,
+        };
+        setCurrentAuthUser(authUser);
+        setCurrentUser(authUser);
+        setShowLoginModal(false);
+        setFirebaseSaveFeedback(
+          `☁️ Đã đăng ký thành công "${res.user.fullName}"! Mã GV: ${res.user.teacherCode || "Chưa cấp"} - Ngày ĐK: ${res.user.registeredDate || "Hôm nay"} (Lưu Firebase Firestore)`
+        );
+        setTimeout(() => setFirebaseSaveFeedback(null), 6000);
+      } else {
+        alert("Lỗi đăng ký: " + (res.error || "Không thể tạo tài khoản"));
+      }
+    } else {
+      const res = await loginWithEmail(authEmail, authPassword);
+      setAuthLoading(false);
+      if (res.success && res.user) {
+        const authUser: CurrentAuthUser = {
+          uid: res.user.uid,
+          email: res.user.email,
+          name: res.user.fullName,
+          fullName: res.user.fullName,
+          role: resolveAuthRole(res.user),
+          teacherCode: res.user.teacherCode,
+          studentClass: res.user.studentClass,
+          avatarUrl: res.user.avatarUrl,
+          schoolName: res.user.schoolName,
+        };
+        setCurrentAuthUser(authUser);
+        setCurrentUser(authUser);
+        setShowLoginModal(false);
+        setFirebaseSaveFeedback(
+          `☁️ Đăng nhập thành công! Tài khoản "${res.user.email}" (${authUser.role === "super_admin" ? "👑 Super Admin" : "👨‍🏫 Giáo viên"})`
+        );
+        setTimeout(() => setFirebaseSaveFeedback(null), 5000);
+      } else {
+        alert("Lỗi đăng nhập: " + (res.error || "Tài khoản hoặc mật khẩu không chính xác"));
+      }
     }
   };
 
@@ -1349,64 +1342,74 @@ return (
           )}
 
           {currentUser ? (
-            <div className={styles.userLoggedInBadge}>
-              <div className={styles.userAvatar}>
-                {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
+            <div
+              className={styles.userLoggedInBadge}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                border: "1.5px solid #60a5fa",
+                padding: "6px 14px",
+                borderRadius: "10px",
+                boxShadow: "0 3px 10px rgba(37, 99, 235, 0.25)",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25 }}>
                 <div
-                  className={styles.userAvatar}
                   style={{
-                    background:
-                      currentUser.role === "super_admin"
-                        ? "#2563eb"
-                        : currentUser.role === "student"
-                          ? "#7c3aed"
-                          : "#059669",
-                    color: "#ffffff",
                     fontSize: "13px",
+                    color: "#ffffff",
                     fontWeight: 700,
+                    letterSpacing: "0.2px",
                   }}
                 >
-                  {currentUser.role === "super_admin"
-                    ? "👑"
-                    : currentUser.role === "student"
-                      ? "🎒"
-                      : "👨‍🏫"}
+                  Chào, {currentUser.name || currentUser.fullName || currentUser.email?.split("@")[0] || "Bạn"}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-                  <span style={{ fontSize: "12px", color: "#0f172a" }}>{currentUser.name || currentUser.email}</span>
-                  <span style={{ fontSize: "10.5px", color: "#16a34a" }}>Đã đăng nhập</span>
-                  <span style={{ fontSize: "12px", color: "#0f172a", fontWeight: 700 }}>
-                    {currentUser.name || currentUser.email}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "10.5px",
-                      color:
-                        currentUser.role === "super_admin"
-                          ? "#b45309"
-                          : currentUser.role === "student"
-                            ? "#6d28d9"
-                            : "#047857",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {currentUser.role === "super_admin"
-                      ? "👑 Super Admin"
-                      : currentUser.role === "student"
-                        ? "🎒 Học sinh"
-                        : "👨‍🏫 Giáo viên"}
-                  </span>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#facc15",
+                    fontWeight: 800,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  {currentUser.role === "student"
+                    ? (currentUser.studentClass
+                        ? (currentUser.studentClass.toLowerCase().includes("lớp")
+                            ? currentUser.studentClass
+                            : `Lớp: ${currentUser.studentClass}`)
+                        : "Lớp: 12A1")
+                    : currentUser.role === "teacher"
+                      ? `Mã GV: ${currentUser.teacherCode || "276648"}`
+                      : "👑 Super Admin"}
                 </div>
-                <button
-                  className={styles.logoutBtn}
-                  onClick={() => {
-                    onClick = { async() => {
+              </div>
+
+              <button
+                type="button"
+                className={styles.logoutBtn}
+                onClick={async () => {
                   await logoutAllSessions();
-                setCurrentUser(null);
-                alert("Đã đăng xuất tài khoản!");
-                  }}
-                title="Đăng xuất"
-                >
+                  setCurrentUser(null);
+                  alert("Đã đăng xuất tài khoản!");
+                }}
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.35)",
+                  borderRadius: "6px",
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#ef4444")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)")}
+                title="Đăng xuất khỏi tài khoản"
+              >
                 Đăng xuất
               </button>
             </div>

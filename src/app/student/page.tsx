@@ -22,7 +22,7 @@ import {
   ExamItem,
   DocumentItem,
 } from "@/lib/examService";
-import { logoutAllSessions } from "@/lib/authService";
+import { logoutAllSessions, setCurrentAuthUser, CurrentAuthUser } from "@/lib/authService";
 import {
   getEvaluationsForStudent,
   sendStudentReply,
@@ -100,10 +100,15 @@ export default function StudentPortalPage() {
     setPasswordModalLoading(true);
     try {
       const studentId = currentSession?.studentId;
+      const studentName = currentSession?.studentName;
       if (studentId) {
-        await setStudentPassword(studentId, newPassword.trim());
+        await setStudentPassword(studentId, newPassword.trim(), studentName);
         if (typeof window !== "undefined") {
           localStorage.setItem(`std_pwd_${studentId}`, newPassword.trim());
+          if (studentName) {
+            localStorage.setItem(`std_pwd_${studentName}`, newPassword.trim());
+            localStorage.setItem(`std_pwd_${studentName.toLowerCase()}`, newPassword.trim());
+          }
         }
         setShowChangePasswordModal(false);
         alert(`🎉 Đã lưu mật khẩu thành công! Mật khẩu mới (${newPassword.trim()}) đã được đồng bộ vào mục Lớp và Học sinh của Giáo viên.`);
@@ -496,9 +501,11 @@ export default function StudentPortalPage() {
           }
 
           // Save password for student in Firestore & local cache
-          await setStudentPassword(student.id, inputPassword.trim());
+          await setStudentPassword(student.id, inputPassword.trim(), student.fullName);
           if (typeof window !== "undefined") {
             localStorage.setItem(`std_pwd_${student.id}`, inputPassword.trim());
+            localStorage.setItem(`std_pwd_${student.fullName}`, inputPassword.trim());
+            localStorage.setItem(`std_pwd_${student.fullName.toLowerCase()}`, inputPassword.trim());
           }
           student.password = inputPassword.trim();
           setStudentsList((prev) =>
@@ -546,6 +553,17 @@ export default function StudentPortalPage() {
           role: "student",
         })
       );
+
+      const studentAuthUser: CurrentAuthUser = {
+        uid: student.id,
+        name: student.fullName,
+        fullName: student.fullName,
+        role: "student",
+        studentClass: currentClass.name,
+        studentId: student.id,
+        schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+      };
+      setCurrentAuthUser(studentAuthUser);
 
       setCurrentSession(newSession);
       setShowLoginModal(false);
