@@ -7078,127 +7078,295 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       {/* =========================================================
           MODAL SỬA TÀI KHOẢN (HIỆU ỨNG PHÓNG TO KHI NHẤP VÀO)
       ========================================================= */}
+      {/* =========================================================
+          MODAL SỬA TÀI KHOẢN (HIỆU ỨNG PHÓNG TO KHI NHẤP VÀO - CHUẨN ẢNH 1)
+      ========================================================= */}
       {showUserEditModal && editingUser && (
         <div className={styles.modalZoomBackdrop} onClick={() => setShowUserEditModal(false)}>
-          <div className={styles.modalZoomBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalZoomHeader}>
-              <h3 className={styles.modalZoomTitle}>
-                <span>✏️</span> Chỉnh sửa tài khoản
+          <div
+            className={styles.modalZoomBox}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "460px",
+              width: "90%",
+              borderRadius: "14px",
+              overflow: "hidden",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              background: "#ffffff",
+            }}
+          >
+            <div
+              className={styles.modalZoomHeader}
+              style={{
+                padding: "20px 24px 16px 24px",
+                borderBottom: "1px solid #f1f5f9",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "17px",
+                  fontWeight: 800,
+                  color: "#1e293b",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.4px",
+                  margin: 0,
+                  fontFamily: "inherit",
+                }}
+              >
+                CHỈNH SỬA TÀI KHOẢN
               </h3>
               <button
                 type="button"
                 className={styles.modalZoomClose}
                 onClick={() => setShowUserEditModal(false)}
+                style={{
+                  fontSize: "20px",
+                  color: "#94a3b8",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px",
+                  lineHeight: 1,
+                }}
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSaveEditUserSubmit}>
-              <div className={styles.modalZoomBody}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Họ và tên người dùng</label>
+              <div
+                className={styles.modalZoomBody}
+                style={{
+                  padding: "20px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "18px",
+                }}
+              >
+                {/* 1. Tên Hiển Thị */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Tên Hiển Thị
+                  </label>
                   <input
                     type="text"
                     required
-                    className={styles.formInput}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      color: "#1e293b",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      transition: "border-color 0.15s ease",
+                    }}
                     value={userEditForm.fullName}
                     onChange={(e) =>
                       setUserEditForm({ ...userEditForm, fullName: e.target.value })
                     }
-                    placeholder="VD: FC ZO ZO"
+                    placeholder="VD: Nguyen Thu Ngan Hoang"
                   />
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Địa chỉ Email</label>
+                {/* 2. Email Đăng Nhập */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Email Đăng Nhập
+                  </label>
                   <input
                     type="email"
                     required
-                    className={styles.formInput}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      color: "#1e293b",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      transition: "border-color 0.15s ease",
+                    }}
                     value={userEditForm.email}
                     onChange={(e) =>
                       setUserEditForm({ ...userEditForm, email: e.target.value })
                     }
-                    placeholder="VD: sogaminh123@gmail.com"
+                    placeholder="VD: hoangnguyenthungan0310@gmail.com"
                   />
                 </div>
 
-                {/* Mã giáo viên 6 chữ số */}
-                <div className={styles.formGroup}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <label className={styles.formLabel} style={{ margin: 0 }}>
-                      Mã giáo viên (6 chữ số)
+                {/* 3. Trạng thái tài khoản (Radio buttons như Ảnh 1) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Trạng thái tài khoản
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "24px", paddingTop: "2px" }}>
+                    <label
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        fontSize: "13.5px",
+                        fontWeight: 700,
+                        color: userEditForm.status === "inactive" ? "#1e293b" : "#475569",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userEditStatus"
+                        value="inactive"
+                        checked={userEditForm.status === "inactive"}
+                        onChange={() =>
+                          setUserEditForm({ ...userEditForm, status: "inactive" })
+                        }
+                        style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
+                      />
+                      <span>Chưa kích hoạt</span>
+                    </label>
+
+                    <label
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        fontSize: "13.5px",
+                        fontWeight: 700,
+                        color: "#059669",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userEditStatus"
+                        value="active"
+                        checked={userEditForm.status === "active" || userEditForm.status !== "inactive"}
+                        onChange={() =>
+                          setUserEditForm({ ...userEditForm, status: "active" })
+                        }
+                        style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
+                      />
+                      <span style={{ color: "#059669", fontWeight: 800 }}>Kích hoạt ngay</span>
                     </label>
                   </div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    className={styles.formInput}
-                    value={userEditForm.teacherCode}
-                    onChange={(e) =>
-                      setUserEditForm({
-                        ...userEditForm,
-                        teacherCode: e.target.value.replace(/\D/g, "").slice(0, 6),
-                      })
-                    }
-                    placeholder="Nhập 6 số mã GV (VD: 571024)"
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: "16px",
-                      fontWeight: 700,
-                      letterSpacing: "4px",
-                      color: "#1d4ed8",
-                      background: "#f0f7ff",
-                    }}
-                  />
-                  <span className={styles.formHint}>
-                    Tùy chỉnh mã gồm đúng 6 chữ số (ví dụ: 571024 hoặc mã riêng của bạn). Nhấn &quot;Lưu thay đổi&quot; để lưu lại.
-                  </span>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Ngày đăng ký</label>
-                  <input
-                    type="text"
-                    className={styles.formInput}
-                    value={userEditForm.registeredDate}
-                    onChange={(e) =>
-                      setUserEditForm({ ...userEditForm, registeredDate: e.target.value })
-                    }
-                    placeholder="VD: 19/9/2026"
-                  />
-                  <span className={styles.formHint}>
-                    Tính từ lúc người dùng nhấp vào đăng ký (Định dạng D/M/YYYY).
-                  </span>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Trạng thái tài khoản</label>
-                  <select
-                    className={styles.formSelect}
-                    value={userEditForm.status}
-                    onChange={(e) =>
-                      setUserEditForm({ ...userEditForm, status: e.target.value })
-                    }
-                  >
-                    <option value="active">ĐÃ KÍCH HOẠT (Hoạt động)</option>
-                    <option value="inactive">CHƯA KÍCH HOẠT (Chờ duyệt)</option>
-                    <option value="locked">BỊ KHÓA (Khóa truy cập)</option>
-                  </select>
+                {/* 4. Mã Giáo Viên (6 chữ số) + Nút TẠO MÃ như Ảnh 1 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Mã Giáo Viên (6 chữ số)
+                  </label>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={userEditForm.teacherCode}
+                      onChange={(e) =>
+                        setUserEditForm({
+                          ...userEditForm,
+                          teacherCode: e.target.value.replace(/\D/g, "").slice(0, 6),
+                        })
+                      }
+                      placeholder="628842"
+                      style={{
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "15px",
+                        fontWeight: 700,
+                        color: "#0f172a",
+                        textAlign: "center",
+                        letterSpacing: "1px",
+                        outline: "none",
+                        height: "44px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const random6Digits = Math.floor(100000 + Math.random() * 900000).toString();
+                        setUserEditForm((prev) => ({ ...prev, teacherCode: random6Digits }));
+                      }}
+                      style={{
+                        background: "#dbeafe",
+                        color: "#1d4ed8",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "0 22px",
+                        height: "44px",
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#bfdbfe")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#dbeafe")}
+                    >
+                      TẠO MÃ
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.modalZoomFooter}>
+              {/* 5. Footer Buttons: HỦY BỎ và LƯU THÔNG TIN như Ảnh 1 */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "14px",
+                  padding: "12px 24px 24px 24px",
+                }}
+              >
                 <button
                   type="button"
-                  className={styles.btnSecondary}
                   onClick={() => setShowUserEditModal(false)}
+                  style={{
+                    flex: 1,
+                    background: "#f1f5f9",
+                    color: "#1e3a8a",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    fontSize: "13.5px",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#e2e8f0")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#f1f5f9")}
                 >
-                  Hủy bỏ
+                  HỦY BỎ
                 </button>
-                <button type="submit" className={styles.btnPrimary}>
-                  💾 Lưu thay đổi
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    fontSize: "13.5px",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.35)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#2563eb")}
+                >
+                  LƯU THÔNG TIN
                 </button>
               </div>
             </form>
@@ -7289,124 +7457,293 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       {/* =========================================================
           MODAL THÊM TÀI KHOẢN MỚI (HIỆU ỨNG PHÓNG TO KHI NHẤP VÀO)
       ========================================================= */}
+      {/* =========================================================
+          MODAL THÊM TÀI KHOẢN MỚI (HIỆU ỨNG PHÓNG TO KHI NHẤP VÀO)
+      ========================================================= */}
       {showUserAddModal && (
         <div className={styles.modalZoomBackdrop} onClick={() => setShowUserAddModal(false)}>
-          <div className={styles.modalZoomBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalZoomHeader}>
-              <h3 className={styles.modalZoomTitle}>
-                <span>➕</span> Thêm tài khoản mới
+          <div
+            className={styles.modalZoomBox}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "460px",
+              width: "90%",
+              borderRadius: "14px",
+              overflow: "hidden",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              background: "#ffffff",
+            }}
+          >
+            <div
+              className={styles.modalZoomHeader}
+              style={{
+                padding: "20px 24px 16px 24px",
+                borderBottom: "1px solid #f1f5f9",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "17px",
+                  fontWeight: 800,
+                  color: "#1e293b",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.4px",
+                  margin: 0,
+                  fontFamily: "inherit",
+                }}
+              >
+                THÊM TÀI KHOẢN MỚI
               </h3>
               <button
                 type="button"
                 className={styles.modalZoomClose}
                 onClick={() => setShowUserAddModal(false)}
+                style={{
+                  fontSize: "20px",
+                  color: "#94a3b8",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px",
+                  lineHeight: 1,
+                }}
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSaveAddUserSubmit}>
-              <div className={styles.modalZoomBody}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Họ và tên người dùng *</label>
+              <div
+                className={styles.modalZoomBody}
+                style={{
+                  padding: "20px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "18px",
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Tên Hiển Thị *
+                  </label>
                   <input
                     type="text"
                     required
-                    className={styles.formInput}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      color: "#1e293b",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      transition: "border-color 0.15s ease",
+                    }}
                     value={userAddForm.fullName}
                     onChange={(e) =>
                       setUserAddForm({ ...userAddForm, fullName: e.target.value })
                     }
-                    placeholder="VD: FC ZO ZO"
+                    placeholder="VD: Nguyen Thu Ngan Hoang"
                   />
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Địa chỉ Email *</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Email Đăng Nhập *
+                  </label>
                   <input
                     type="email"
                     required
-                    className={styles.formInput}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      color: "#1e293b",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      transition: "border-color 0.15s ease",
+                    }}
                     value={userAddForm.email}
                     onChange={(e) =>
                       setUserAddForm({ ...userAddForm, email: e.target.value })
                     }
-                    placeholder="VD: sogaminh123@gmail.com"
+                    placeholder="VD: hoangnguyenthungan0310@gmail.com"
                   />
                 </div>
 
-                {/* Mã giáo viên 6 số */}
-                <div className={styles.formGroup}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <label className={styles.formLabel} style={{ margin: 0 }}>
-                      Mã giáo viên (6 chữ số)
+                {/* Trạng thái tài khoản */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Trạng thái tài khoản
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "24px", paddingTop: "2px" }}>
+                    <label
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        fontSize: "13.5px",
+                        fontWeight: 700,
+                        color: userAddForm.status === "inactive" ? "#1e293b" : "#475569",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userAddStatus"
+                        value="inactive"
+                        checked={userAddForm.status === "inactive"}
+                        onChange={() =>
+                          setUserAddForm({ ...userAddForm, status: "inactive" })
+                        }
+                        style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
+                      />
+                      <span>Chưa kích hoạt</span>
+                    </label>
+
+                    <label
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        fontSize: "13.5px",
+                        fontWeight: 700,
+                        color: "#059669",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userAddStatus"
+                        value="active"
+                        checked={userAddForm.status === "active" || userAddForm.status !== "inactive"}
+                        onChange={() =>
+                          setUserAddForm({ ...userAddForm, status: "active" })
+                        }
+                        style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
+                      />
+                      <span style={{ color: "#059669", fontWeight: 800 }}>Kích hoạt ngay</span>
                     </label>
                   </div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    className={styles.formInput}
-                    value={userAddForm.teacherCode}
-                    onChange={(e) =>
-                      setUserAddForm({
-                        ...userAddForm,
-                        teacherCode: e.target.value.replace(/\D/g, "").slice(0, 6),
-                      })
-                    }
-                    placeholder="Nhập 6 số mã GV (VD: 571024)"
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: "16px",
-                      fontWeight: 700,
-                      letterSpacing: "4px",
-                      color: "#1d4ed8",
-                      background: "#f0f7ff",
-                    }}
-                  />
-                  <span className={styles.formHint}>
-                    Mã 6 chữ số (ví dụ: 571024 hoặc mã riêng) cho giáo viên này để học sinh đăng nhập.
-                  </span>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Ngày đăng ký</label>
-                  <input
-                    type="text"
-                    className={styles.formInput}
-                    value={userAddForm.registeredDate}
-                    onChange={(e) =>
-                      setUserAddForm({ ...userAddForm, registeredDate: e.target.value })
-                    }
-                    placeholder="VD: 19/9/2026"
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Trạng thái</label>
-                  <select
-                    className={styles.formSelect}
-                    value={userAddForm.status}
-                    onChange={(e) =>
-                      setUserAddForm({ ...userAddForm, status: e.target.value })
-                    }
-                  >
-                    <option value="active">ĐÃ KÍCH HOẠT (Hoạt động)</option>
-                    <option value="inactive">CHƯA KÍCH HOẠT (Chờ duyệt)</option>
-                    <option value="locked">BỊ KHÓA (Khóa truy cập)</option>
-                  </select>
+                {/* Mã Giáo Viên (6 chữ số) + Nút TẠO MÃ */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Mã Giáo Viên (6 chữ số)
+                  </label>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={userAddForm.teacherCode}
+                      onChange={(e) =>
+                        setUserAddForm({
+                          ...userAddForm,
+                          teacherCode: e.target.value.replace(/\D/g, "").slice(0, 6),
+                        })
+                      }
+                      placeholder="628842"
+                      style={{
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "15px",
+                        fontWeight: 700,
+                        color: "#0f172a",
+                        textAlign: "center",
+                        letterSpacing: "1px",
+                        outline: "none",
+                        height: "44px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const random6Digits = Math.floor(100000 + Math.random() * 900000).toString();
+                        setUserAddForm((prev) => ({ ...prev, teacherCode: random6Digits }));
+                      }}
+                      style={{
+                        background: "#dbeafe",
+                        color: "#1d4ed8",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "0 22px",
+                        height: "44px",
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#bfdbfe")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#dbeafe")}
+                    >
+                      TẠO MÃ
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.modalZoomFooter}>
+              {/* Footer Buttons */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "14px",
+                  padding: "12px 24px 24px 24px",
+                }}
+              >
                 <button
                   type="button"
-                  className={styles.btnSecondary}
                   onClick={() => setShowUserAddModal(false)}
+                  style={{
+                    flex: 1,
+                    background: "#f1f5f9",
+                    color: "#1e3a8a",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    fontSize: "13.5px",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#e2e8f0")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#f1f5f9")}
                 >
-                  Hủy bỏ
+                  HỦY BỎ
                 </button>
-                <button type="submit" className={styles.btnPrimary}>
-                  + Tạo tài khoản
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    fontSize: "13.5px",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.35)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#2563eb")}
+                >
+                  TẠO TÀI KHOẢN
                 </button>
               </div>
             </form>
