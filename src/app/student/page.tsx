@@ -1146,7 +1146,7 @@ export default function StudentPortalPage() {
                       <span style={{ fontSize: "22px" }}>👩‍🏫</span>
                       <div>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "#1e3a8a" }}>
-                          Cô Đặng Anh Thư (Giáo viên phụ trách)
+                          Đặng Anh Thư (Giáo viên phụ trách)
                         </div>
                         <div style={{ fontSize: "11.5px", color: "#64748b" }}>
                           Đánh giá năng lực {ev.examTitle ? `• Đề: ${ev.examTitle}` : ""} {ev.score !== undefined ? `• Điểm: ${ev.score.toFixed(1)}/10` : ""}
@@ -2048,7 +2048,7 @@ export default function StudentPortalPage() {
                     TRẢ LỜI / HỎI BÀI CÔ GIÁO
                   </h3>
                   <div style={{ fontSize: "12px", color: "#bfdbfe" }}>
-                    Người nhận: Cô Đặng Anh Thư (Giáo viên phụ trách)
+                    Người nhận: Đặng Anh Thư (Giáo viên phụ trách)
                   </div>
                 </div>
               </div>

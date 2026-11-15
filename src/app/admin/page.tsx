@@ -229,7 +229,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     title: "",
     subject: "toan",
     subjectName: "Toán học",
-    school: "THPT DTNT THCS & THPT Tuy Đức - Cô Đặng Anh Thư",
+    school: "THPT DTNT THCS & THPT Tuy Đức - Đặng Anh Thư",
     questions: 40,
     timeMinutes: 50,
     difficulty: "Vận dụng cao",
@@ -405,7 +405,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     subjectName: "Toán học",
     grade: "Lớp 12",
     school: "THPT DTNT THCS & THPT Tuy Đức",
-    author: "Cô Đặng Anh Thư",
+    author: "Đặng Anh Thư",
     academicYear: "2025 - 2026",
     description: "",
     estimatedHours: 35,
@@ -1750,7 +1750,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       tag: examForm.tag,
       tagType: examForm.tagType,
       fileUrl: examForm.fileUrl || undefined,
-      createdBy: "Cô Đặng Anh Thư - THPT Tuy Đức",
+      createdBy: "Đặng Anh Thư - THPT Tuy Đức",
       accessCode: examAccessCode,
       assignedClasses: assignMode === "class" ? assignedClasses : [],
       assignedStudents: assignMode === "student" ? assignedStudents : [],
@@ -1779,7 +1779,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
         title: "",
         subject: "toan",
         subjectName: "Toán học",
-        school: "THPT DTNT THCS & THPT Tuy Đức - Cô Đặng Anh Thư",
+        school: "THPT DTNT THCS & THPT Tuy Đức - Đặng Anh Thư",
         questions: 40,
         timeMinutes: 50,
         difficulty: "Vận dụng cao",
@@ -1938,7 +1938,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       tag: "📌 Bài tập về nhà",
       tagType: "new" as const,
       fileUrl: assignHwForm.fileUrl || examForm.fileUrl || undefined,
-      createdBy: "Cô Đặng Anh Thư - THPT Tuy Đức",
+      createdBy: "Đặng Anh Thư - THPT Tuy Đức",
       accessCode: examAccessCode || "5710",
       assignedClasses: assignHwForm.mode === "class" ? assignHwForm.selectedClasses : [],
       assignedStudents: assignHwForm.mode === "student" ? assignHwForm.selectedStudents : [],
@@ -2097,7 +2097,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
         downloads: "1 (Mới giao)",
         description: "Tài liệu học tập cho lớp hoặc từng học sinh.",
         fileUrl: docFormLink.trim() || undefined,
-        uploader: "Cô Đặng Anh Thư - THPT Tuy Đức",
+        uploader: "Đặng Anh Thư - THPT Tuy Đức",
         assignType: docFormAssignMode,
         assignedClasses: docFormAssignMode === "class" ? docFormAssignedClasses : [],
         assignedStudents: docFormAssignMode === "student" ? docFormAssignedStudents : [],
@@ -2153,7 +2153,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       subjectName: "Toán học",
       grade: "Lớp 12",
       school: "THPT DTNT THCS & THPT Tuy Đức",
-      author: "Cô Đặng Anh Thư",
+      author: "Đặng Anh Thư",
       academicYear: "2025 - 2026",
       description: "",
       estimatedHours: 35,
@@ -2434,7 +2434,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
         </div>
         <div className={styles.topBarActions}>
           <span style={{ fontSize: "12px", color: "#e0e7ff" }}>
-            Giáo viên phụ trách: <strong>Cô Đặng Anh Thư</strong>
+            Giáo viên phụ trách: <strong>Đặng Anh Thư</strong>
           </span>
           <Link href="/" className={styles.topBarLink}>
             <span>🏠</span> Về Trang Chủ
@@ -2489,7 +2489,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
           <div className={styles.userCard}>
             <div className={styles.userAvatar}>T</div>
             <div>
-              <div className={styles.userName}>Cô Đặng Anh Thư</div>
+              <div className={styles.userName}>Đặng Anh Thư</div>
               <div className={styles.userRole}>Quản trị viên / Giáo viên</div>
             </div>
           </div>

@@ -104,7 +104,7 @@ export default function TestCloudinaryPage() {
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 26px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("LUYỆN THI 12 - CÔ ĐẶNG ANH THƯ", 300, 110);
+        ctx.fillText("LUYỆN THI 12 - ĐẶNG ANH THƯ", 300, 110);
 
         ctx.fillStyle = "#bfdbfe";
         ctx.font = "18px sans-serif";

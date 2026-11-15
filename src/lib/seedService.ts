@@ -55,12 +55,12 @@ export async function seedAllDataToFirestore(): Promise<{
       }, { merge: true });
     });
 
-    // 5. Seed Initial Admin Users (Cô Đặng Anh Thư)
+    // 5. Seed Initial Admin Users (Đặng Anh Thư)
     const adminRef1 = doc(db, "users", "admin_dang_anh_thu_gmail");
     batch.set(adminRef1, {
       uid: "admin_dang_anh_thu_gmail",
       email: "thudanganh670@gmail.com",
-      fullName: "Cô Đặng Anh Thư",
+      fullName: "Đặng Anh Thư",
       teacherCode: "571024",
       schoolName: "THPT DTNT THCS & THPT Tuy Đức",
       studentClass: "Ban Giám Hiệu / Quản Trị",

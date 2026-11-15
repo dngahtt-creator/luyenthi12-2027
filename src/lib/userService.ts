@@ -54,13 +54,13 @@ export const OLD_ACCOUNT_IDENTIFIERS = [
 ];
 
 /**
- * Tài khoản Admin thực tế đã đăng nhập của trường (Cô Đặng Anh Thư)
+ * Tài khoản Admin thực tế đã đăng nhập của trường (Đặng Anh Thư)
  */
 export const DEFAULT_USERS: UserAccountData[] = [
   {
     uid: "admin_dang_anh_thu_gmail",
     email: "thudanganh670@gmail.com",
-    fullName: "Cô Đặng Anh Thư",
+    fullName: "Đặng Anh Thư",
     teacherCode: "571024", // Mã giáo viên 6 số cố định 571024
     registeredDate: "01/09/2026",
     status: "active",
@@ -514,7 +514,7 @@ export async function loginWithGoogleFirebase() {
       const newUserData: UserAccountData = {
         uid: fbUser.uid,
         email: email,
-        fullName: isAdminEmail ? "Cô Đặng Anh Thư" : (fbUser.displayName || email.split("@")[0]),
+        fullName: isAdminEmail ? "Đặng Anh Thư" : (fbUser.displayName || email.split("@")[0]),
         teacherCode: isAdminEmail ? "571024" : generateTeacherCode(email),
         registeredDate: getRegistrationDateString(),
         status: "active",

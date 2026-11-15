@@ -18,7 +18,7 @@ export interface SchoolClass {
   name: string; // e.g. "12A1"
   grade: string; // "12", "11", "10", "5", etc.
   academicYear: string; // "2025 - 2026"
-  homeroomTeacher?: string; // "Cô Đặng Anh Thư"
+  homeroomTeacher?: string; // "Đặng Anh Thư"
   room?: string; // "Phòng 301"
   description?: string;
   studentCount?: number;
@@ -43,7 +43,7 @@ export const DEFAULT_CLASSES: SchoolClass[] = [
     name: "12A1",
     grade: "12",
     academicYear: "2025 - 2026",
-    homeroomTeacher: "Cô Đặng Anh Thư",
+    homeroomTeacher: "Đặng Anh Thư",
     room: "Phòng 301 - Dãy Nhà A",
     description: "Lớp Chuyên đề Toán - KHTN chất lượng cao",
     studentCount: 8,
@@ -1261,7 +1261,7 @@ export async function findTeacherByCode(
   // 2. Kiểm tra mã giáo viên cố định mặc định (6 số: 571024; tương thích ngược: 5710)
   if (trimmed === "571024" || trimmed === "5710" || trimmed === "102400" || trimmed === "1024") {
     return {
-      fullName: "Cô Đặng Anh Thư",
+      fullName: "Đặng Anh Thư",
       teacherCode: "571024",
       schoolName: "THPT DTNT THCS & THPT Tuy Đức",
     };

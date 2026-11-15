@@ -201,7 +201,7 @@ export async function saveTeacherEvaluation(params: {
   const newMessage: StudentFeedbackMessage = {
     id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
     sender: "teacher",
-    senderName: "Cô Đặng Anh Thư (Giáo viên)",
+    senderName: "Đặng Anh Thư (Giáo viên)",
     content: params.content.trim(),
     timestamp: new Date().toISOString(),
     formattedTime: getFormattedCurrentTime(),
@@ -329,7 +329,7 @@ export async function sendTeacherReply(
   const newMessage: StudentFeedbackMessage = {
     id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
     sender: "teacher",
-    senderName: "Cô Đặng Anh Thư (Giáo viên)",
+    senderName: "Đặng Anh Thư (Giáo viên)",
     content: teacherContent.trim(),
     timestamp: new Date().toISOString(),
     formattedTime: getFormattedCurrentTime(),

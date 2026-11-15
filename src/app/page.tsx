@@ -192,348 +192,89 @@ const SIMULATOR_QUESTIONS: SimulatorQuestion[] = [
 ];
 
 // =========================================================
-// HELPER: TỰ ĐỘNG XÁC ĐỊNH TÊN MÔN HỌC, BIỂU TƯỢNG VÀ MÀU SẮC ĐỒ HỌA
+// HELPER: HÌNH ẢNH BÌA SÁCH GIÁO KHOA MÔN HỌC & ĐỊNH DẠNG TÊN HIỂN THỊ
 // =========================================================
-interface SubjectVisualInfo {
-  subjectName: string;
-  gradeBadge: string;
-  mainIcon: string;
-  subIcons: string[];
-  gradient: string;
-  badgeBg: string;
-  badgeColor: string;
-}
-
-function getSubjectVisualInfo(name: string, type?: string): SubjectVisualInfo {
+function getSubjectCoverPath(name: string, type?: string): string {
   const lower = (name || "").toLowerCase();
-
-  // 1. Phân loại khối lớp
-  let gradeBadge = "";
-  if (lower.includes("12") || lower.startsWith("12")) gradeBadge = "LỚP 12";
-  else if (lower.includes("11") || lower.startsWith("11")) gradeBadge = "LỚP 11";
-  else if (lower.includes("10") || lower.startsWith("10")) gradeBadge = "LỚP 10";
-
-  // 2. MÔN TOÁN HỌC
-  if (lower.includes("toán")) {
-    return {
-      subjectName: "TOÁN HỌC",
-      gradeBadge: gradeBadge || "MÔN TOÁN",
-      mainIcon: "📐",
-      subIcons: ["🔢", "🧮", "∑"],
-      gradient: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 3. MÔN NGỮ VĂN
-  if (lower.includes("văn") || lower.includes("ngữ văn")) {
-    return {
-      subjectName: "NGỮ VĂN",
-      gradeBadge: gradeBadge || "MÔN VĂN",
-      mainIcon: "📖",
-      subIcons: ["✍️", "📜", "🖋️"],
-      gradient: "linear-gradient(135deg, #881337 0%, #be123c 50%, #fb7185 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 4. MÔN TIẾNG ANH
-  if (lower.includes("anh") || lower.includes("tiếng anh") || lower.includes("english")) {
-    return {
-      subjectName: "TIẾNG ANH",
-      gradeBadge: gradeBadge || "NGOẠI NGỮ",
-      mainIcon: "🇬🇧",
-      subIcons: ["🗣️", "🎧", "🌍"],
-      gradient: "linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #38bdf8 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 5. MÔN VẬT LÍ
-  if (lower.includes("vật lí") || lower.includes("vật lý") || lower.includes("lí") || lower.includes("lý")) {
-    return {
-      subjectName: "VẬT LÍ",
-      gradeBadge: gradeBadge || "VẬT LÍ",
-      mainIcon: "⚡",
-      subIcons: ["⚛️", "🔭", "🧲"],
-      gradient: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #c084fc 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 6. MÔN HOÁ HỌC
-  if (lower.includes("hóa") || lower.includes("hoá")) {
-    return {
-      subjectName: "HOÁ HỌC",
-      gradeBadge: gradeBadge || "HOÁ HỌC",
-      mainIcon: "🧪",
-      subIcons: ["⚗️", "🔬", "💥"],
-      gradient: "linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 7. MÔN SINH HỌC
-  if (lower.includes("sinh")) {
-    return {
-      subjectName: "SINH HỌC",
-      gradeBadge: gradeBadge || "SINH HỌC",
-      mainIcon: "🧬",
-      subIcons: ["🌿", "🦠", "🔬"],
-      gradient: "linear-gradient(135deg, #14532d 0%, #16a34a 50%, #4ade80 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 8. MÔN LỊCH SỬ
-  if (lower.includes("sử") || lower.includes("lịch sử")) {
-    return {
-      subjectName: "LỊCH SỬ",
-      gradeBadge: gradeBadge || "LỊCH SỬ",
-      mainIcon: "🏛️",
-      subIcons: ["📜", "⚔️", "🚩"],
-      gradient: "linear-gradient(135deg, #78350f 0%, #b45309 50%, #fbbf24 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 9. MÔN ĐỊA LÍ
-  if (lower.includes("địa") || lower.includes("địa lí") || lower.includes("địa lý")) {
-    return {
-      subjectName: "ĐỊA LÍ",
-      gradeBadge: gradeBadge || "ĐỊA LÍ",
-      mainIcon: "🌍",
-      subIcons: ["🧭", "🗺️", "⛰️"],
-      gradient: "linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #2dd4bf 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 10. MÔN GDKT & PHÁP LUẬT
-  if (lower.includes("pháp luật") || lower.includes("gdkt") || lower.includes("kinh tế")) {
-    return {
-      subjectName: "GDKT & PHÁP LUẬT",
-      gradeBadge: gradeBadge || "GDKT&PL",
-      mainIcon: "⚖️",
-      subIcons: ["🏛️", "💼", "📜"],
-      gradient: "linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #fb923c 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 11. MÔN TIN HỌC / PYTHON / WEBSITE / AI
-  if (lower.includes("tin") || lower.includes("python") || lower.includes("thuật toán") || lower.includes("website") || lower.includes("ai")) {
-    return {
-      subjectName: "TIN HỌC",
-      gradeBadge: gradeBadge || "TIN HỌC",
-      mainIcon: "💻",
-      subIcons: ["💾", "⚡", "🖥️"],
-      gradient: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #3b82f6 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 12. MÔN CÔNG NGHỆ
-  if (lower.includes("công nghệ")) {
-    return {
-      subjectName: "CÔNG NGHỆ",
-      gradeBadge: gradeBadge || "CÔNG NGHỆ",
-      mainIcon: "⚙️",
-      subIcons: ["🔧", "💡", "🔌"],
-      gradient: "linear-gradient(135deg, #334155 0%, #475569 50%, #94a3b8 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 13. TỔ HỢP KHOA HỌC TỰ NHIÊN
-  if (lower.includes("khtn") || lower.includes("tự nhiên")) {
-    return {
-      subjectName: "TỔ HỢP KHTN",
-      gradeBadge: "LÍ - HÓA - SINH",
-      mainIcon: "🔬",
-      subIcons: ["⚡", "🧪", "🧬"],
-      gradient: "linear-gradient(135deg, #065f46 0%, #0284c7 50%, #6366f1 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // 14. TỔ HỢP KHOA HỌC XÃ HỘI
-  if (lower.includes("khxh") || lower.includes("xã hội")) {
-    return {
-      subjectName: "TỔ HỢP KHXH",
-      gradeBadge: "SỬ - ĐỊA - GDKTPL",
-      mainIcon: "🏛️",
-      subIcons: ["📜", "🌍", "⚖️"],
-      gradient: "linear-gradient(135deg, #78350f 0%, #b45309 50%, #0d9488 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  // Phân loại dự phòng theo Loại
-  if (type === "video") {
-    return {
-      subjectName: "VIDEO BÀI GIẢNG",
-      gradeBadge: "BÀI GIẢNG",
-      mainIcon: "🎬",
-      subIcons: ["▶️", "🎥", "📺"],
-      gradient: "linear-gradient(135deg, #831843 0%, #be185d 50%, #f472b6 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  if (type === "exam") {
-    return {
-      subjectName: "ĐỀ THI THỬ",
-      gradeBadge: "LUYỆN ĐỀ",
-      mainIcon: "📝",
-      subIcons: ["🎯", "⏱️", "⭐"],
-      gradient: "linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #6366f1 100%)",
-      badgeBg: "rgba(255, 255, 255, 0.22)",
-      badgeColor: "#ffffff",
-    };
-  }
-
-  return {
-    subjectName: (name || "CHUYÊN ĐỀ").replace(/^\d+\s*-\s*/, "").toUpperCase(),
-    gradeBadge: gradeBadge || "TÀI LIỆU",
-    mainIcon: "📚",
-    subIcons: ["📖", "✏️", "💡"],
-    gradient: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #60a5fa 100%)",
-    badgeBg: "rgba(255, 255, 255, 0.22)",
-    badgeColor: "#ffffff",
-  };
+  if (lower.includes("toán") || lower.includes("toan")) return "/subjects/toan.png";
+  if (lower.includes("văn") || lower.includes("ngữ văn") || lower.includes("van")) return "/subjects/van.png";
+  if (lower.includes("vật lí") || lower.includes("vật lý") || lower.includes("lí") || lower.includes("lý")) return "/subjects/vatli.png";
+  if (lower.includes("hóa") || lower.includes("hoá")) return "/subjects/hoahoc.png";
+  if (lower.includes("sinh")) return "/subjects/sinhhoc.png";
+  if (lower.includes("sử") || lower.includes("lịch sử")) return "/subjects/lichsu.png";
+  if (lower.includes("địa") || lower.includes("địa lí")) return "/subjects/diali.png";
+  if (lower.includes("pháp luật") || lower.includes("gdkt") || lower.includes("kinh tế")) return "/subjects/gdktpl.png";
+  if (lower.includes("tin") || lower.includes("python") || lower.includes("thuật toán") || lower.includes("website") || lower.includes("ai")) return "/subjects/tinhoc.png";
+  if (lower.includes("anh") || lower.includes("tiếng anh") || lower.includes("english")) return "/subjects/tienganh.png";
+  if (lower.includes("công nghệ")) return "/subjects/congnghe.png";
+  if (lower.includes("quốc phòng") || lower.includes("an ninh")) return "/subjects/gdqp.png";
+  if (lower.includes("khtn")) return "/subjects/vatli.png";
+  if (lower.includes("khxh")) return "/subjects/lichsu.png";
+  if (lower.includes("trải nghiệm") || lower.includes("hướng nghiệp")) return "/subjects/hdtn.png";
+  return "/subjects/toan.png";
 }
 
-function renderSubjectBanner(cat: LearningCategory) {
-  const visual = getSubjectVisualInfo(cat.name, cat.type);
+function renderSubjectCover(cat: LearningCategory) {
+  const coverUrl = getSubjectCoverPath(cat.name, cat.type);
   return (
     <div
       style={{
         width: "100%",
-        height: "115px",
-        background: visual.gradient,
-        position: "relative",
-        overflow: "hidden",
+        height: "148px",
+        background: "#f8fafc",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: "10px 12px",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        padding: "10px 8px 4px 8px",
         boxSizing: "border-box",
-        userSelect: "none",
       }}
     >
-      {/* Background Watermark Icon */}
-      <div
+      <img
+        src={coverUrl}
+        alt={cat.name}
         style={{
-          position: "absolute",
-          right: "-10px",
-          bottom: "-10px",
-          fontSize: "64px",
-          opacity: 0.16,
-          lineHeight: 1,
-          pointerEvents: "none",
-          transform: "rotate(-12deg)",
+          height: "100%",
+          maxHeight: "135px",
+          width: "auto",
+          maxWidth: "100%",
+          objectFit: "contain",
+          borderRadius: "6px",
+          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.14)",
+          transition: "transform 0.22s ease",
         }}
-      >
-        {visual.mainIcon}
-      </div>
-
-      {/* Top row: Grade badge & secondary icons */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <span
-          style={{
-            fontSize: "10px",
-            fontWeight: 800,
-            letterSpacing: "0.5px",
-            padding: "2px 8px",
-            borderRadius: "6px",
-            background: visual.badgeBg,
-            color: visual.badgeColor,
-            backdropFilter: "blur(4px)",
-            textTransform: "uppercase",
-          }}
-        >
-          {visual.gradeBadge}
-        </span>
-        <div style={{ display: "flex", gap: "3px", fontSize: "13px", opacity: 0.9 }}>
-          {visual.subIcons.map((ic, i) => (
-            <span key={i}>{ic}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom: Main Icon Box & Subject Title */}
-      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "8px" }}>
-        <div
-          style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "8px",
-            background: "rgba(255, 255, 255, 0.24)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "20px",
-            backdropFilter: "blur(6px)",
-            flexShrink: 0,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
-          }}
-        >
-          {visual.mainIcon}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: "13px",
-              fontWeight: 900,
-              color: "#ffffff",
-              textTransform: "uppercase",
-              letterSpacing: "0.4px",
-              lineHeight: 1.2,
-              textShadow: "0 1px 3px rgba(0,0,0,0.35)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {visual.subjectName}
-          </div>
-          <div
-            style={{
-              fontSize: "10px",
-              color: "rgba(255, 255, 255, 0.9)",
-              fontWeight: 600,
-              letterSpacing: "0.2px",
-            }}
-          >
-            {cat.type === "video" ? "🎬 Video bài giảng" : cat.type === "exam" ? "📝 Bộ đề thi thử" : "📖 Chuyên đề ôn thi"}
-          </div>
-        </div>
-      </div>
+      />
     </div>
   );
+}
+
+function formatDisplaySubjectName(name: string, isExam?: boolean): string {
+  const lower = (name || "").toLowerCase();
+  if (isExam) {
+    if (lower.includes("vật lí") || lower.includes("vật lý") || lower.includes("lí") || lower.includes("lý")) return "Đề Vật lí";
+    if (lower.includes("hóa") || lower.includes("hoá")) return "Đề Hoá học";
+    if (lower.includes("văn") || lower.includes("ngữ văn")) return "Đề Ngữ văn";
+    if (lower.includes("sử") || lower.includes("lịch sử")) return "Đề Lịch sử";
+    if (lower.includes("địa") || lower.includes("địa lí")) return "Đề Địa lí";
+    if (lower.includes("toán")) return "ĐỀ TOÁN THPT";
+    if (lower.includes("sinh")) return "Đề Sinh học";
+    if (lower.includes("anh")) return "Đề Tiếng Anh";
+    if (lower.includes("khtn")) return "Đề Tổ hợp KHTN";
+    if (lower.includes("khxh")) return "Đề Tổ hợp KHXH";
+    if (lower.includes("tin")) return "Đề Tin học";
+    return name.replace(/^\d+\s*-\s*/, "");
+  }
+  return name.replace(/^\d+\s*-\s*/, "").toUpperCase();
+}
+
+function formatDisplaySubtitle(cat: LearningCategory, isExam?: boolean): string {
+  if (isExam) {
+    const lower = (cat.name || "").toLowerCase();
+    if (lower.includes("toán")) return "- Đề thi và đáp án kèm theo";
+    if (lower.includes("sử")) return "Tổng hợp các đề thi TN THPT các năm";
+    return "Tổng hợp đề thi TN THPT các năm";
+  }
+  return "Tổng hợp tài liệu THPT";
 }
 
 export default function Home() {
@@ -1141,17 +882,53 @@ export default function Home() {
     };
   }, []);
 
+  const [showMoreDocs, setShowMoreDocs] = useState(false);
+  const [showMoreExams, setShowMoreExams] = useState(false);
+
   // 3 Mục chính theo chuẩn hình 2
-  const documentCategories = useMemo(
-    () => learningCategories.filter((c) => c.type === "document"),
-    [learningCategories]
-  );
+  const documentCategories = useMemo(() => {
+    const list = learningCategories.filter((c) => c.type === "document");
+    const docPriority = (name: string) => {
+      const l = name.toLowerCase();
+      if (l.includes("11")) return 100;
+      if (l.includes("hoá") || l.includes("hoahoc") || l.includes("hóa")) return 1;
+      if (l.includes("lịch sử") || l.includes("sử")) return 2;
+      if (l.includes("địa")) return 3;
+      if (l.includes("văn") || l.includes("ngữ văn")) return 4;
+      if (l.includes("toán")) return 5;
+      if (l.includes("tin")) return 6;
+      if (l.includes("vật lí") || l.includes("vật lý") || l.includes("lí") || l.includes("lý")) return 7;
+      if (l.includes("sinh")) return 8;
+      if (l.includes("anh") || l.includes("tiếng anh")) return 9;
+      if (l.includes("gdkt") || l.includes("pháp luật")) return 10;
+      if (l.includes("công nghệ")) return 11;
+      return 50;
+    };
+    return [...list].sort((a, b) => docPriority(a.name) - docPriority(b.name));
+  }, [learningCategories]);
+
+  const examCategories = useMemo(() => {
+    const list = learningCategories.filter((c) => c.type === "exam");
+    const examPriority = (name: string) => {
+      const l = name.toLowerCase();
+      if (l.includes("11")) return 100;
+      if (l.includes("vật lí") || l.includes("vật lý") || l.includes("lí") || l.includes("lý")) return 1;
+      if (l.includes("hoá") || l.includes("hoahoc") || l.includes("hóa")) return 2;
+      if (l.includes("văn") || l.includes("ngữ văn")) return 3;
+      if (l.includes("lịch sử") || l.includes("sử")) return 4;
+      if (l.includes("địa")) return 5;
+      if (l.includes("toán")) return 6;
+      if (l.includes("sinh")) return 7;
+      if (l.includes("anh") || l.includes("tiếng anh")) return 8;
+      if (l.includes("khtn")) return 9;
+      if (l.includes("khxh")) return 10;
+      return 50;
+    };
+    return [...list].sort((a, b) => examPriority(a.name) - examPriority(b.name));
+  }, [learningCategories]);
+
   const videoCategories = useMemo(
     () => learningCategories.filter((c) => c.type === "video"),
-    [learningCategories]
-  );
-  const examCategories = useMemo(
-    () => learningCategories.filter((c) => c.type === "exam"),
     [learningCategories]
   );
 
@@ -1710,7 +1487,7 @@ export default function Home() {
                 </h1>
 
                 <p className={styles.heroDesc}>
-                  Hệ thống ôn luyện trực tuyến chuyên sâu lớp 12 trường <strong>THPT DTNT THCS & THPT Tuy Đức</strong> đồng hành cùng Cô <strong>Đặng Anh Thư</strong> 🎓.
+                  Hệ thống ôn luyện trực tuyến chuyên sâu lớp 12 trường <strong>THPT DTNT THCS & THPT Tuy Đức</strong> đồng hành cùng <strong>Đặng Anh Thư</strong> 🎓.
                   Làm chủ kỹ thuật giải nhanh 30 giây, bứt phá tư duy vận dụng cao và thực chiến hơn <strong>1.200+</strong> đề thi thử bấm giờ tự động chuẩn format 2027!
                 </p>
 
@@ -1925,51 +1702,31 @@ export default function Home() {
         </section>
 
         {/* =========================================================
-            3 MỤC CHÍNH TRÊN TRANG CHỦ: TÀI LIỆU, VIDEO, ĐỀ THI (CHUẨN HÌNH 2)
+            3 MỤC CHÍNH TRÊN TRANG CHỦ: BÀI GIẢNG & TÀI LIỆU, ĐỀ THI, VIDEO BÀI HỌC (CHUẨN HÌNH 2)
         ========================================================= */}
-        <section id="muc-hoc-lieu" className={styles.sectionWrap} style={{ paddingTop: "20px", paddingBottom: "10px" }}>
-          {/* MỤC 1: TÀI LIỆU */}
-          <div style={{ marginBottom: "32px" }}>
+        <section id="muc-hoc-lieu" className={styles.sectionWrap} style={{ paddingTop: "16px", paddingBottom: "16px" }}>
+          {/* MỤC 1: BÀI GIẢNG & TÀI LIỆU */}
+          <div style={{ marginBottom: "28px" }}>
             <div
               style={{
-                background: "#ffffff",
-                border: "1.5px solid #e2e8f0",
-                borderRadius: "16px",
-                padding: "10px 18px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: "16px",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                marginBottom: "12px",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "10px",
-                    background: "#2563eb",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#ffffff",
-                    fontSize: "20px",
-                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.3)",
-                  }}
-                >
-                  📄
-                </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "20px" }}>📄</span>
                 <h3
                   style={{
                     margin: 0,
-                    fontSize: "16px",
-                    fontWeight: 900,
-                    color: "#1e3a8a",
-                    letterSpacing: "0.5px",
+                    fontSize: "17px",
+                    fontWeight: 800,
+                    color: "#1d4ed8",
+                    letterSpacing: "-0.2px",
                   }}
                 >
-                  TÀI LIỆU
+                  Bài giảng &amp; Tài liệu
                 </h3>
               </div>
 
@@ -1977,23 +1734,23 @@ export default function Home() {
                 type="button"
                 className={styles.zoomBtn}
                 onClick={handleOpenDocumentSection}
-                title="Mở toàn bộ tài liệu học tập & chuyên đề ôn thi"
+                title="Xem tất cả tài liệu học tập"
                 style={{
                   background: "#2563eb",
                   color: "#ffffff",
                   border: "none",
-                  borderRadius: "20px",
-                  padding: "8px 22px",
-                  fontSize: "13.5px",
-                  fontWeight: 800,
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: 700,
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "6px",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                  gap: "4px",
+                  boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
                 }}
               >
-                Vào Học Ngay ➔
+                XEM TẤT CẢ &gt;
               </button>
             </div>
 
@@ -2001,11 +1758,11 @@ export default function Home() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-                gap: "16px",
+                gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+                gap: "14px",
               }}
             >
-              {documentCategories.map((cat) => (
+              {(showMoreDocs ? documentCategories : documentCategories.slice(0, 6)).map((cat) => (
                 <div
                   key={cat.id}
                   className={styles.zoomCard}
@@ -2014,19 +1771,19 @@ export default function Home() {
                     border: "1px solid #e2e8f0",
                     borderRadius: "12px",
                     overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.04)",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    transition: "transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease",
+                    transition: "transform 0.22s ease, box-shadow 0.22s ease",
                   }}
                 >
                   <div>
-                    {renderSubjectBanner(cat)}
-                    <div style={{ padding: "10px 12px 6px 12px" }}>
+                    {renderSubjectCover(cat)}
+                    <div style={{ padding: "8px 10px 4px 10px" }}>
                       <div
                         style={{
-                          fontSize: "13.5px",
+                          fontSize: "13px",
                           fontWeight: 800,
                           color: "#1e293b",
                           whiteSpace: "nowrap",
@@ -2035,15 +1792,24 @@ export default function Home() {
                         }}
                         title={cat.name}
                       >
-                        {cat.name}
+                        {formatDisplaySubjectName(cat.name, false)}
                       </div>
-                      <div style={{ fontSize: "11.5px", color: "#64748b", fontStyle: "italic", margin: "2px 0 8px 0" }}>
-                        {cat.author || "Nguồn internet"}
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: "#64748b",
+                          margin: "2px 0 6px 0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {formatDisplaySubtitle(cat, false)}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ padding: "0 12px 12px 12px" }}>
+                  <div style={{ padding: "0 10px 10px 10px" }}>
                     <button
                       type="button"
                       className={styles.zoomBtn}
@@ -2058,10 +1824,11 @@ export default function Home() {
                         color: "#1d4ed8",
                         border: "1px solid #bfdbfe",
                         borderRadius: "8px",
-                        padding: "7px 0",
-                        fontSize: "12.5px",
+                        padding: "6px 0",
+                        fontSize: "12px",
                         fontWeight: 800,
                         cursor: "pointer",
+                        letterSpacing: "0.3px",
                       }}
                     >
                       VÀO HỌC
@@ -2070,194 +1837,50 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* MỤC 2: VIDEO */}
-          <div style={{ marginBottom: "32px" }}>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1.5px solid #e2e8f0",
-                borderRadius: "16px",
-                padding: "10px 18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "16px",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
+            {documentCategories.length > 6 && (
+              <div style={{ textAlign: "center", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowMoreDocs(!showMoreDocs)}
                   style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "10px",
-                    background: "#2563eb",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#ffffff",
-                    fontSize: "18px",
-                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.3)",
+                    background: "transparent",
+                    border: "none",
+                    color: "#2563eb",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textDecoration: "underline",
                   }}
                 >
-                  ▶
-                </div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "16px",
-                    fontWeight: 900,
-                    color: "#1e3a8a",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  VIDEO
-                </h3>
+                  {showMoreDocs ? "Thu gọn ▲" : `Xem thêm ${documentCategories.length - 6} môn khác ▼`}
+                </button>
               </div>
-
-              <button
-                type="button"
-                className={styles.zoomBtn}
-                onClick={handleOpenVideoSection}
-                title="Mở toàn bộ video bài giảng trực tuyến"
-                style={{
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "20px",
-                  padding: "8px 22px",
-                  fontSize: "13.5px",
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
-                }}
-              >
-                Vào Học Ngay ➔
-              </button>
-            </div>
-
-            {/* Grid of Video Cards */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              {videoCategories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className={styles.zoomCard}
-                  style={{
-                    background: "#ffffff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    transition: "transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease",
-                  }}
-                >
-                  <div>
-                    {renderSubjectBanner(cat)}
-                    <div style={{ padding: "10px 12px 6px 12px" }}>
-                      <div
-                        style={{
-                          fontSize: "13.5px",
-                          fontWeight: 800,
-                          color: "#1e293b",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        title={cat.name}
-                      >
-                        {cat.name}
-                      </div>
-                      <div style={{ fontSize: "11.5px", color: "#64748b", fontStyle: "italic", margin: "2px 0 8px 0" }}>
-                        {cat.author || "Nguồn internet"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ padding: "0 12px 12px 12px" }}>
-                    <button
-                      type="button"
-                      className={styles.zoomBtn}
-                      onClick={() => {
-                        setActiveCategoryModal(cat);
-                        setActiveSubfolder("all");
-                        setFilterItemType("all");
-                      }}
-                      style={{
-                        width: "100%",
-                        background: "#eff6ff",
-                        color: "#1d4ed8",
-                        border: "1px solid #bfdbfe",
-                        borderRadius: "8px",
-                        padding: "7px 0",
-                        fontSize: "12.5px",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                      }}
-                    >
-                      VÀO HỌC
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            )}
           </div>
 
-          {/* MỤC 3: ĐỀ THI */}
-          <div style={{ marginBottom: "16px" }}>
+          {/* MỤC 2: ĐỀ THI (CHUẨN HÌNH 2) */}
+          <div style={{ marginBottom: "28px" }}>
             <div
               style={{
-                background: "#ffffff",
-                border: "1.5px solid #e2e8f0",
-                borderRadius: "16px",
-                padding: "10px 18px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: "16px",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                marginBottom: "12px",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "10px",
-                    background: "#2563eb",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#ffffff",
-                    fontSize: "20px",
-                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.3)",
-                  }}
-                >
-                  📝
-                </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "20px" }}>📝</span>
                 <h3
                   style={{
                     margin: 0,
-                    fontSize: "16px",
-                    fontWeight: 900,
-                    color: "#1e3a8a",
-                    letterSpacing: "0.5px",
+                    fontSize: "17px",
+                    fontWeight: 800,
+                    color: "#1d4ed8",
+                    letterSpacing: "-0.2px",
                   }}
                 >
-                  ĐỀ THI
+                  Đề thi
                 </h3>
               </div>
 
@@ -2265,23 +1888,23 @@ export default function Home() {
                 type="button"
                 className={styles.zoomBtn}
                 onClick={handleOpenExamSection}
-                title="Mở toàn bộ đề thi thử trực tuyến"
+                title="Xem tất cả đề thi"
                 style={{
                   background: "#2563eb",
                   color: "#ffffff",
                   border: "none",
-                  borderRadius: "20px",
-                  padding: "8px 22px",
-                  fontSize: "13.5px",
-                  fontWeight: 800,
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: 700,
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "6px",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                  gap: "4px",
+                  boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
                 }}
               >
-                Vào Học Ngay ➔
+                XEM TẤT CẢ &gt;
               </button>
             </div>
 
@@ -2289,11 +1912,11 @@ export default function Home() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-                gap: "16px",
+                gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+                gap: "14px",
               }}
             >
-              {examCategories.map((cat) => (
+              {(showMoreExams ? examCategories : examCategories.slice(0, 6)).map((cat) => (
                 <div
                   key={cat.id}
                   className={styles.zoomCard}
@@ -2302,19 +1925,19 @@ export default function Home() {
                     border: "1px solid #e2e8f0",
                     borderRadius: "12px",
                     overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.04)",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    transition: "transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease",
+                    transition: "transform 0.22s ease, box-shadow 0.22s ease",
                   }}
                 >
                   <div>
-                    {renderSubjectBanner(cat)}
-                    <div style={{ padding: "10px 12px 6px 12px" }}>
+                    {renderSubjectCover(cat)}
+                    <div style={{ padding: "8px 10px 4px 10px" }}>
                       <div
                         style={{
-                          fontSize: "13.5px",
+                          fontSize: "13px",
                           fontWeight: 800,
                           color: "#1e293b",
                           whiteSpace: "nowrap",
@@ -2323,17 +1946,27 @@ export default function Home() {
                         }}
                         title={cat.name}
                       >
-                        {cat.name}
+                        {formatDisplaySubjectName(cat.name, true)}
                       </div>
-                      <div style={{ fontSize: "11.5px", color: "#64748b", fontStyle: "italic", margin: "2px 0 8px 0" }}>
-                        {cat.author || "Cô Đặng Anh Thư"}
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: "#64748b",
+                          margin: "2px 0 6px 0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {formatDisplaySubtitle(cat, true)}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ padding: "0 12px 12px 12px" }}>
+                  <div style={{ padding: "0 10px 10px 10px" }}>
                     <button
                       type="button"
+                      className={styles.zoomBtn}
                       onClick={() => setActiveCategoryModal(cat)}
                       style={{
                         width: "100%",
@@ -2341,10 +1974,11 @@ export default function Home() {
                         color: "#1d4ed8",
                         border: "1px solid #bfdbfe",
                         borderRadius: "8px",
-                        padding: "7px 0",
-                        fontSize: "12.5px",
+                        padding: "6px 0",
+                        fontSize: "12px",
                         fontWeight: 800,
                         cursor: "pointer",
+                        letterSpacing: "0.3px",
                       }}
                     >
                       VÀO HỌC
@@ -2353,6 +1987,167 @@ export default function Home() {
                 </div>
               ))}
             </div>
+
+            {examCategories.length > 6 && (
+              <div style={{ textAlign: "center", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowMoreExams(!showMoreExams)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#2563eb",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {showMoreExams ? "Thu gọn ▲" : `Xem thêm ${examCategories.length - 6} bộ đề khác ▼`}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* MỤC 3: VIDEO BÀI HỌC & TIN TỨC (CHUẨN HÌNH 2) */}
+          <div style={{ marginBottom: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "20px" }}>🎬</span>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: "17px",
+                    fontWeight: 800,
+                    color: "#1d4ed8",
+                    letterSpacing: "-0.2px",
+                  }}
+                >
+                  Video Bài học &amp; Tin tức
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={handleOpenVideoSection}
+                title="Xem tất cả video bài giảng"
+                style={{
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
+                }}
+              >
+                XEM TẤT CẢ &gt;
+              </button>
+            </div>
+
+            {videoCategories.length === 0 ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "32px 16px",
+                  background: "#ffffff",
+                  border: "1px dashed #cbd5e1",
+                  borderRadius: "12px",
+                  color: "#64748b",
+                  fontSize: "13.5px",
+                  fontWeight: 600,
+                  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.02)",
+                }}
+              >
+                🎬 Chưa có video bài học.
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+                  gap: "14px",
+                }}
+              >
+                {videoCategories.slice(0, 6).map((cat) => (
+                  <div
+                    key={cat.id}
+                    className={styles.zoomCard}
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      boxShadow: "0 2px 6px rgba(0, 0, 0, 0.04)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      transition: "transform 0.22s ease, box-shadow 0.22s ease",
+                    }}
+                  >
+                    <div>
+                      {renderSubjectCover(cat)}
+                      <div style={{ padding: "8px 10px 4px 10px" }}>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 800,
+                            color: "#1e293b",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                          title={cat.name}
+                        >
+                          {cat.name}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 6px 0" }}>
+                          🎬 Video bài giảng
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: "0 10px 10px 10px" }}>
+                      <button
+                        type="button"
+                        className={styles.zoomBtn}
+                        onClick={() => {
+                          setActiveCategoryModal(cat);
+                          setActiveSubfolder("all");
+                          setFilterItemType("all");
+                        }}
+                        style={{
+                          width: "100%",
+                          background: "#eff6ff",
+                          color: "#1d4ed8",
+                          border: "1px solid #bfdbfe",
+                          borderRadius: "8px",
+                          padding: "6px 0",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                        }}
+                      >
+                        VÀO HỌC
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -2362,7 +2157,7 @@ export default function Home() {
             <span className={styles.sectionTag}>📋 CHUYÊN MỤC ĐỀ THI</span>
             <h2 className={styles.sectionHeading}>Ngân Hàng Đề Thi THPT Quốc Gia Chuẩn Cấu Trúc 📝</h2>
             <p className={styles.sectionSub}>
-              Hệ thống đề thi cập nhật liên tục từ các trường Chuyên hàng đầu (KHTN, Sư Phạm, Lê Hồng Phong,...) cùng Cô Đặng Anh Thư 🎓.
+              Hệ thống đề thi cập nhật liên tục từ các trường Chuyên hàng đầu (KHTN, Sư Phạm, Lê Hồng Phong,...) cùng Đặng Anh Thư 🎓.
             </p>
           </div>
 
@@ -2578,7 +2373,7 @@ export default function Home() {
         </div>
 
         <div className={styles.footerBottom}>
-          <span>© 2026 Hệ thống Luyện Thi 12 • THPT DTNT THCS & THPT Tuy Đức • Bản quyền thuộc về Cô Đặng Anh Thư 🎓</span>
+          <span>© 2026 Hệ thống Luyện Thi 12 • THPT DTNT THCS & THPT Tuy Đức • Bản quyền thuộc về Đặng Anh Thư 🎓</span>
           <span>Chinh phục 9+ • Vững bước cánh cổng Đại học mơ ước 🚀</span>
         </div>
       </footer>
