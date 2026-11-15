@@ -1,0 +1,801 @@
+.container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #1e293b;
+  padding-bottom: 60px;
+}
+
+/* =========================================================
+   1. TOP NAVIGATION / HEADER (KHUNG ĐẦU TRANG)
+========================================================= */
+.topNav {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.navContent {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.backBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.backBtn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateX(-2px);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.mainTitle {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #1e293b;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.subTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #2563eb;
+  margin: 2px 0 0 0;
+  line-height: 1.3;
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Trophy pill badge on top right - exact to screenshot */
+.trophyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef9c3;
+  color: #b45309;
+  border: 1px solid #fef08a;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 2px rgba(180, 83, 9, 0.08);
+}
+
+.trophyIcon {
+  font-size: 15px;
+  color: #d97706;
+}
+
+.switchStudentBtn {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.switchStudentBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* =========================================================
+   2. MAIN CONTENT WRAPPER
+========================================================= */
+.mainContent {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+/* =========================================================
+   3. STAT CARDS (3 THẺ THỐNG KÊ TRẮC NGHIỆM, ĐÚNG/SAI, TRẢ LỜI NGẮN)
+========================================================= */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 860px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.statCard {
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 104px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Thẻ 1: Trắc nghiệm (Xanh dương) */
+.cardMultipleChoice {
+  background: #f0f7ff;
+  border: 1.5px solid #bfdbfe;
+}
+
+.cardMultipleChoice .cardHeaderLabel {
+  color: #2563eb;
+}
+
+.cardMultipleChoice .cardPercentage {
+  color: #2563eb;
+}
+
+/* Thẻ 2: Đúng / Sai (Cam đào) */
+.cardTrueFalse {
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+}
+
+.cardTrueFalse .cardHeaderLabel {
+  color: #ea580c;
+}
+
+.cardTrueFalse .cardPercentage {
+  color: #ea580c;
+}
+
+/* Thẻ 3: Trả lời ngắn (Xanh lá) */
+.cardShortAnswer {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.cardShortAnswer .cardHeaderLabel {
+  color: #16a34a;
+}
+
+.cardShortAnswer .cardPercentage {
+  color: #16a34a;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardIcon {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.cardHeaderLabel {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.cardPercentage {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.cardSubtext {
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* =========================================================
+   4. SECTION: BÀI TẬP & ĐỀ THI
+========================================================= */
+.sectionBlock {
+  margin-bottom: 32px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #2563eb;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.sectionHeadingIcon {
+  font-size: 20px;
+}
+
+/* Khung rỗng (Giáo viên chưa giao bài tập nào) - đúng chuẩn ảnh */
+.emptyCardContainer {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.emptyBookIcon {
+  width: 54px;
+  height: 54px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.emptyBadge {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 24px;
+  border-radius: 8px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+/* Danh sách khi có bài tập / đề thi giao */
+.assignedExamsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .assignedExamsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.assignedExamCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.assignedExamCard:hover {
+  border-color: #bfdbfe;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+}
+
+.examCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.subjectBadge {
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.subjectToan {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.subjectLy {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.subjectHoa {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.subjectOther {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.codeBadge {
+  font-family: monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.examTitle {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.examMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.examMetaRow span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.examCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.examStatus {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.statusPending {
+  color: #d97706;
+}
+
+.statusCompleted {
+  color: #16a34a;
+}
+
+.startExamBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.startExamBtn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+/* =========================================================
+   5. SECTION: TÀI LIỆU (TÀI LIỆU PDF)
+========================================================= */
+.documentsSectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #9333ea;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.docCardContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.docItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.docItemRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.docItemRow:first-child {
+  padding-top: 0;
+}
+
+.docLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.docRedIcon {
+  width: 32px;
+  height: 32px;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.docInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.docItemTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.docFormatSub {
+  font-size: 11px;
+  font-weight: 800;
+  color: #c026d3;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.docViewBtn {
+  background: #fae8ff;
+  color: #9333ea;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 6px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.docViewBtn:hover {
+  background: #f5d0fe;
+  color: #7e22ce;
+  transform: scale(1.02);
+}
+
+/* =========================================================
+   6. MODAL: ĐĂNG NHẬP / VÀO HỌC (NHẬP MÃ GV, CHỌN LỚP, TÊN, MK LẦN ĐẦU)
+========================================================= */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.loginModalBox {
+  background: #ffffff;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modalCloseBtn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.modalHeader {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.modalHeaderBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  font-size: 28px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.modalSub {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.formInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 14.5px;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.formSelect {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 14.5px;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.formSelect:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.teacherMatchBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.quickTeacherCodes {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.quickCodePill {
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #2563eb;
+  border: 1px solid #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.quickCodePill:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.firstTimeAlert {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.submitBtn {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  margin-top: 20px;
+}
+
+.submitBtn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Modal xem tài liệu */
+.docModalBox {
+  background: #ffffff;
+  width: 100%;
+  max-width: 640px;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.docModalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.docModalBody {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 14px;
+  color: #334155;
+}

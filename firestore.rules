@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Mở toàn quyền đọc và ghi cho toàn bộ collections:
+    // classes, students, users, exams, documents, submissions, test_connection
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

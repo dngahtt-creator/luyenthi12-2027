@@ -1,0 +1,459 @@
+.container {
+  min-height: 100vh;
+  background: radial-gradient(100% 70% at 50% 0%, #eff6ff 0%, #ffffff 60%);
+  padding: 40px 20px 80px;
+  font-family: inherit;
+  color: #0f172a;
+}
+
+.inner {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.topNavRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.backBtn:hover {
+  background: #dbeafe;
+  transform: translateX(-2px);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.6px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #64748b;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* Status Banner */
+.statusBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.statusSuccess {
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #065f46;
+}
+
+.statusPending {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #1e40af;
+}
+
+.statusError {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #991b1b;
+}
+
+.statusLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.statusIcon {
+  font-size: 32px;
+}
+
+.statusHeading {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.statusText {
+  font-size: 13.5px;
+  opacity: 0.9;
+}
+
+.actionBtn {
+  background: #1d4ed8;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.actionBtn:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 3 Diagnostics Cards */
+.diagGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.diagCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.diagHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.diagTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.badgeSuccess {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badgePending {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badgeError {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.diagBody {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.diagFooter {
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Upload Playground Box */
+.uploadCard {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+  margin-bottom: 28px;
+}
+
+.uploadTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uploadDesc {
+  font-size: 13.5px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.presetRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.presetLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.presetInput {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 180px;
+  outline: none;
+}
+
+.presetInput:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.uploadActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.fileInputWrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.fileInputBtn {
+  background: #ffffff;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  border: 1.5px solid #bfdbfe;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.fileInputBtn:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.fileHiddenInput {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.uploadResultBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 20px;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.previewImage {
+  width: 160px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.resultInfo {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.resultUrlLink {
+  color: #2563eb;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.presetGuideBox {
+  margin-top: 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 12.5px;
+  color: #92400e;
+  line-height: 1.6;
+}
+
+/* Console Logs */
+.consoleCard {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  margin-bottom: 28px;
+}
+
+.consoleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #1e293b;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.consoleLogs {
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.logEntry {
+  display: flex;
+  gap: 10px;
+}
+
+.logTime {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.logInfo { color: #38bdf8; }
+.logSuccess { color: #4ade80; }
+.logWarn { color: #facc15; }
+.logError { color: #f87171; }
+
+/* Config Table */
+.configCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.configTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.configList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+
+.configItem {
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.configKey {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.configVal {
+  font-weight: 700;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+@media (max-width: 800px) {
+  .diagGrid, .configList {
+    grid-template-columns: 1fr;
+  }
+  .uploadResultBox {
+    grid-template-columns: 1fr;
+  }
+}
