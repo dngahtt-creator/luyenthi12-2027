@@ -1720,15 +1720,15 @@ export default function StudentPortalPage() {
                 <input
                   type="text"
                   maxLength={6}
-                  placeholder="Nhập đúng 6 số mã giáo viên (VD: 571024)..."
+                  placeholder="••••••"
                   value={inputTeacherCode}
                   onChange={(e) => handleTeacherCodeChange(e.target.value)}
                   className={styles.formInput}
                   required
                   style={{
                     fontFamily: "monospace",
-                    fontSize: "16px",
-                    letterSpacing: "4px",
+                    fontSize: "18px",
+                    letterSpacing: "6px",
                     fontWeight: 700,
                   }}
                 />

@@ -7272,7 +7272,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                           teacherCode: e.target.value.replace(/\D/g, "").slice(0, 6),
                         })
                       }
-                      placeholder="628842"
+                      placeholder="••••••"
                       style={{
                         flex: 1,
                         padding: "10px 14px",
@@ -7649,7 +7649,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                           teacherCode: e.target.value.replace(/\D/g, "").slice(0, 6),
                         })
                       }
-                      placeholder="628842"
+                      placeholder="••••••"
                       style={{
                         flex: 1,
                         padding: "10px 14px",

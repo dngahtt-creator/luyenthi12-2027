@@ -3438,7 +3438,7 @@ export default function Home() {
                   <input
                     type="text"
                     maxLength={6}
-                    placeholder="Nhập đúng 6 số mã giáo viên (VD: 571024)..."
+                    placeholder="••••••"
                     value={studentInputTeacherCode}
                     onChange={(e) => handleStudentTeacherCodeChange(e.target.value)}
                     className={styles.studentFormInput}
@@ -3446,8 +3446,8 @@ export default function Home() {
                     autoFocus
                     style={{
                       fontFamily: "monospace",
-                      fontSize: "16px",
-                      letterSpacing: "4px",
+                      fontSize: "18px",
+                      letterSpacing: "6px",
                       fontWeight: 700,
                     }}
                   />
