@@ -25,10 +25,12 @@ import {
   saveNewExam,
   updateExam,
   deleteExam,
+  deleteMultipleExams,
   getAllDocuments,
   saveNewDocument,
   updateDocument,
   deleteDocument,
+  deleteMultipleDocuments,
   getRecentSubmissions,
   exportExamResultsToExcel,
   deleteSubmission,
@@ -272,6 +274,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
   const [localImagePreviewUrls, setLocalImagePreviewUrls] = useState<string[]>([]);
   const [examFilterClass, setExamFilterClass] = useState<string>("all");
   const [examFilterSubject, setExamFilterSubject] = useState<string>("all");
+  const [isExamMultiSelectMode, setIsExamMultiSelectMode] = useState<boolean>(false);
+  const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
 
   // MULTI-VARIANT EXAM SHUFFLE STATE (TRỘN ĐỀ & SINH NHIỀU MÃ ĐỀ THI)
   const [examVariantsCount, setExamVariantsCount] = useState<number>(1);
@@ -347,6 +351,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
   const [docFormStudentClassFilter, setDocFormStudentClassFilter] = useState<string>("");
   const [docUploadingFile, setDocUploadingFile] = useState<boolean>(false);
   const [docUploadedFileName, setDocUploadedFileName] = useState<string>("");
+  const [isDocMultiSelectMode, setIsDocMultiSelectMode] = useState<boolean>(false);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
 
   // 6. STUDENT EVALUATION & FEEDBACK STATE (ĐÁNH GIÁ NĂNG LỰC HỌC SINH - AI & THỦ CÔNG)
   const [evaluationsList, setEvaluationsList] = useState<StudentEvaluation[]>([]);
@@ -1974,6 +1980,25 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     }
   };
 
+  const handleDeleteSelectedExams = async () => {
+    if (selectedExamIds.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 bài tập/đề thi để xóa!");
+      return;
+    }
+    const count = selectedExamIds.length;
+    if (
+      confirm(
+        `Bạn có chắc chắn muốn gỡ ${count} bài tập/đề thi đã chọn không?\nThao tác này sẽ gỡ khỏi hệ thống và trang chủ.`
+      )
+    ) {
+      await deleteMultipleExams(selectedExamIds);
+      setSelectedExamIds([]);
+      setIsExamMultiSelectMode(false);
+      showToast(`🗑️ Đã gỡ thành công ${count} đề thi khỏi hệ thống!`);
+      await fetchExams();
+    }
+  };
+
   // 5. DOCUMENT TAB ACTIONS (GIAO TÀI LIỆU - HÌNH 1 & HÌNH 2)
   const handleDocFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2095,6 +2120,25 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       await deleteDocument(id);
       showToast(`🗑️ Đã xóa tài liệu "${title}" khỏi hệ thống.`);
       fetchDocuments();
+    }
+  };
+
+  const handleDeleteSelectedDocs = async () => {
+    if (selectedDocIds.length === 0) {
+      alert("Vui lòng tích chọn ít nhất 1 tài liệu để xóa!");
+      return;
+    }
+    const count = selectedDocIds.length;
+    if (
+      confirm(
+        `Bạn có chắc chắn muốn xóa ${count} tài liệu đã chọn không?\nThao tác này sẽ xóa vĩnh viễn và không thể khôi phục.`
+      )
+    ) {
+      await deleteMultipleDocuments(selectedDocIds);
+      setSelectedDocIds([]);
+      setIsDocMultiSelectMode(false);
+      showToast(`🗑️ Đã xóa thành công ${count} tài liệu khỏi hệ thống.`);
+      await fetchDocuments();
     }
   };
 
@@ -4336,6 +4380,46 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                           </svg>
                         </button>
+
+                        {/* Button 4: Nút Chọn nhiều cho Đề thi */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsExamMultiSelectMode((prev) => !prev);
+                            setSelectedExamIds([]);
+                          }}
+                          title="Chọn nhiều bài tập / đề thi để xóa hàng loạt"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            padding: "6px 12px",
+                            height: "34px",
+                            background: isExamMultiSelectMode ? "#eff6ff" : "#ffffff",
+                            border: `1.5px solid ${isExamMultiSelectMode ? "#2563eb" : "#cbd5e1"}`,
+                            borderRadius: "8px",
+                            color: isExamMultiSelectMode ? "#1d4ed8" : "#475569",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="9 11 12 14 22 4" />
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                          </svg>
+                          <span>{isExamMultiSelectMode ? "✕ HỦY CHỌN" : "CHỌN NHIỀU"}</span>
+                        </button>
                       </div>
                     </div>
 
@@ -4430,11 +4514,65 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             justifyContent: "space-between",
                             alignItems: "center",
                             marginBottom: "14px",
+                            flexWrap: "wrap",
+                            gap: "10px",
                           }}
                         >
-                          <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700 }}>
-                            🔍 Tìm thấy <strong style={{ color: "#1d4ed8" }}>{filteredExams.length}</strong> bài tập / đề thi
-                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700 }}>
+                              🔍 Tìm thấy <strong style={{ color: "#1d4ed8" }}>{filteredExams.length}</strong> bài tập / đề thi
+                            </span>
+                            {isExamMultiSelectMode && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (selectedExamIds.length === filteredExams.length) {
+                                      setSelectedExamIds([]);
+                                    } else {
+                                      setSelectedExamIds(filteredExams.map((e) => e.id));
+                                    }
+                                  }}
+                                  style={{
+                                    padding: "3px 10px",
+                                    fontSize: "11.5px",
+                                    fontWeight: 700,
+                                    background: "#eff6ff",
+                                    color: "#1d4ed8",
+                                    border: "1px solid #bfdbfe",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {selectedExamIds.length === filteredExams.length
+                                    ? "☑️ Bỏ chọn tất cả"
+                                    : `☐ Chọn tất cả (${filteredExams.length})`}
+                                </button>
+                                <span style={{ fontSize: "12px", fontWeight: 700, color: "#1d4ed8", background: "#dbeafe", padding: "2px 8px", borderRadius: "6px" }}>
+                                  Đã chọn: <strong>{selectedExamIds.length}</strong>/{filteredExams.length}
+                                </span>
+                                {selectedExamIds.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={handleDeleteSelectedExams}
+                                    style={{
+                                      padding: "4px 12px",
+                                      fontSize: "11.5px",
+                                      fontWeight: 800,
+                                      background: "#dc2626",
+                                      color: "#ffffff",
+                                      border: "none",
+                                      borderRadius: "6px",
+                                      cursor: "pointer",
+                                      boxShadow: "0 2px 6px rgba(220, 38, 38, 0.3)",
+                                    }}
+                                  >
+                                    🗑️ Xóa đã chọn ({selectedExamIds.length})
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
                           <button
                             type="button"
                             onClick={() => {
@@ -4458,6 +4596,22 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         <table className={styles.table}>
                           <thead>
                             <tr>
+                              {isExamMultiSelectMode && (
+                                <th style={{ width: "40px", textAlign: "center" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedExamIds.length === filteredExams.length && filteredExams.length > 0}
+                                    onChange={() => {
+                                      if (selectedExamIds.length === filteredExams.length) {
+                                        setSelectedExamIds([]);
+                                      } else {
+                                        setSelectedExamIds(filteredExams.map((e) => e.id));
+                                      }
+                                    }}
+                                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                  />
+                                </th>
+                              )}
                               <th style={{ width: "60px", textAlign: "center", textTransform: "uppercase" }}>TT</th>
                               <th style={{ textTransform: "uppercase" }}>Tên bài tập / Đề thi</th>
                               <th style={{ textTransform: "uppercase", width: "130px" }}>Môn học</th>
@@ -4466,8 +4620,31 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredExams.map((exam, idx) => (
-                              <tr key={exam.id}>
+                            {filteredExams.map((exam, idx) => {
+                              const isSelected = selectedExamIds.includes(exam.id);
+                              return (
+                              <tr
+                                key={exam.id}
+                                style={{
+                                  background: isSelected ? "#eff6ff" : undefined,
+                                }}
+                              >
+                                {isExamMultiSelectMode && (
+                                  <td style={{ textAlign: "center" }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {
+                                        setSelectedExamIds((prev) =>
+                                          prev.includes(exam.id)
+                                            ? prev.filter((id) => id !== exam.id)
+                                            : [...prev, exam.id]
+                                        );
+                                      }}
+                                      style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#2563eb" }}
+                                    />
+                                  </td>
+                                )}
                                 <td style={{ textAlign: "center", fontWeight: 700, color: "#64748b" }}>
                                   {idx + 1}
                                 </td>
@@ -4604,7 +4781,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                   </button>
                                 </td>
                               </tr>
-                            ))}
+                            );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -6010,11 +6188,165 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-                  <span style={{ fontSize: "16px", color: "#9333ea" }}>📖</span>
-                  <h2 style={{ fontSize: "13.5px", fontWeight: 800, color: "#1e293b", textTransform: "uppercase", margin: 0 }}>
-                    DANH SÁCH TÀI LIỆU ({documentsList.length})
-                  </h2>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "16px", color: "#9333ea" }}>📖</span>
+                    <h2 style={{ fontSize: "13.5px", fontWeight: 800, color: "#1e293b", textTransform: "uppercase", margin: 0 }}>
+                      DANH SÁCH TÀI LIỆU ({documentsList.length})
+                    </h2>
+                  </div>
+
+                  {/* NÚT CHỌN NHIỀU & THAO TÁC HÀNG LOẠT */}
+                  {documentsList.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      {!isDocMultiSelectMode ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsDocMultiSelectMode(true);
+                            setSelectedDocIds([]);
+                          }}
+                          title="Chọn nhiều tài liệu để xóa hoặc quản lý hàng loạt"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "6px 14px",
+                            background: "#fdf4ff",
+                            border: "1.5px solid #d8b4fe",
+                            borderRadius: "8px",
+                            color: "#7e22ce",
+                            fontSize: "12.5px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            boxShadow: "0 1px 3px rgba(126, 34, 206, 0.08)",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = "#9333ea";
+                            e.currentTarget.style.background = "#fae8ff";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = "#d8b4fe";
+                            e.currentTarget.style.background = "#fdf4ff";
+                          }}
+                        >
+                          <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="9 11 12 14 22 4" />
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                          </svg>
+                          <span>CHỌN NHIỀU</span>
+                        </button>
+                      ) : (
+                        <>
+                          {/* Nút Chọn tất cả / Bỏ chọn tất cả */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedDocIds.length === documentsList.length) {
+                                setSelectedDocIds([]);
+                              } else {
+                                setSelectedDocIds(documentsList.map((d) => d.id));
+                              }
+                            }}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "6px 12px",
+                              background:
+                                selectedDocIds.length === documentsList.length ? "#eff6ff" : "#ffffff",
+                              border: `1.5px solid ${
+                                selectedDocIds.length === documentsList.length ? "#3b82f6" : "#cbd5e1"
+                              }`,
+                              borderRadius: "8px",
+                              color:
+                                selectedDocIds.length === documentsList.length ? "#1d4ed8" : "#475569",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span>
+                              {selectedDocIds.length === documentsList.length
+                                ? "☑️ Bỏ chọn tất cả"
+                                : `☐ Chọn tất cả (${documentsList.length})`}
+                            </span>
+                          </button>
+
+                          {/* Badge số lượng đã chọn */}
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 800,
+                              padding: "4px 10px",
+                              background: selectedDocIds.length > 0 ? "#f3e8ff" : "#f1f5f9",
+                              color: selectedDocIds.length > 0 ? "#7e22ce" : "#64748b",
+                              borderRadius: "6px",
+                              border: `1px solid ${selectedDocIds.length > 0 ? "#d8b4fe" : "#e2e8f0"}`,
+                            }}
+                          >
+                            Đã chọn: <strong>{selectedDocIds.length}</strong>/{documentsList.length}
+                          </span>
+
+                          {/* Nút Xóa đã chọn */}
+                          {selectedDocIds.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={handleDeleteSelectedDocs}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "6px 14px",
+                                background: "#dc2626",
+                                border: "none",
+                                borderRadius: "8px",
+                                color: "#ffffff",
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                boxShadow: "0 2px 8px rgba(220, 38, 38, 0.35)",
+                              }}
+                            >
+                              <span>🗑️</span>
+                              <span>Xóa đã chọn ({selectedDocIds.length})</span>
+                            </button>
+                          )}
+
+                          {/* Nút Đóng / Thoát */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsDocMultiSelectMode(false);
+                              setSelectedDocIds([]);
+                            }}
+                            style={{
+                              padding: "6px 12px",
+                              background: "#ffffff",
+                              border: "1.5px solid #cbd5e1",
+                              borderRadius: "8px",
+                              color: "#64748b",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            ✕ Hủy
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {documentsList.length === 0 ? (
@@ -6024,6 +6356,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {documentsList.map((doc, idx) => {
+                      const isSelected = selectedDocIds.includes(doc.id);
                       const classText =
                         doc.assignedClasses && doc.assignedClasses.length > 0
                           ? doc.assignedClasses.join(", ")
@@ -6039,17 +6372,59 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       return (
                         <div
                           key={doc.id}
+                          onClick={() => {
+                            if (isDocMultiSelectMode) {
+                              setSelectedDocIds((prev) =>
+                                prev.includes(doc.id)
+                                  ? prev.filter((id) => id !== doc.id)
+                                  : [...prev, doc.id]
+                              );
+                            }
+                          }}
                           style={{
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            padding: "14px 0",
-                            borderBottom: idx < documentsList.length - 1 ? "1px solid #f1f5f9" : "none",
+                            padding: "12px 14px",
+                            margin: "3px 0",
+                            borderRadius: "8px",
+                            background: isSelected ? "#f5f3ff" : "transparent",
+                            border: isSelected ? "1.5px solid #c084fc" : "1.5px solid transparent",
+                            borderBottom:
+                              !isSelected && idx < documentsList.length - 1
+                                ? "1px solid #f1f5f9"
+                                : isSelected
+                                ? "1.5px solid #c084fc"
+                                : "none",
+                            cursor: isDocMultiSelectMode ? "pointer" : "default",
+                            transition: "all 0.15s ease",
                           }}
                         >
-                          {/* Bên trái: Biểu tượng đỏ + Tiêu đề + Meta (Lớp & Ngày) */}
+                          {/* Bên trái: Checkbox (khi chọn nhiều) + Biểu tượng đỏ + Tiêu đề + Meta (Lớp & Ngày) */}
                           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <svg width="22" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            {isDocMultiSelectMode && (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  setSelectedDocIds((prev) =>
+                                    prev.includes(doc.id)
+                                      ? prev.filter((id) => id !== doc.id)
+                                      : [...prev, doc.id]
+                                  );
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  width: "18px",
+                                  height: "18px",
+                                  cursor: "pointer",
+                                  accentColor: "#9333ea",
+                                  flexShrink: 0,
+                                }}
+                              />
+                            )}
+
+                            <svg width="22" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                               <polyline points="14 2 14 8 20 8" />
                               <line x1="16" y1="13" x2="8" y2="13" />
@@ -6058,7 +6433,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             </svg>
 
                             <div>
-                              <h3 style={{ margin: "0 0 4px 0", fontSize: "14.5px", fontWeight: 700, color: "#0f172a" }}>
+                              <h3 style={{ margin: "0 0 4px 0", fontSize: "14.5px", fontWeight: 700, color: isSelected ? "#6b21a8" : "#0f172a" }}>
                                 {doc.title}
                               </h3>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11.5px", color: "#94a3b8" }}>
@@ -6077,7 +6452,10 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                           </div>
 
                           {/* Bên phải: Nút Sửa (Bút chì xanh) và Nút Xóa (Thùng rác đỏ) */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div
+                            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
                               type="button"
                               onClick={() => handleEditDocument(doc)}

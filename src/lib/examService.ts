@@ -624,11 +624,39 @@ export async function deleteExam(examId: string): Promise<boolean> {
   return true;
 }
 
+export async function deleteMultipleExams(examIds: string[]): Promise<boolean> {
+  if (!examIds || examIds.length === 0) return true;
+  const idSet = new Set(examIds);
+  try {
+    for (const examId of examIds) {
+      const docRef = doc(db, "exams", examId);
+      await deleteDoc(docRef).catch(() => {});
+    }
+  } catch (err) {
+    console.warn("Firestore delete multiple exams note:", err);
+  }
+
+  if (typeof window !== "undefined") {
+    const current = await getAllExams();
+    const updated = current.filter((e) => !idSet.has(e.id));
+    localStorage.setItem("school_exams_cache", JSON.stringify(updated));
+    broadcastDataUpdate();
+  }
+  return true;
+}
+
 /* =========================================================
    2. DOCUMENT MANAGEMENT (GIAO TÀI LIỆU)
 ========================================================= */
 
 export async function getAllDocuments(): Promise<DocumentItem[]> {
+  if (typeof window !== "undefined") {
+    const cleared = localStorage.getItem("school_documents_cleared");
+    if (cleared === "true") {
+      return [];
+    }
+  }
+
   try {
     const colRef = collection(db, "documents");
     const q = query(colRef, orderBy("createdAt", "desc"));
@@ -645,7 +673,16 @@ export async function getAllDocuments(): Promise<DocumentItem[]> {
       }
       return remoteDocs;
     } else {
-      // Khi Firestore chưa có tài liệu, tự động ghi liên kết tài liệu lên Firestore
+      // Khi Firestore chưa có tài liệu:
+      if (typeof window !== "undefined") {
+        const cleared = localStorage.getItem("school_documents_cleared");
+        const cached = localStorage.getItem("school_documents_cache");
+        if (cleared === "true" || (cached && JSON.parse(cached).length === 0)) {
+          return [];
+        }
+      }
+
+      // Chỉ nạp tài liệu mặc định nếu chưa từng xóa sạch
       try {
         const batch = writeBatch(db);
         DEFAULT_DOCUMENTS.forEach((docItem) => {
@@ -662,6 +699,8 @@ export async function getAllDocuments(): Promise<DocumentItem[]> {
   }
 
   if (typeof window !== "undefined") {
+    const cleared = localStorage.getItem("school_documents_cleared");
+    if (cleared === "true") return [];
     const cached = localStorage.getItem("school_documents_cache");
     if (cached) {
       try {
@@ -679,6 +718,10 @@ export async function saveNewDocument(
   docData: Omit<DocumentItem, "id">
 ): Promise<{ success: boolean; id?: string }> {
   try {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("school_documents_cleared");
+    }
+
     const colRef = collection(db, "documents");
     const docRef = await addDoc(colRef, {
       ...docData,
@@ -751,6 +794,33 @@ export async function deleteDocument(docId: string): Promise<boolean> {
     const current = await getAllDocuments();
     const updated = current.filter((d) => d.id !== docId);
     localStorage.setItem("school_documents_cache", JSON.stringify(updated));
+    if (updated.length === 0) {
+      localStorage.setItem("school_documents_cleared", "true");
+    }
+    broadcastDataUpdate();
+  }
+  return true;
+}
+
+export async function deleteMultipleDocuments(docIds: string[]): Promise<boolean> {
+  if (!docIds || docIds.length === 0) return true;
+  const idSet = new Set(docIds);
+  try {
+    for (const docId of docIds) {
+      const docRef = doc(db, "documents", docId);
+      await deleteDoc(docRef).catch(() => {});
+    }
+  } catch (err) {
+    console.warn("Firestore delete multiple documents note:", err);
+  }
+
+  if (typeof window !== "undefined") {
+    const current = await getAllDocuments();
+    const updated = current.filter((d) => !idSet.has(d.id));
+    localStorage.setItem("school_documents_cache", JSON.stringify(updated));
+    if (updated.length === 0) {
+      localStorage.setItem("school_documents_cleared", "true");
+    }
     broadcastDataUpdate();
   }
   return true;
