@@ -645,6 +645,10 @@ export async function getAllStudents(): Promise<StudentItem[]> {
     if (!snapshot.empty) {
       let students: StudentItem[] = snapshot.docs.map((d) => {
         const data = d.data();
+        let pwd = data.password || "";
+        if (!pwd && typeof window !== "undefined") {
+          pwd = localStorage.getItem(`std_pwd_${d.id}`) || "";
+        }
         return {
           id: d.id,
           classId: data.classId || "",
@@ -653,7 +657,7 @@ export async function getAllStudents(): Promise<StudentItem[]> {
           fullName: data.fullName || "",
           dob: data.dob || "",
           createdAt: data.createdAt,
-          password: data.password || "",
+          password: pwd,
         };
       });
 
@@ -676,7 +680,12 @@ export async function getAllStudents(): Promise<StudentItem[]> {
     if (cached !== null) {
       try {
         const parsed = JSON.parse(cached) as StudentItem[];
-        return parsed.filter((s) => !isClassBelongsToDeleted(s.classId, s.className));
+        return parsed
+          .filter((s) => !isClassBelongsToDeleted(s.classId, s.className))
+          .map((s) => ({
+            ...s,
+            password: s.password || (typeof window !== "undefined" ? localStorage.getItem(`std_pwd_${s.id}`) || "" : ""),
+          }));
       } catch {
         // ignore
       }
@@ -1189,21 +1198,32 @@ export async function setStudentPassword(
   studentId: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
+  const pwdTrimmed = (newPassword || "").trim();
   try {
     const docRef = doc(db, "students", studentId);
-    await setDoc(docRef, { password: newPassword.trim(), updatedAt: serverTimestamp() }, { merge: true });
+    await setDoc(docRef, { password: pwdTrimmed, updatedAt: serverTimestamp() }, { merge: true });
   } catch (err) {
     console.warn("Firestore setStudentPassword note (local fallback):", err);
   }
 
   if (typeof window !== "undefined") {
+    if (pwdTrimmed) {
+      localStorage.setItem(`std_pwd_${studentId}`, pwdTrimmed);
+    } else {
+      localStorage.removeItem(`std_pwd_${studentId}`);
+    }
     const current = await getAllStudents();
     const idx = current.findIndex((s) => s.id === studentId);
     if (idx !== -1) {
-      current[idx].password = newPassword.trim();
+      current[idx].password = pwdTrimmed;
       localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(current));
-      broadcastUpdate();
     }
+    broadcastUpdate();
+    window.dispatchEvent(
+      new CustomEvent("school_student_password_changed", {
+        detail: { studentId, password: pwdTrimmed },
+      })
+    );
   }
 
   return { success: true };

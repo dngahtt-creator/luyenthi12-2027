@@ -194,6 +194,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     fullName: "",
     dob: "",
     classId: "",
+    password: "",
   });
 
   // Import Modal State
@@ -1164,6 +1165,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       fullName: "",
       dob: "01/01/2015",
       classId: currentClass.id,
+      password: "",
     });
     setShowStudentModal(true);
   };
@@ -1175,6 +1177,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       fullName: student.fullName,
       dob: student.dob || "",
       classId: student.classId,
+      password: student.password || "",
     });
     setShowStudentModal(true);
   };
@@ -1197,15 +1200,21 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
         classId: studentForm.classId,
         className: targetClassName,
       });
+      if (studentForm.password.trim() !== (editingStudent.password || "")) {
+        await setStudentPassword(editingStudent.id, studentForm.password.trim());
+      }
       showToast(`✅ Đã cập nhật học sinh "${studentForm.fullName}" vào Firebase Firestore!`);
     } else {
-      await saveNewStudent({
+      const res = await saveNewStudent({
         orderNumber: Number(studentForm.orderNumber) || 1,
         fullName: studentForm.fullName.trim(),
         dob: studentForm.dob.trim(),
         classId: studentForm.classId,
         className: targetClassName,
       });
+      if (studentForm.password.trim() && res.id) {
+        await setStudentPassword(res.id, studentForm.password.trim());
+      }
       showToast(`🎉 Đã thêm học sinh "${studentForm.fullName}" vào Lớp ${targetClassName} (Firestore)!`);
     }
 
@@ -3329,13 +3338,14 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         <th style={{ width: "80px", textAlign: "center", textTransform: 'uppercase' }}>TT</th>
                         <th style={{ textTransform: 'uppercase' }}>Họ và tên</th>
                         <th style={{ textTransform: 'uppercase' }}>Ngày sinh</th>
+                        <th style={{ textAlign: "center", textTransform: 'uppercase', minWidth: "150px" }}>MẬT KHẨU</th>
                         <th style={{ textAlign: "right", textTransform: 'uppercase' }}>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {currentClassStudents.length === 0 ? (
                         <tr>
-                          <td colSpan={4} style={{ textAlign: "center", padding: "60px 0" }}>
+                          <td colSpan={5} style={{ textAlign: "center", padding: "60px 0" }}>
                             <div style={{ fontSize: '40px', marginBottom: '10px' }}>🔍</div>
                             <div style={{ fontSize: "14px", color: "#64748b", fontWeight: 700, textTransform: 'uppercase' }}>Chưa có học sinh nào.</div>
                             <div style={{ fontSize: '12px', color: '#94a3b8' }}>Vui lòng chọn lớp hoặc nạp danh sách học sinh.</div>
@@ -3361,6 +3371,52 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               <span style={{ fontSize: "13px", color: "#475569", fontWeight: 600 }}>
                                 🎂 {st.dob || "---"}
                               </span>
+                            </td>
+                            {/* CỘT MẬT KHẨU DO HỌC SINH TỰ LƯU TRONG TRANG HỌC SINH */}
+                            <td style={{ textAlign: "center" }}>
+                              {st.password ? (
+                                <div
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    background: "#f0fdf4",
+                                    border: "1.5px solid #86efac",
+                                    padding: "4px 10px",
+                                    borderRadius: "8px",
+                                    boxShadow: "0 1px 3px rgba(22, 163, 74, 0.12)",
+                                  }}
+                                  title={`Mật khẩu do học sinh ${st.fullName} tự đặt và lưu: ${st.password}`}
+                                >
+                                  <span style={{ fontSize: "12px" }}>🔑</span>
+                                  <span
+                                    style={{
+                                      fontFamily: "monospace",
+                                      fontWeight: 800,
+                                      fontSize: "13.5px",
+                                      color: "#15803d",
+                                      letterSpacing: "0.5px",
+                                    }}
+                                  >
+                                    {st.password}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: "11.5px",
+                                    color: "#94a3b8",
+                                    background: "#f8fafc",
+                                    border: "1px dashed #cbd5e1",
+                                    padding: "3px 8px",
+                                    borderRadius: "6px",
+                                    fontStyle: "italic",
+                                  }}
+                                  title="Học sinh chưa tạo mật khẩu trên hệ thống"
+                                >
+                                  Chưa tạo MK
+                                </span>
+                              )}
                             </td>
                             <td style={{ textAlign: "right" }}>
                               <button
@@ -6894,6 +6950,19 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       placeholder="DD/MM/YYYY (VD: 01/01/2015)"
                       value={studentForm.dob}
                       onChange={(e) => setStudentForm({ ...studentForm, dob: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      <span>🔑</span> Mật khẩu học sinh:
+                    </label>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="Mật khẩu do HS lưu hoặc GV đặt"
+                      value={studentForm.password}
+                      onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
                     />
                   </div>
                 </div>

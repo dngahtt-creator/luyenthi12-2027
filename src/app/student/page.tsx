@@ -80,6 +80,41 @@ export default function StudentPortalPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState<boolean>(false);
 
+  // Modal Đổi Mật Khẩu học sinh
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState<boolean>(false);
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState<string>("");
+  const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
+  const [passwordModalLoading, setPasswordModalLoading] = useState<boolean>(false);
+
+  const handleSaveStudentPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword.trim() || newPassword.trim().length < 4) {
+      setPasswordModalError("Mật khẩu phải có ít nhất 4 ký tự!");
+      return;
+    }
+    if (newPassword.trim() !== confirmNewPassword.trim()) {
+      setPasswordModalError("Mật khẩu xác nhận không trùng khớp!");
+      return;
+    }
+    setPasswordModalLoading(true);
+    try {
+      const studentId = currentSession?.studentId;
+      if (studentId) {
+        await setStudentPassword(studentId, newPassword.trim());
+        if (typeof window !== "undefined") {
+          localStorage.setItem(`std_pwd_${studentId}`, newPassword.trim());
+        }
+        setShowChangePasswordModal(false);
+        alert(`🎉 Đã lưu mật khẩu thành công! Mật khẩu mới (${newPassword.trim()}) đã được đồng bộ vào mục Lớp và Học sinh của Giáo viên.`);
+      }
+    } catch (err: any) {
+      setPasswordModalError("Lỗi lưu mật khẩu: " + (err.message || "Vui lòng thử lại"));
+    } finally {
+      setPasswordModalLoading(false);
+    }
+  };
+
   // 4. Document Preview Modal
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
 
@@ -778,6 +813,26 @@ export default function StudentPortalPage() {
               <span className={styles.trophyIcon}>🏆</span>
               <span>2/0</span>
             </div>
+
+            <button
+              type="button"
+              className={styles.switchStudentBtn}
+              onClick={() => {
+                setNewPassword("");
+                setConfirmNewPassword("");
+                setPasswordModalError(null);
+                setShowChangePasswordModal(true);
+              }}
+              style={{
+                background: "#f0fdf4",
+                color: "#166534",
+                border: "1.5px solid #86efac",
+                fontWeight: 700,
+              }}
+              title="Đổi hoặc cập nhật mật khẩu đăng nhập của em"
+            >
+              🔑 Đổi mật khẩu
+            </button>
 
             <button
               type="button"
@@ -2315,6 +2370,191 @@ export default function StudentPortalPage() {
                 Đóng
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL ĐỔI MẬT KHẨU CHO HỌC SINH */}
+      {showChangePasswordModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+          onClick={() => setShowChangePasswordModal(false)}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: "20px",
+              width: "100%",
+              maxWidth: "420px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              overflow: "hidden",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+                padding: "18px 24px",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "22px" }}>🔑</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>ĐỔI MẬT KHẨU HỌC SINH</h3>
+                  <div style={{ fontSize: "12px", opacity: 0.9 }}>
+                    {studentDisplayName} • Lớp {currentSession?.className || studentGrade}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowChangePasswordModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#ffffff",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  padding: "4px",
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStudentPassword} style={{ padding: "24px" }}>
+              {passwordModalError && (
+                <div
+                  style={{
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#dc2626",
+                    padding: "10px 14px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>⚠️</span>
+                  <span>{passwordModalError}</span>
+                </div>
+              )}
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  Mật khẩu mới (*):
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Nhập ít nhất 4 ký tự..."
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordModalError(null);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "11px 14px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #cbd5e1",
+                    fontSize: "14px",
+                    color: "#0f172a",
+                    boxSizing: "border-box",
+                    outline: "none",
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  Xác nhận mật khẩu mới (*):
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Nhập lại mật khẩu mới..."
+                  value={confirmNewPassword}
+                  onChange={(e) => {
+                    setConfirmNewPassword(e.target.value);
+                    setPasswordModalError(null);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "11px 14px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #cbd5e1",
+                    fontSize: "14px",
+                    color: "#0f172a",
+                    boxSizing: "border-box",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              <div style={{ background: "#f8fafc", padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", marginBottom: "20px", fontSize: "12px", color: "#64748b", lineHeight: 1.5 }}>
+                💡 <strong>Ghi chú:</strong> Sau khi em lưu, mật khẩu này sẽ được cập nhật trực tiếp vào hệ thống và hiển thị ở cột <strong>MẬT KHẨU</strong> trong mục <em>Lớp và Học sinh</em> của Thầy/Cô để hỗ trợ tra cứu khi cần.
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowChangePasswordModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "11px 16px",
+                    borderRadius: "10px",
+                    border: "1px solid #cbd5e1",
+                    background: "#f1f5f9",
+                    color: "#475569",
+                    fontSize: "13.5px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordModalLoading}
+                  style={{
+                    flex: 1.5,
+                    padding: "11px 16px",
+                    borderRadius: "10px",
+                    border: "none",
+                    background: passwordModalLoading ? "#94a3b8" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    color: "#ffffff",
+                    fontSize: "13.5px",
+                    fontWeight: 800,
+                    cursor: passwordModalLoading ? "not-allowed" : "pointer",
+                    boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                  }}
+                >
+                  {passwordModalLoading ? "⏳ Đang lưu..." : "💾 LƯU MẬT KHẨU"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
