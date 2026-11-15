@@ -1052,7 +1052,7 @@ export default function Home() {
           <div className={styles.topSchoolRight}>
             <span className={styles.topSchoolItem}>📍 Tuy Đức, Lâm Đồng</span>
             <span className={styles.topSchoolDivider}>•</span>
-            <span className={styles.topSchoolItem}>📞 Hotline: 1900.8686</span>
+            <span className={styles.topSchoolItem}>📞 Hotline: 0914905774</span>
           </div>
         </div>
       </div>
@@ -2242,15 +2242,7 @@ export default function Home() {
                 <div className={styles.contactLogoBadge}>🏫</div>
                 <div>
                   <strong>Trường THPT DTNT THCS & THPT Tuy Đức:</strong>
-                  <span>Xã Tuy Đức, Tỉnh Lâm Đồng (Địa chỉ sau sáp nhập)</span>
-                </div>
-              </li>
-
-              <li className={styles.contactItem}>
-                <div className={styles.contactLogoBadge}>📍</div>
-                <div>
-                  <strong>Cơ sở Hà Nội & TP.HCM:</strong>
-                  <span>Số 12 Chùa Bộc, Hà Nội • Số 268 Lý Thường Kiệt, TP.HCM</span>
+                  <span>Xã Tuy Đức, Tỉnh Lâm Đồng</span>
                 </div>
               </li>
 
@@ -2258,7 +2250,7 @@ export default function Home() {
                 <div className={styles.contactLogoBadge}>📞</div>
                 <div>
                   <strong>Tổng đài tư vấn & hỗ trợ thi:</strong>
-                  <span>Hotline: 1900.8686 - 0988.123.456</span>
+                  <span>Hotline: 0914905774</span>
                 </div>
               </li>
 
@@ -2266,45 +2258,10 @@ export default function Home() {
                 <div className={styles.contactLogoBadge}>✉️</div>
                 <div>
                   <strong>Hộp thư điện tử hỗ trợ:</strong>
-                  <span>hotro@luyenthi12.edu.vn</span>
+                  <span>dngatt@gmail.com</span>
                 </div>
               </li>
             </ul>
-          </div>
-        </div>
-
-        {/* Khung Chứng Nhận & Bảo Mật Logo Dễ Nhận Biết */}
-        <div className={styles.trustBadgesRow}>
-          <div className={styles.trustBadgeItem}>
-            <span className={styles.trustBadgeIcon}>🛡️</span>
-            <div>
-              <div className={styles.trustBadgeTitle}>Bảo Mật SSL 256-Bit</div>
-              <div className={styles.trustBadgeSub}>Mã hóa dữ liệu thi an toàn</div>
-            </div>
-          </div>
-
-          <div className={styles.trustBadgeItem}>
-            <span className={styles.trustBadgeIcon}>📜</span>
-            <div>
-              <div className={styles.trustBadgeTitle}>Đã Thông Báo Bộ Công Thương</div>
-              <div className={styles.trustBadgeSub}>Website giáo dục chính thống</div>
-            </div>
-          </div>
-
-          <div className={styles.trustBadgeItem}>
-            <span className={styles.trustBadgeIcon}>🎓</span>
-            <div>
-              <div className={styles.trustBadgeTitle}>Chuẩn Format Bộ GD&ĐT</div>
-              <div className={styles.trustBadgeSub}>Cấu trúc thi tốt nghiệp 2026</div>
-            </div>
-          </div>
-
-          <div className={styles.trustBadgeItem}>
-            <span className={styles.trustBadgeIcon}>🏆</span>
-            <div>
-              <div className={styles.trustBadgeTitle}>Top 1 Ôn Thi 12 Trực Tuyến</div>
-              <div className={styles.trustBadgeSub}>Hơn 50.000+ học sinh tin dùng</div>
-            </div>
           </div>
         </div>
 
@@ -2433,7 +2390,7 @@ export default function Home() {
                     href="#forgot"
                     onClick={(e) => {
                       e.preventDefault();
-                      alert("Vui lòng liên hệ Văn phòng trường THPT Tuy Đức hoặc Hotline 1900.8686 để cấp lại mật khẩu.");
+                      alert("Vui lòng liên hệ Văn phòng trường THPT Tuy Đức hoặc Hotline 0914905774 để cấp lại mật khẩu.");
                     }}
                     style={{ color: "#2563eb", fontWeight: 600 }}
                   >
