@@ -1319,15 +1319,6 @@ return (
 
         {/* Góc Phải: Nút Quản Trị, Đăng Nhập & Nút Vào Học Nổi Bật Ngoài Cùng Bên Phải */}
         <div className={styles.navRightActions}>
-          <Link
-            href="/admin"
-            id="btn-quan-tri"
-            className={styles.adminBtn}
-            style={{ textDecoration: "none" }}
-            title="Cổng Quản Trị Hệ Thống (Cấu hình Cloudinary, Tài Khoản, Giao Đề Thi & Tài Liệu)"
-          >
-            <span>⚙️</span> Quản trị
-          </Link>
           {/* Nút Quản Trị: ẨN ĐỐI VỚI HỌC SINH (chỉ hiển thị cho Khách, Giáo viên và Super Admin) */}
           {(!currentUser || currentUser.role !== "student") && (
             <Link
@@ -2387,105 +2378,6 @@ return (
         </div>
       </section>
 
-      {/* MỤC 2: ĐỀ THI THPT QUỐC GIA CHUẨN CẤU TRÚC */}
-      <section id="de-thi" className={styles.sectionWrap}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTag}>📋 CHUYÊN MỤC ĐỀ THI</span>
-          <h2 className={styles.sectionHeading}>Ngân Hàng Đề Thi THPT Quốc Gia Chuẩn Cấu Trúc 📝</h2>
-          <p className={styles.sectionSub}>
-            Hệ thống đề thi cập nhật liên tục từ các trường Chuyên hàng đầu (KHTN, Sư Phạm, Lê Hồng Phong,...) cùng Đặng Anh Thư 🎓.
-          </p>
-        </div>
-
-        {/* Filter bar */}
-        <div className={styles.filterBar}>
-          <div className={styles.subjectChips}>
-            {subjects.map((sub) => (
-              <button
-                key={sub.id}
-                className={`${styles.chipBtn} ${selectedSubject === sub.id ? styles.chipActive : ""}`}
-                onClick={() => setSelectedSubject(sub.id)}
-              >
-                <span>{sub.icon}</span> {sub.name}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.searchBox}>
-            <span className={styles.searchIcon}>🔍</span>
-            <input
-              type="text"
-              placeholder="Tìm kiếm đề thi..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
-            />
-          </div>
-        </div>
-
-        {/* Exam Cards Grid */}
-        <div className={styles.examGrid}>
-          {filteredExams.map((exam) => (
-            <div key={exam.id} className={styles.examCard}>
-              <div className={styles.examCardTop}>
-                <div className={styles.examMetaRow}>
-                  <span className={`${styles.examSubjectBadge} ${getBadgeClass(exam.subject, exam.badgeClass)}`}>
-                    {exam.subjectName}
-                  </span>
-                  {exam.tag && (
-                    <span className={exam.tagType === "hot" ? styles.examTagHot : styles.examTagNew}>
-                      {exam.tag}
-                    </span>
-                  )}
-                </div>
-
-                <h3 className={styles.examTitle}>{exam.title}</h3>
-                <div className={styles.examSchool}>
-                  <span>🏫</span> {exam.school}
-                </div>
-              </div>
-
-              <div>
-                <div className={styles.examDetails}>
-                  <div className={styles.detailCol}>
-                    <span className={styles.detailVal}>{exam.questions}</span>
-                    <span className={styles.detailKey}>Số câu</span>
-                  </div>
-                  <div className={styles.detailCol}>
-                    <span className={styles.detailVal}>{exam.timeMinutes}p</span>
-                    <span className={styles.detailKey}>Thời gian</span>
-                  </div>
-                  <div className={styles.detailCol}>
-                    <span className={styles.detailVal}>{exam.avgScore}</span>
-                    <span className={styles.detailKey}>Điểm TB</span>
-                  </div>
-                </div>
-
-                <div className={styles.examCardBottom}>
-                  <span className={styles.examTakers}>
-                    <span>👥</span> {exam.takers} lượt thi
-                  </span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <Link
-                      href={`/mock-exams/${encodeURIComponent(exam.id)}`}
-                      className={styles.examPracticeBtn}
-                      style={{ textDecoration: 'none' }}
-                    >
-                      Thi Thử
-                    </Link>
-                    <button
-                      className={styles.examStartBtn}
-                      onClick={() => setSelectedExam(exam)}
-                    >
-                      <span>Vào Thi</span> →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </main>
 
     {/* =========================================================
@@ -2504,11 +2396,7 @@ return (
             </div>
           </div>
 
-          <p className={styles.footerDesc}>
-            Hệ thống giáo dục trực tuyến chất lượng cao, đồng hành cùng học sinh trường THPT DTNT THCS & THPT Tuy Đức và học sinh lớp 12 trên toàn quốc bứt phá điểm 9+ trong kỳ thi tốt nghiệp THPT và xét tuyển Đại học mơ ước.
-          </p>
-
-          <div className={styles.socialLogosTitle}>Kết Nối Cùng Chúng Tôi:</div>
+          <div className={styles.socialLogosTitle} style={{ marginTop: "12px" }}>Kết Nối Cùng Chúng Tôi:</div>
           <div className={styles.socialLogosRow}>
             {/* Facebook Logo */}
             <a href="https://facebook.com" target="_blank" rel="noreferrer" className={`${styles.socialLogoBtn} ${styles.socialFb}`} title="Facebook">
@@ -2543,26 +2431,6 @@ return (
               </svg>
             </a>
           </div>
-        </div>
-
-        {/* Cột 2: Danh Mục Điều Hướng */}
-        <div>
-          <h4 className={styles.footerHeading}>Chuyên Mục Thi</h4>
-          <ul className={styles.footerLinks}>
-            <li><a href="#trang-chu"><span>🏠</span> Trang chủ Luyện Thi 12</a></li>
-            <li><a href="#vao-thi-ngay"><span>⚡</span> Vào thi trực tuyến ngay</a></li>
-            <li><a href="#de-thi"><span>📝</span> Đề thi THPT Quốc Gia 2026</a></li>
-            <li>
-              <button
-                type="button"
-                onClick={() => setShowDocLibraryModal(true)}
-                style={{ background: "none", border: "none", padding: 0, color: "inherit", cursor: "pointer", font: "inherit", display: "inline-flex", alignItems: "center", gap: "6px" }}
-              >
-                <span>📚</span> Thư viện tài liệu & Sổ tay
-              </button>
-            </li>
-            <li><a href="#de-thi"><span>⭐</span> Đề thi thử trường Chuyên</a></li>
-          </ul>
         </div>
 
         {/* Cột 3: Môn Thi 12 Trọng Tâm */}
