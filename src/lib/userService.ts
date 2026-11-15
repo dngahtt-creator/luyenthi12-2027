@@ -333,7 +333,7 @@ export async function updateUserInFirestore(
               JSON.stringify({ ...cur, ...updates })
             );
           }
-        } catch {}
+        } catch { }
       }
     } catch (e) {
       console.warn("Lỗi lưu localStorage user cache:", e);
