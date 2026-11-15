@@ -10,6 +10,7 @@ import {
   toggleLikeCommunityDoc,
 } from "@/lib/communityDocService";
 import { uploadFileToCloudinary, getSavedCloudinaryConfig } from "@/lib/cloudinary";
+import { getCurrentAuthUser, CurrentAuthUser } from "@/lib/authService";
 
 const SUBJECT_LIST = [
   { id: "all", name: "Tất cả", icon: "🌐" },
@@ -27,6 +28,7 @@ const SUBJECT_LIST = [
 const GRADE_LIST = ["Tất cả khối", "Lớp 12", "Lớp 11", "Lớp 10", "Toàn cấp THPT"];
 
 export default function CommunityDocsPage() {
+  const [currentUser, setCurrentUser] = useState<CurrentAuthUser | null>(null);
   const [docsList, setDocsList] = useState<CommunityDocumentItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -80,11 +82,19 @@ export default function CommunityDocsPage() {
 
   useEffect(() => {
     loadData();
+    const initialUser = getCurrentAuthUser();
+    if (initialUser) setCurrentUser(initialUser);
+
+    const handleAuthChange = (e: any) => {
+      setCurrentUser(e.detail || null);
+    };
+    window.addEventListener("school_auth_changed", handleAuthChange);
 
     const handleSync = () => loadData();
     window.addEventListener("school_community_docs_updated", handleSync);
     window.addEventListener("school_data_updated", handleSync);
     return () => {
+      window.removeEventListener("school_auth_changed", handleAuthChange);
       window.removeEventListener("school_community_docs_updated", handleSync);
       window.removeEventListener("school_data_updated", handleSync);
     };
@@ -381,23 +391,25 @@ export default function CommunityDocsPage() {
               <span>📤</span> Đóng Góp Tài Liệu
             </button>
 
-            <Link
-              href="/admin/community-docs"
-              style={{
-                textDecoration: "none",
-                background: "#f1f5f9",
-                color: "#334155",
-                borderRadius: "10px",
-                padding: "8px 14px",
-                fontSize: "13px",
-                fontWeight: 600,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <span>⚙️</span> Quản Trị
-            </Link>
+            {(!currentUser || currentUser.role !== "student") && (
+              <Link
+                href="/admin/community-docs"
+                style={{
+                  textDecoration: "none",
+                  background: "#f1f5f9",
+                  color: "#334155",
+                  borderRadius: "10px",
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span>⚙️</span> Quản Trị
+              </Link>
+            )}
           </div>
         </div>
       </header>

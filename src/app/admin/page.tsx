@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
+import {
+  getCurrentAuthUser,
+  setCurrentAuthUser,
+  DEFAULT_SUPER_ADMIN,
+  CurrentAuthUser,
+  isTeacherAllowedTab,
+  switchMockRole,
+  logoutAllSessions,
+} from "@/lib/authService";
 import {
   getSavedCloudinaryConfig,
   saveCloudinaryConfig,
@@ -137,6 +147,11 @@ function checkStudentMatchInitial(fullName: string, letter: string, query: strin
 }
 
 export default function AdminPage({ initialTab = "config" }: { initialTab?: AdminTab } = {}) {
+  const router = useRouter();
+  const [currentAdminUser, setCurrentAdminUser] = useState<CurrentAuthUser>(DEFAULT_SUPER_ADMIN);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  const isSuperAdmin = currentAdminUser.role === "super_admin";
+
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -206,6 +221,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     teacherCode: "",
     registeredDate: "",
     status: "active",
+    role: "teacher",
   });
 
   // User Delete Modal State (Phóng to khi nhấp vào)
@@ -220,6 +236,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     teacherCode: "",
     registeredDate: "",
     status: "active",
+    role: "teacher",
   });
 
   // 3. EXAMS & EXERCISES STATE
@@ -421,8 +438,45 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     setTimeout(() => setToastMessage(null), 4500);
   };
 
-  // Initial load
+  // Initial load & Auth Role Verification
   useEffect(() => {
+    // 0. Xác thực quyền tài khoản
+    const authUser = getCurrentAuthUser();
+    if (authUser?.role === "student") {
+      alert("⚠️ Bạn đang đăng nhập bằng tài khoản Học sinh. Tài khoản học sinh không có quyền truy cập trang quản trị!");
+      router.replace("/student");
+      return;
+    }
+
+    if (authUser?.role === "teacher") {
+      setCurrentAdminUser(authUser);
+      if (!isTeacherAllowedTab(initialTab)) {
+        setActiveTab("classes"); // Mặc định Lớp và Học sinh như Ảnh 1
+      }
+    } else if (authUser?.role === "super_admin") {
+      setCurrentAdminUser(authUser);
+    } else {
+      // Mặc định Super Admin
+      setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
+    }
+    setIsAuthChecking(false);
+
+    const handleAuthChange = (e: any) => {
+      const updated: CurrentAuthUser | null = e.detail;
+      if (updated?.role === "student") {
+        alert("⚠️ Tài khoản học sinh không có quyền truy cập trang quản trị!");
+        router.replace("/student");
+      } else if (updated) {
+        setCurrentAdminUser(updated);
+        if (updated.role === "teacher" && !isTeacherAllowedTab(activeTab)) {
+          setActiveTab("classes");
+        }
+      } else {
+        setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
+      }
+    };
+    window.addEventListener("school_auth_changed", handleAuthChange);
+
     if (typeof window !== "undefined") {
       if (
         window.location.pathname.includes("/materials") ||
@@ -509,6 +563,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     window.addEventListener("storage", handleSync);
     return () => {
       unsubEvaluations();
+      window.removeEventListener("school_auth_changed", handleAuthChange);
       window.removeEventListener("school_class_student_updated", handleSync);
       window.removeEventListener("school_data_updated", handleSync);
       window.removeEventListener("school_submissions_updated", handleSync);
@@ -1343,12 +1398,18 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
   const handleOpenEditUser = (user: UserAccountData) => {
     setEditingUser(user);
     const initialCode = user.teacherCode === "5710" ? "571024" : (user.teacherCode || "");
+    const isUserSuperAdmin =
+      user.role === "super_admin" ||
+      user.role === "admin" ||
+      (user.email || "").toLowerCase().trim() === "thudanganh670@gmail.com";
+    const userRole = isUserSuperAdmin ? "super_admin" : (user.role || "teacher");
     setUserEditForm({
       fullName: user.fullName || "",
       email: user.email || "",
       teacherCode: initialCode,
       registeredDate: user.registeredDate || getRegistrationDateString(),
       status: user.status || "active",
+      role: userRole,
     });
     setShowUserEditModal(true);
   };
@@ -1374,6 +1435,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       teacherCode: finalCode,
       registeredDate: userEditForm.registeredDate.trim() || getRegistrationDateString(),
       status: userEditForm.status,
+      role: userEditForm.role,
     });
 
     setUsersList((prev) =>
@@ -1386,6 +1448,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               teacherCode: finalCode,
               registeredDate: userEditForm.registeredDate.trim() || item.registeredDate,
               status: userEditForm.status,
+              role: userEditForm.role,
             }
           : item
       )
@@ -1430,6 +1493,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       teacherCode: "571024",
       registeredDate: getRegistrationDateString(),
       status: "active",
+      role: "teacher",
     });
     setShowUserAddModal(true);
   };
@@ -1456,9 +1520,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       registeredDate: userAddForm.registeredDate.trim() || getRegistrationDateString(),
       status: userAddForm.status,
       schoolName: "THPT DTNT THCS & THPT Tuy Đức",
-      studentClass: "Giáo viên",
+      studentClass: userAddForm.role === "super_admin" ? "Ban Giám Hiệu" : userAddForm.role === "student" ? "Học sinh" : "Giáo viên",
       authProvider: "password",
-      role: "teacher",
+      role: userAddForm.role || "teacher",
       createdAt: new Date().toISOString(),
     };
 
@@ -2486,11 +2550,99 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             <span>Firebase & Cloudinary: Hoạt động</span>
           </div>
 
+          {/* Nút chuyển đổi nhanh chế độ thử nghiệm quyền cho Thầy/Cô */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#f8fafc",
+              border: "1.5px solid #cbd5e1",
+              borderRadius: "12px",
+              padding: "3px 6px",
+            }}
+          >
+            <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b", paddingLeft: "4px" }}>
+              Quyền:
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                switchMockRole("super_admin");
+                setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
+                showToast("👑 Đã chuyển sang chế độ Super Admin (Toàn quyền tất cả chức năng)!");
+              }}
+              style={{
+                border: "none",
+                background: isSuperAdmin ? "#2563eb" : "transparent",
+                color: isSuperAdmin ? "#ffffff" : "#475569",
+                borderRadius: "8px",
+                padding: "5px 10px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              title="Super Admin: Nhìn và sử dụng tất cả chức năng"
+            >
+              👑 Super Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                switchMockRole("teacher");
+                setCurrentAdminUser({
+                  uid: "teacher_mock",
+                  name: "Thầy/Cô Giáo Viên",
+                  fullName: "Thầy/Cô Giáo Viên",
+                  role: "teacher",
+                  teacherCode: "628842",
+                  studentClass: "Giáo viên bộ môn",
+                  schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+                });
+                setActiveTab("classes");
+                showToast("👨‍🏫 Đã chuyển sang chế độ Giáo viên (Chỉ sử dụng 4 quyền theo ảnh)!");
+              }}
+              style={{
+                border: "none",
+                background: !isSuperAdmin ? "#059669" : "transparent",
+                color: !isSuperAdmin ? "#ffffff" : "#475569",
+                borderRadius: "8px",
+                padding: "5px 10px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              title="Giáo viên: Chỉ sử dụng 4 quyền trên ảnh (Lớp & HS, Quản lý học tập, Giao đề thi, Giao tài liệu)"
+            >
+              👨‍🏫 Giáo viên
+            </button>
+          </div>
+
           <div className={styles.userCard}>
-            <div className={styles.userAvatar}>T</div>
+            <div
+              className={styles.userAvatar}
+              style={{
+                background: isSuperAdmin ? "#2563eb" : "#059669",
+                fontSize: isSuperAdmin ? "16px" : "15px",
+              }}
+            >
+              {isSuperAdmin ? "👑" : "👨‍🏫"}
+            </div>
             <div>
-              <div className={styles.userName}>Đặng Anh Thư</div>
-              <div className={styles.userRole}>Quản trị viên / Giáo viên</div>
+              <div className={styles.userName}>
+                {currentAdminUser.fullName || currentAdminUser.name || "Đặng Anh Thư"}
+              </div>
+              <div
+                className={styles.userRole}
+                style={{
+                  color: isSuperAdmin ? "#1d4ed8" : "#059669",
+                  fontWeight: 800,
+                }}
+              >
+                {isSuperAdmin ? "Super Admin (Toàn quyền)" : "Giáo viên (4 quyền theo ảnh)"}
+              </div>
             </div>
           </div>
         </div>
@@ -2502,25 +2654,31 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       <div className={styles.adminLayout}>
         {/* Navigation Sidebar Tabs */}
         <aside className={styles.sidebar}>
-          <div className={styles.sidebarTitle}>Chức năng quản trị</div>
+          <div className={styles.sidebarTitle}>
+            {isSuperAdmin ? "Chức năng Super Admin (Toàn quyền)" : "Chức năng Giáo viên"}
+          </div>
 
-          <button
-            id="tab-btn-config"
-            className={`${styles.navItem} ${activeTab === "config" ? styles.navItemActive : ""}`}
-            onClick={() => {
-              setActiveTab("config");
-              if (typeof window !== "undefined") {
-                window.history.pushState(null, "", "/admin");
-              }
-            }}
-          >
-            <div className={styles.navItemLeft}>
-              <span className={styles.navIcon}>☁️</span>
-              <span>Cấu hình hệ thống</span>
-            </div>
-            <span className={styles.navCount}>Cloudinary</span>
-          </button>
+          {/* 1. CHỈ SUPER ADMIN: Cấu hình hệ thống */}
+          {isSuperAdmin && (
+            <button
+              id="tab-btn-config"
+              className={`${styles.navItem} ${activeTab === "config" ? styles.navItemActive : ""}`}
+              onClick={() => {
+                setActiveTab("config");
+                if (typeof window !== "undefined") {
+                  window.history.pushState(null, "", "/admin");
+                }
+              }}
+            >
+              <div className={styles.navItemLeft}>
+                <span className={styles.navIcon}>☁️</span>
+                <span>Cấu hình hệ thống</span>
+              </div>
+              <span className={styles.navCount}>Cloudinary</span>
+            </button>
+          )}
 
+          {/* 2. CẢ SUPER ADMIN & GIÁO VIÊN: Lớp và Học sinh (Ảnh 1) */}
           <button
             id="tab-btn-classes"
             className={`${styles.navItem} ${activeTab === "classes" ? styles.navItemActive : ""}`}
@@ -2538,40 +2696,27 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             <span className={styles.navCount}>{classesList.length} lớp</span>
           </button>
 
-          <button
-            id="tab-btn-users"
-            className={`${styles.navItem} ${activeTab === "users" ? styles.navItemActive : ""}`}
-            onClick={() => {
-              setActiveTab("users");
-              if (typeof window !== "undefined") {
-                window.history.pushState(null, "", "/admin");
-              }
-            }}
-          >
-            <div className={styles.navItemLeft}>
-              <span className={styles.navIcon}>👥</span>
-              <span>Quản lý tài khoản</span>
-            </div>
-            <span className={styles.navCount}>{usersList.length}</span>
-          </button>
+          {/* 3. CHỈ SUPER ADMIN: Quản lý tài khoản */}
+          {isSuperAdmin && (
+            <button
+              id="tab-btn-users"
+              className={`${styles.navItem} ${activeTab === "users" ? styles.navItemActive : ""}`}
+              onClick={() => {
+                setActiveTab("users");
+                if (typeof window !== "undefined") {
+                  window.history.pushState(null, "", "/admin");
+                }
+              }}
+            >
+              <div className={styles.navItemLeft}>
+                <span className={styles.navIcon}>👥</span>
+                <span>Quản lý tài khoản</span>
+              </div>
+              <span className={styles.navCount}>{usersList.length}</span>
+            </button>
+          )}
 
-          <button
-            id="tab-btn-exams"
-            className={`${styles.navItem} ${activeTab === "exams" ? styles.navItemActive : ""}`}
-            onClick={() => {
-              setActiveTab("exams");
-              if (typeof window !== "undefined") {
-                window.history.pushState(null, "", "/admin");
-              }
-            }}
-          >
-            <div className={styles.navItemLeft}>
-              <span className={styles.navIcon}>📝</span>
-              <span>Giao Bài tập & Đề thi</span>
-            </div>
-            <span className={styles.navCount}>{examsList.length}</span>
-          </button>
-
+          {/* 4. CẢ SUPER ADMIN & GIÁO VIÊN: Quản lý học tập (Ảnh 2) */}
           <button
             id="tab-btn-learning"
             className={`${styles.navItem} ${activeTab === "learning" ? styles.navItemActive : ""}`}
@@ -2609,6 +2754,25 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             </div>
           </button>
 
+          {/* 5. CẢ SUPER ADMIN & GIÁO VIÊN: Giao Bài tập & Đề thi (Ảnh 3) */}
+          <button
+            id="tab-btn-exams"
+            className={`${styles.navItem} ${activeTab === "exams" ? styles.navItemActive : ""}`}
+            onClick={() => {
+              setActiveTab("exams");
+              if (typeof window !== "undefined") {
+                window.history.pushState(null, "", "/admin");
+              }
+            }}
+          >
+            <div className={styles.navItemLeft}>
+              <span className={styles.navIcon}>📝</span>
+              <span>Giao Bài tập & Đề thi</span>
+            </div>
+            <span className={styles.navCount}>{examsList.length}</span>
+          </button>
+
+          {/* 6. CẢ SUPER ADMIN & GIÁO VIÊN: Giao tài liệu (Ảnh 4) */}
           <button
             id="tab-btn-documents"
             className={`${styles.navItem} ${activeTab === "documents" ? styles.navItemActive : ""}`}
@@ -2626,22 +2790,25 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             <span className={styles.navCount}>{documentsList.length}</span>
           </button>
 
-          <button
-            id="tab-btn-community-docs"
-            className={`${styles.navItem} ${activeTab === "community-docs" ? styles.navItemActive : ""}`}
-            onClick={() => {
-              setActiveTab("community-docs");
-              if (typeof window !== "undefined") {
-                window.history.pushState(null, "", "/admin/community-docs");
-              }
-            }}
-          >
-            <div className={styles.navItemLeft}>
-              <span className={styles.navIcon}>🌐</span>
-              <span>Tài liệu cộng đồng</span>
-            </div>
-            <span className={styles.navCount}>{communityDocsList.length}</span>
-          </button>
+          {/* 7. CHỈ SUPER ADMIN: Tài liệu cộng đồng */}
+          {isSuperAdmin && (
+            <button
+              id="tab-btn-community-docs"
+              className={`${styles.navItem} ${activeTab === "community-docs" ? styles.navItemActive : ""}`}
+              onClick={() => {
+                setActiveTab("community-docs");
+                if (typeof window !== "undefined") {
+                  window.history.pushState(null, "", "/admin/community-docs");
+                }
+              }}
+            >
+              <div className={styles.navItemLeft}>
+                <span className={styles.navIcon}>🌐</span>
+                <span>Tài liệu cộng đồng</span>
+              </div>
+              <span className={styles.navCount}>{communityDocsList.length}</span>
+            </button>
+          )}
 
           <div className={styles.sidebarFooter}>
             <Link href="/" className={styles.backHomeBtn}>
@@ -2666,9 +2833,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
           )}
 
           {/* =========================================================
-              MỤC 1: CẤU HÌNH HỆ THỐNG (CLOUDINARY)
+              MỤC 1: CẤU HÌNH HỆ THỐNG (CLOUDINARY) - CHỈ SUPER ADMIN
           ========================================================= */}
-          {activeTab === "config" && (
+          {isSuperAdmin && activeTab === "config" && (
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <div>
@@ -3241,9 +3408,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
           )}
 
           {/* =========================================================
-              MỤC: QUẢN LÝ TÀI KHOẢN (GIAO DIỆN THEO HÌNH ẢNH)
+              MỤC: QUẢN LÝ TÀI KHOẢN (CHỈ DÀNH CHO SUPER ADMIN)
           ========================================================= */}
-          {activeTab === "users" && (
+          {isSuperAdmin && activeTab === "users" && (
             <div className={styles.accountPageWrap}>
               {/* Header */}
               <div className={styles.accountHeader}>
@@ -3393,10 +3560,25 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               {idx + 1}
                             </td>
                             <td>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <span style={{ fontWeight: 800, color: "#0f172a", fontSize: "14.5px" }}>
-                                  {u.fullName || "Chưa đặt tên"}
-                                </span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontWeight: 800, color: "#0f172a", fontSize: "14.5px" }}>
+                                    {u.fullName || "Chưa đặt tên"}
+                                  </span>
+                                  {u.email === "thudanganh670@gmail.com" || u.role === "super_admin" || u.role === "admin" ? (
+                                    <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#b45309", background: "#fef3c7", padding: "1px 7px", borderRadius: "10px", border: "1px solid #fde68a" }}>
+                                      👑 Super Admin
+                                    </span>
+                                  ) : u.role === "student" ? (
+                                    <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#6d28d9", background: "#f5f3ff", padding: "1px 7px", borderRadius: "10px", border: "1px solid #ddd6fe" }}>
+                                      🎒 Học sinh
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#047857", background: "#ecfdf5", padding: "1px 7px", borderRadius: "10px", border: "1px solid #a7f3d0" }}>
+                                      👨‍🏫 Giáo viên
+                                    </span>
+                                  )}
+                                </div>
                                 <span style={{ color: "#64748b", fontSize: "12.5px" }}>
                                   {u.email}
                                 </span>
@@ -6511,7 +6693,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             </div>
           )}
 
-          {(activeTab === "community-docs" || activeTab === "curriculum") && (
+          {isSuperAdmin && (activeTab === "community-docs" || activeTab === "curriculum") && (
             <CommunityDocsTab
               communityDocsList={communityDocsList}
               onRefresh={fetchCommunityDocs}
@@ -6519,6 +6701,45 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               cloudinaryCloudName={cloudName}
               cloudinaryPreset={uploadPreset}
             />
+          )}
+
+          {/* Cảnh báo hạn chế quyền khi Giáo viên cố truy cập tab ngoài 4 quyền được phép */}
+          {!isSuperAdmin && !isTeacherAllowedTab(activeTab) && (
+            <div
+              style={{
+                background: "#fef2f2",
+                border: "1.5px solid #fecaca",
+                borderRadius: "16px",
+                padding: "36px 24px",
+                textAlign: "center",
+                margin: "20px 0",
+              }}
+            >
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>🛡️</div>
+              <h3 style={{ fontSize: "18px", color: "#991b1b", margin: "0 0 8px 0", fontWeight: 800 }}>
+                Giới Hạn Quyền Giáo Viên
+              </h3>
+              <p style={{ fontSize: "14px", color: "#7f1d1d", maxWidth: "540px", margin: "0 auto 16px auto", lineHeight: 1.6 }}>
+                Tài khoản Giáo viên chỉ được phép sử dụng 4 chức năng: <strong>Lớp và Học sinh</strong>, <strong>Quản lý học tập</strong>, <strong>Giao Bài tập & Đề thi</strong>, và <strong>Giao tài liệu</strong>. Các tính năng quản trị hệ thống và tài khoản chỉ dành riêng cho Super Admin.
+              </p>
+              <button
+                type="button"
+                onClick={() => setActiveTab("classes")}
+                style={{
+                  background: "#059669",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "10px 20px",
+                  fontSize: "13.5px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(5, 150, 105, 0.3)",
+                }}
+              >
+                Về Trang Lớp và Học Sinh
+              </button>
+            </div>
           )}
         </main>
       </div>
@@ -7256,6 +7477,95 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   </div>
                 </div>
 
+                {/* 3.5. Phân quyền vai trò tài khoản (Super Admin / Giáo viên / Học sinh) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Phân quyền vai trò tài khoản
+                  </label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                    <label
+                      style={{
+                        border: `1.5px solid ${userEditForm.role === "super_admin" || userEditForm.role === "admin" ? "#2563eb" : "#cbd5e1"}`,
+                        background: userEditForm.role === "super_admin" || userEditForm.role === "admin" ? "#eff6ff" : "#ffffff",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userEditRole"
+                        value="super_admin"
+                        checked={userEditForm.role === "super_admin" || userEditForm.role === "admin"}
+                        onChange={() => setUserEditForm({ ...userEditForm, role: "super_admin" })}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "18px" }}>👑</span>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#1d4ed8" }}>Super Admin</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>Toàn quyền chức năng</span>
+                    </label>
+
+                    <label
+                      style={{
+                        border: `1.5px solid ${userEditForm.role === "teacher" || (!userEditForm.role && userEditForm.role !== "student") ? "#059669" : "#cbd5e1"}`,
+                        background: userEditForm.role === "teacher" || (!userEditForm.role && userEditForm.role !== "student") ? "#ecfdf5" : "#ffffff",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userEditRole"
+                        value="teacher"
+                        checked={userEditForm.role === "teacher" || (!userEditForm.role && userEditForm.role !== "student")}
+                        onChange={() => setUserEditForm({ ...userEditForm, role: "teacher" })}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "18px" }}>👨‍🏫</span>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#059669" }}>Giáo viên</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>4 quyền theo ảnh</span>
+                    </label>
+
+                    <label
+                      style={{
+                        border: `1.5px solid ${userEditForm.role === "student" ? "#7c3aed" : "#cbd5e1"}`,
+                        background: userEditForm.role === "student" ? "#f5f3ff" : "#ffffff",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userEditRole"
+                        value="student"
+                        checked={userEditForm.role === "student"}
+                        onChange={() => setUserEditForm({ ...userEditForm, role: "student" })}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "18px" }}>🎒</span>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#7c3aed" }}>Học sinh</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>Ẩn nút quản trị</span>
+                    </label>
+                  </div>
+                </div>
+
                 {/* 4. Mã Giáo Viên (6 chữ số) + Nút TẠO MÃ như Ảnh 1 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
@@ -7629,6 +7939,95 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
                       />
                       <span style={{ color: "#059669", fontWeight: 800 }}>Kích hoạt ngay</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Phân quyền vai trò tài khoản mới */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>
+                    Phân quyền vai trò tài khoản
+                  </label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                    <label
+                      style={{
+                        border: `1.5px solid ${userAddForm.role === "super_admin" || userAddForm.role === "admin" ? "#2563eb" : "#cbd5e1"}`,
+                        background: userAddForm.role === "super_admin" || userAddForm.role === "admin" ? "#eff6ff" : "#ffffff",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userAddRole"
+                        value="super_admin"
+                        checked={userAddForm.role === "super_admin" || userAddForm.role === "admin"}
+                        onChange={() => setUserAddForm({ ...userAddForm, role: "super_admin" })}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "18px" }}>👑</span>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#1d4ed8" }}>Super Admin</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>Toàn quyền chức năng</span>
+                    </label>
+
+                    <label
+                      style={{
+                        border: `1.5px solid ${userAddForm.role === "teacher" || (!userAddForm.role && userAddForm.role !== "student") ? "#059669" : "#cbd5e1"}`,
+                        background: userAddForm.role === "teacher" || (!userAddForm.role && userAddForm.role !== "student") ? "#ecfdf5" : "#ffffff",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userAddRole"
+                        value="teacher"
+                        checked={userAddForm.role === "teacher" || (!userAddForm.role && userAddForm.role !== "student")}
+                        onChange={() => setUserAddForm({ ...userAddForm, role: "teacher" })}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "18px" }}>👨‍🏫</span>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#059669" }}>Giáo viên</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>4 quyền theo ảnh</span>
+                    </label>
+
+                    <label
+                      style={{
+                        border: `1.5px solid ${userAddForm.role === "student" ? "#7c3aed" : "#cbd5e1"}`,
+                        background: userAddForm.role === "student" ? "#f5f3ff" : "#ffffff",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="userAddRole"
+                        value="student"
+                        checked={userAddForm.role === "student"}
+                        onChange={() => setUserAddForm({ ...userAddForm, role: "student" })}
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "18px" }}>🎒</span>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: "#7c3aed" }}>Học sinh</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>Ẩn nút quản trị</span>
                     </label>
                   </div>
                 </div>

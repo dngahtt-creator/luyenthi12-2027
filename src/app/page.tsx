@@ -44,6 +44,14 @@ import {
   StudentItem,
   DEFAULT_STUDENTS,
 } from "@/lib/classStudentService";
+import {
+  getCurrentAuthUser,
+  setCurrentAuthUser,
+  CurrentAuthUser,
+  logoutAllSessions,
+  SUPER_ADMIN_EMAILS,
+  UserRole,
+} from "@/lib/authService";
 
 interface SimulatorQuestion {
   id: number;
@@ -303,7 +311,7 @@ export default function Home() {
   const [authClass, setAuthClass] = useState<string>("12A1");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; name?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentAuthUser | null>(null);
 
   // Admin Firebase Users State
   const [adminUsersList, setAdminUsersList] = useState<UserAccountData[]>([]);
@@ -580,15 +588,17 @@ export default function Home() {
       };
 
       localStorage.setItem("student_portal_session", JSON.stringify(newSession));
-      localStorage.setItem(
-        "school_current_user",
-        JSON.stringify({
-          name: student.fullName,
-          studentClass: currentClass.name,
-          studentId: student.id,
-          role: "student",
-        })
-      );
+      const studentAuthUser: CurrentAuthUser = {
+        uid: student.id,
+        name: student.fullName,
+        fullName: student.fullName,
+        role: "student",
+        studentClass: currentClass.name,
+        studentId: student.id,
+        schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+      };
+      setCurrentAuthUser(studentAuthUser);
+      setCurrentUser(studentAuthUser);
 
       setShowStudentLoginModal(false);
       // Chuyển thẳng vào trang cá nhân của học sinh
@@ -670,6 +680,19 @@ export default function Home() {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Lắng nghe trạng thái đăng nhập tài khoản (Super Admin / Giáo viên / Học sinh)
+  useEffect(() => {
+    const initialUser = getCurrentAuthUser();
+    if (initialUser) {
+      setCurrentUser(initialUser);
+    }
+    const handleAuthChange = (e: any) => {
+      setCurrentUser(e.detail || null);
+    };
+    window.addEventListener("school_auth_changed", handleAuthChange);
+    return () => window.removeEventListener("school_auth_changed", handleAuthChange);
   }, []);
 
   // Scroll dynamics & effects (Parallax, Progress Bar, Active Nav, Back to top)
@@ -1071,19 +1094,43 @@ export default function Home() {
     setTimeout(() => setDownloadSuccessMsg(null), 4000);
   };
 
+  // Helper xác định vai trò khi đăng nhập
+  const resolveAuthRole = (u: any): UserRole => {
+    const emailNorm = (u.email || "").toLowerCase().trim();
+    if (
+      SUPER_ADMIN_EMAILS.includes(emailNorm) ||
+      emailNorm.includes("danganhthu") ||
+      u.role === "super_admin" ||
+      u.role === "admin"
+    ) {
+      return "super_admin";
+    }
+    if (u.role === "student") return "student";
+    return "teacher";
+  };
+
   // Google Sign In handler with Firebase Firestore saving
   const handleGoogleSignIn = async () => {
     setAuthLoading(true);
     try {
       const res = await loginWithGoogleFirebase();
       if (res.success && res.user) {
-        setCurrentUser({
+        const authUser: CurrentAuthUser = {
+          uid: res.user.uid,
           email: res.user.email,
           name: res.user.fullName,
-        });
+          fullName: res.user.fullName,
+          role: resolveAuthRole(res.user),
+          teacherCode: res.user.teacherCode,
+          studentClass: res.user.studentClass,
+          avatarUrl: res.user.avatarUrl,
+          schoolName: res.user.schoolName,
+        };
+        setCurrentAuthUser(authUser);
+        setCurrentUser(authUser);
         setShowLoginModal(false);
         setFirebaseSaveFeedback(
-          `☁️ Đăng nhập thành công tài khoản "${res.user.fullName}" (Mã GV: ${res.user.teacherCode || "Chưa cấp"})!`
+          `☁️ Đăng nhập thành công tài khoản "${res.user.fullName}" (${authUser.role === "super_admin" ? "👑 Super Admin" : "👨‍🏫 Giáo viên"})!`
         );
         setTimeout(() => setFirebaseSaveFeedback(null), 5000);
       } else {
@@ -1115,10 +1162,19 @@ export default function Home() {
       });
       setAuthLoading(false);
       if (res.success && res.user) {
-        setCurrentUser({
+        const authUser: CurrentAuthUser = {
+          uid: res.user.uid,
           email: res.user.email,
           name: res.user.fullName,
-        });
+          fullName: res.user.fullName,
+          role: resolveAuthRole(res.user),
+          teacherCode: res.user.teacherCode,
+          studentClass: res.user.studentClass,
+          avatarUrl: res.user.avatarUrl,
+          schoolName: res.user.schoolName,
+        };
+        setCurrentAuthUser(authUser);
+        setCurrentUser(authUser);
         setShowLoginModal(false);
         setFirebaseSaveFeedback(
           `☁️ Đã đăng ký thành công "${res.user.fullName}"! Mã GV: ${res.user.teacherCode || "Chưa cấp"} - Ngày ĐK: ${res.user.registeredDate || "Hôm nay"} (Lưu Firebase Firestore)`
@@ -1131,13 +1187,22 @@ export default function Home() {
       const res = await loginWithEmail(authEmail, authPassword);
       setAuthLoading(false);
       if (res.success && res.user) {
-        setCurrentUser({
+        const authUser: CurrentAuthUser = {
+          uid: res.user.uid,
           email: res.user.email,
           name: res.user.fullName,
-        });
+          fullName: res.user.fullName,
+          role: resolveAuthRole(res.user),
+          teacherCode: res.user.teacherCode,
+          studentClass: res.user.studentClass,
+          avatarUrl: res.user.avatarUrl,
+          schoolName: res.user.schoolName,
+        };
+        setCurrentAuthUser(authUser);
+        setCurrentUser(authUser);
         setShowLoginModal(false);
         setFirebaseSaveFeedback(
-          `☁️ Đăng nhập thành công! Đã đồng bộ tài khoản "${res.user.email}" (Mã GV: ${res.user.teacherCode || "Chưa cấp"}) với Firebase Firestore!`
+          `☁️ Đăng nhập thành công! Tài khoản "${res.user.email}" (${authUser.role === "super_admin" ? "👑 Super Admin" : "👨‍🏫 Giáo viên"})`
         );
         setTimeout(() => setFirebaseSaveFeedback(null), 5000);
       } else {
@@ -1243,28 +1308,68 @@ export default function Home() {
 
           {/* Góc Phải: Nút Quản Trị, Đăng Nhập & Nút Vào Học Nổi Bật Ngoài Cùng Bên Phải */}
           <div className={styles.navRightActions}>
-            <Link
-              href="/admin"
-              id="btn-quan-tri"
-              className={styles.adminBtn}
-              style={{ textDecoration: "none" }}
-              title="Cổng Quản Trị Hệ Thống (Cấu hình Cloudinary, Tài Khoản, Giao Đề Thi & Tài Liệu)"
-            >
-              <span>⚙️</span> Quản trị
-            </Link>
+            {/* Nút Quản Trị: ẨN ĐỐI VỚI HỌC SINH (chỉ hiển thị cho Khách, Giáo viên và Super Admin) */}
+            {(!currentUser || currentUser.role !== "student") && (
+              <Link
+                href="/admin"
+                id="btn-quan-tri"
+                className={styles.adminBtn}
+                style={{ textDecoration: "none" }}
+                title="Cổng Quản Trị Hệ Thống (Cấu hình Cloudinary, Tài Khoản, Giao Đề Thi & Tài Liệu)"
+              >
+                <span>⚙️</span> Quản trị
+              </Link>
+            )}
 
             {currentUser ? (
               <div className={styles.userLoggedInBadge}>
-                <div className={styles.userAvatar}>
-                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
+                <div
+                  className={styles.userAvatar}
+                  style={{
+                    background:
+                      currentUser.role === "super_admin"
+                        ? "#2563eb"
+                        : currentUser.role === "student"
+                        ? "#7c3aed"
+                        : "#059669",
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                  }}
+                >
+                  {currentUser.role === "super_admin"
+                    ? "👑"
+                    : currentUser.role === "student"
+                    ? "🎒"
+                    : "👨‍🏫"}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-                  <span style={{ fontSize: "12px", color: "#0f172a" }}>{currentUser.name || currentUser.email}</span>
-                  <span style={{ fontSize: "10.5px", color: "#16a34a" }}>Đã đăng nhập</span>
+                  <span style={{ fontSize: "12px", color: "#0f172a", fontWeight: 700 }}>
+                    {currentUser.name || currentUser.email}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "10.5px",
+                      color:
+                        currentUser.role === "super_admin"
+                          ? "#b45309"
+                          : currentUser.role === "student"
+                          ? "#6d28d9"
+                          : "#047857",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {currentUser.role === "super_admin"
+                      ? "👑 Super Admin"
+                      : currentUser.role === "student"
+                      ? "🎒 Học sinh"
+                      : "👨‍🏫 Giáo viên"}
+                  </span>
                 </div>
                 <button
                   className={styles.logoutBtn}
-                  onClick={() => {
+                  onClick={async () => {
+                    await logoutAllSessions();
                     setCurrentUser(null);
                     alert("Đã đăng xuất tài khoản!");
                   }}

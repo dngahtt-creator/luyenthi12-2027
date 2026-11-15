@@ -22,6 +22,7 @@ import {
   ExamItem,
   DocumentItem,
 } from "@/lib/examService";
+import { logoutAllSessions } from "@/lib/authService";
 import {
   getEvaluationsForStudent,
   sendStudentReply,
@@ -796,6 +797,24 @@ export default function StudentPortalPage() {
               title="Đổi học sinh hoặc nhập mã giáo viên khác"
             >
               🔄 Đổi học sinh
+            </button>
+
+            <button
+              type="button"
+              className={styles.switchStudentBtn}
+              onClick={async () => {
+                await logoutAllSessions();
+                window.location.href = "/";
+              }}
+              style={{
+                background: "#fee2e2",
+                color: "#991b1b",
+                border: "1px solid #fecaca",
+                fontWeight: 700,
+              }}
+              title="Đăng xuất khỏi tài khoản học sinh"
+            >
+              🚪 Đăng xuất
             </button>
           </div>
         </div>
