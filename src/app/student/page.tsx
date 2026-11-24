@@ -870,7 +870,73 @@ export default function StudentPortalPage() {
             </div>
           </div>
 
-          <div className={styles.navRight}>
+          <div className={styles.navRight} style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* THẺ TÀI KHOẢN HỌC SINH ĐÃ ĐĂNG NHẬP (CHUẨN THEO ẢNH NGƯỜI DÙNG YÊU CẦU) */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "12px",
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                border: "1.5px solid #60a5fa",
+                padding: "6px 14px",
+                borderRadius: "10px",
+                boxShadow: "0 3px 10px rgba(37, 99, 235, 0.25)",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, textAlign: "left" }}>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    letterSpacing: "0.2px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Chào, {studentDisplayName}
+                </div>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#facc15",
+                    fontWeight: 800,
+                    letterSpacing: "0.4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {currentSession?.className
+                    ? (currentSession.className.toLowerCase().includes("lớp")
+                        ? currentSession.className
+                        : `Lớp: ${currentSession.className}`)
+                    : `Lớp: ${studentGrade}A`}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await logoutAllSessions();
+                  window.location.href = "/";
+                }}
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.35)",
+                  borderRadius: "6px",
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                  whiteSpace: "nowrap",
+                }}
+                title="Đăng xuất khỏi tài khoản học sinh"
+              >
+                Đăng xuất
+              </button>
+            </div>
+
             {/* Trophy badge on top right - exact to screenshot: 2/0 */}
             <div className={styles.trophyBadge} title="Tổng lượt thi / Điểm tích lũy">
               <span className={styles.trophyIcon}>🏆</span>
@@ -915,24 +981,6 @@ export default function StudentPortalPage() {
               title="Đổi học sinh hoặc nhập mã giáo viên khác"
             >
               🔄 Đổi học sinh
-            </button>
-
-            <button
-              type="button"
-              className={styles.switchStudentBtn}
-              onClick={async () => {
-                await logoutAllSessions();
-                window.location.href = "/";
-              }}
-              style={{
-                background: "#fee2e2",
-                color: "#991b1b",
-                border: "1px solid #fecaca",
-                fontWeight: 700,
-              }}
-              title="Đăng xuất khỏi tài khoản học sinh"
-            >
-              🚪 Đăng xuất
             </button>
           </div>
         </div>
