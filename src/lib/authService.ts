@@ -32,6 +32,44 @@ export const DEFAULT_SUPER_ADMIN: CurrentAuthUser = {
   schoolName: "THPT DTNT THCS & THPT Tuy Đức",
 };
 
+export const DEFAULT_TEACHER: CurrentAuthUser = {
+  uid: "teacher_sogaminh123",
+  email: "sogaminh123@gmail.com",
+  name: "sogaminh123",
+  fullName: "sogaminh123",
+  role: "teacher",
+  teacherCode: "628842",
+  studentClass: "Giáo viên bộ môn",
+  schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+};
+
+/**
+ * Lấy tên tài khoản hiển thị cho người dùng, đảm bảo hiển thị đúng tên tài khoản của GV (sogaminh123, email prefix hoặc fullName)
+ */
+export function getDisplayedAccountName(user?: CurrentAuthUser | null): string {
+  if (!user) return "Bạn";
+
+  const genericNames = ["thầy/cô", "giáo viên", "thầy/cô giáo viên", "bạn", "teacher"];
+
+  const rawName = (user.name || user.fullName || "").trim();
+  if (rawName && !genericNames.includes(rawName.toLowerCase())) {
+    return rawName;
+  }
+
+  if (user.email && user.email.includes("@")) {
+    const prefix = user.email.split("@")[0].trim();
+    if (prefix && !genericNames.includes(prefix.toLowerCase())) {
+      return prefix;
+    }
+  }
+
+  if (user.role === "teacher") {
+    return DEFAULT_TEACHER.name;
+  }
+
+  return rawName || "Bạn";
+}
+
 /**
  * 4 Quyền duy nhất dành cho Giáo viên bộ môn (như ảnh người dùng yêu cầu):
  * 1. 🏫 Lớp và Học sinh (classes)
@@ -98,13 +136,25 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
         }
 
         // Quyền Giáo viên
+        const fallbackTeacherName = u.email && u.email.includes("@")
+          ? u.email.split("@")[0]
+          : DEFAULT_TEACHER.name;
+
+        const rawTeacherName = (u.fullName || u.name || "").trim();
+        const isGeneric =
+          !rawTeacherName ||
+          ["thầy/cô", "giáo viên", "thầy/cô giáo viên", "bạn", "teacher"].includes(
+            rawTeacherName.toLowerCase()
+          );
+        const teacherName = isGeneric ? fallbackTeacherName : rawTeacherName;
+
         return {
-          uid: u.uid,
-          email: u.email,
-          name: u.fullName || u.name || "Giáo viên",
-          fullName: u.fullName || u.name || "Giáo viên",
+          uid: u.uid || DEFAULT_TEACHER.uid,
+          email: u.email || DEFAULT_TEACHER.email,
+          name: teacherName,
+          fullName: teacherName,
           role: "teacher",
-          teacherCode: u.teacherCode,
+          teacherCode: u.teacherCode || DEFAULT_TEACHER.teacherCode,
           studentClass: u.studentClass || "Giáo viên bộ môn",
           schoolName: u.schoolName || "THPT DTNT THCS & THPT Tuy Đức",
           avatarUrl: u.avatarUrl,
@@ -180,10 +230,10 @@ export function switchMockRole(role: "super_admin" | "teacher" | "student", cust
     };
   } else if (role === "teacher") {
     user = {
-      uid: "teacher_user_" + Date.now(),
-      email: "giaovien.tuyduc@gmail.com",
-      name: customName || "Thầy/Cô Giáo Viên",
-      fullName: customName || "Thầy/Cô Giáo Viên",
+      uid: "teacher_sogaminh123",
+      email: "sogaminh123@gmail.com",
+      name: customName || DEFAULT_TEACHER.name,
+      fullName: customName || DEFAULT_TEACHER.fullName,
       role: "teacher",
       teacherCode: "628842",
       studentClass: "Giáo viên bộ môn",

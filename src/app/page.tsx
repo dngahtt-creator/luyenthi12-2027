@@ -51,6 +51,7 @@ import {
   logoutAllSessions,
   SUPER_ADMIN_EMAILS,
   UserRole,
+  getDisplayedAccountName,
 } from "@/lib/authService";
 
 interface SimulatorQuestion {
@@ -1353,9 +1354,10 @@ return (
                     color: "#ffffff",
                     fontWeight: 700,
                     letterSpacing: "0.2px",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  Chào, {currentUser.name || currentUser.fullName || currentUser.email?.split("@")[0] || "Bạn"}
+                  Chào, {getDisplayedAccountName(currentUser)}
                 </div>
                 <div
                   style={{
@@ -1363,6 +1365,7 @@ return (
                     color: "#facc15",
                     fontWeight: 800,
                     letterSpacing: "0.4px",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {currentUser.role === "student"
@@ -1372,7 +1375,7 @@ return (
                             : `Lớp: ${currentUser.studentClass}`)
                         : "Lớp: 12A1")
                     : currentUser.role === "teacher"
-                      ? `Mã GV: ${currentUser.teacherCode || "276648"}`
+                      ? `Mã GV: ${currentUser.teacherCode || "628842"}`
                       : "👑 Super Admin"}
                 </div>
               </div>

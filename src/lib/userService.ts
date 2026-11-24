@@ -46,7 +46,6 @@ export const OLD_ACCOUNT_IDENTIFIERS = [
   "usr_fc_zo_zo",
   "usr_gioi_luong",
   "usr_gioi_luong_68",
-  "sogaminh123@gmail.com",
   "luonggioi.gv@thddn.edu.vn",
   "luonggioi68@gmail.com",
   "admin_dang_anh_thu",
@@ -54,7 +53,7 @@ export const OLD_ACCOUNT_IDENTIFIERS = [
 ];
 
 /**
- * Tài khoản Admin thực tế đã đăng nhập của trường (Đặng Anh Thư)
+ * Tài khoản Admin thực tế đã đăng nhập của trường (Đặng Anh Thư) và Giáo viên chính
  */
 export const DEFAULT_USERS: UserAccountData[] = [
   {
@@ -68,6 +67,18 @@ export const DEFAULT_USERS: UserAccountData[] = [
     studentClass: "Ban Giám Hiệu / Quản Trị",
     authProvider: "google",
     role: "admin",
+  },
+  {
+    uid: "teacher_sogaminh123",
+    email: "sogaminh123@gmail.com",
+    fullName: "sogaminh123",
+    teacherCode: "628842",
+    registeredDate: "01/09/2026",
+    status: "active",
+    schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+    studentClass: "Giáo viên bộ môn",
+    authProvider: "password",
+    role: "teacher",
   },
 ];
 

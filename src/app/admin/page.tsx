@@ -8,10 +8,12 @@ import {
   getCurrentAuthUser,
   setCurrentAuthUser,
   DEFAULT_SUPER_ADMIN,
+  DEFAULT_TEACHER,
   CurrentAuthUser,
   isTeacherAllowedTab,
   switchMockRole,
   logoutAllSessions,
+  getDisplayedAccountName,
 } from "@/lib/authService";
 import {
   getSavedCloudinaryConfig,
@@ -2602,16 +2604,17 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               onClick={() => {
                 switchMockRole("teacher");
                 setCurrentAdminUser({
-                  uid: "teacher_mock",
-                  name: "Thầy/Cô Giáo Viên",
-                  fullName: "Thầy/Cô Giáo Viên",
+                  uid: DEFAULT_TEACHER.uid || "teacher_sogaminh123",
+                  email: DEFAULT_TEACHER.email || "sogaminh123@gmail.com",
+                  name: DEFAULT_TEACHER.name || "sogaminh123",
+                  fullName: DEFAULT_TEACHER.fullName || "sogaminh123",
                   role: "teacher",
-                  teacherCode: "628842",
+                  teacherCode: DEFAULT_TEACHER.teacherCode || "628842",
                   studentClass: "Giáo viên bộ môn",
                   schoolName: "THPT DTNT THCS & THPT Tuy Đức",
                 });
                 setActiveTab("classes");
-                showToast("👨‍🏫 Đã chuyển sang chế độ Giáo viên (Chỉ sử dụng 4 quyền theo ảnh)!");
+                showToast("👨‍🏫 Đã chuyển sang chế độ Giáo viên (Tài khoản: sogaminh123 - 4 quyền theo ảnh)!");
               }}
               style={{
                 border: "none",
@@ -2642,7 +2645,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             </div>
             <div>
               <div className={styles.userName}>
-                {currentAdminUser.fullName || currentAdminUser.name || "Đặng Anh Thư"}
+                {getDisplayedAccountName(currentAdminUser) || "Đặng Anh Thư"}
               </div>
               <div
                 className={styles.userRole}
