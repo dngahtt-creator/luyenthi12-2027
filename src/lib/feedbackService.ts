@@ -16,6 +16,7 @@ export interface StudentFeedbackMessage {
   sender: "teacher" | "student";
   senderName: string;
   content: string;
+  imageUrl?: string; // Hỗ trợ gửi ảnh trực tiếp hoặc dán ảnh clipboard (Ctrl+V)
   timestamp: string;
   formattedTime?: string;
   isAiGenerated?: boolean;
@@ -26,6 +27,8 @@ export interface StudentEvaluation {
   studentId: string;
   studentName: string;
   studentClass: string;
+  teacherCode?: string; // Mã giáo viên nhận câu hỏi / phản hồi
+  teacherName?: string; // Tên giáo viên phụ trách
   examId?: string;
   examTitle?: string;
   score?: number;
@@ -73,6 +76,8 @@ export async function getAllEvaluations(): Promise<StudentEvaluation[]> {
           studentId: data.studentId || "",
           studentName: data.studentName || "",
           studentClass: data.studentClass || "",
+          teacherCode: data.teacherCode || "",
+          teacherName: data.teacherName || "",
           examId: data.examId || "",
           examTitle: data.examTitle || "",
           score: data.score !== undefined ? data.score : undefined,
@@ -125,6 +130,8 @@ export function subscribeEvaluations(callback: (list: StudentEvaluation[]) => vo
             studentId: data.studentId || "",
             studentName: data.studentName || "",
             studentClass: data.studentClass || "",
+            teacherCode: data.teacherCode || "",
+            teacherName: data.teacherName || "",
             examId: data.examId || "",
             examTitle: data.examTitle || "",
             score: data.score !== undefined ? data.score : undefined,
@@ -180,6 +187,9 @@ export async function saveTeacherEvaluation(params: {
   studentName: string;
   studentClass: string;
   content: string;
+  teacherCode?: string;
+  teacherName?: string;
+  imageUrl?: string;
   examId?: string;
   examTitle?: string;
   score?: number;
@@ -198,11 +208,15 @@ export async function saveTeacherEvaluation(params: {
       (cleanName && e.studentName.toLowerCase() === cleanName.toLowerCase())
   );
 
+  const resolvedTeacherName = params.teacherName || existing?.teacherName || "Giáo viên phụ trách";
+  const resolvedTeacherCode = params.teacherCode || existing?.teacherCode || "";
+
   const newMessage: StudentFeedbackMessage = {
     id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
     sender: "teacher",
-    senderName: "Đặng Anh Thư (Giáo viên)",
+    senderName: `${resolvedTeacherName} (Giáo viên)`,
     content: params.content.trim(),
+    imageUrl: params.imageUrl || undefined,
     timestamp: new Date().toISOString(),
     formattedTime: getFormattedCurrentTime(),
     isAiGenerated: Boolean(params.isAiGenerated),
@@ -214,6 +228,8 @@ export async function saveTeacherEvaluation(params: {
     targetEval = {
       ...existing,
       studentClass: params.studentClass || existing.studentClass,
+      teacherCode: resolvedTeacherCode,
+      teacherName: resolvedTeacherName,
       examId: params.examId || existing.examId,
       examTitle: params.examTitle || existing.examTitle,
       score: params.score !== undefined ? params.score : existing.score,
@@ -232,6 +248,8 @@ export async function saveTeacherEvaluation(params: {
       studentId: cleanId,
       studentName: cleanName,
       studentClass: params.studentClass || "",
+      teacherCode: resolvedTeacherCode,
+      teacherName: resolvedTeacherName,
       examId: params.examId,
       examTitle: params.examTitle,
       score: params.score,
@@ -273,7 +291,8 @@ export async function saveTeacherEvaluation(params: {
 export async function sendStudentReply(
   evalId: string,
   studentName: string,
-  replyContent: string
+  replyContent: string,
+  imageUrl?: string
 ): Promise<StudentEvaluation | null> {
   const currentList = await getAllEvaluations();
   const target = currentList.find((e) => e.id === evalId);
@@ -284,6 +303,7 @@ export async function sendStudentReply(
     sender: "student",
     senderName: studentName || target.studentName,
     content: replyContent.trim(),
+    imageUrl: imageUrl || undefined,
     timestamp: new Date().toISOString(),
     formattedTime: getFormattedCurrentTime(),
   };
@@ -316,21 +336,111 @@ export async function sendStudentReply(
   return updatedEval;
 }
 
+// 4.1 HỌC SINH TẠO HOẶC GỬI CÂU HỎI TRỰC TIẾP ĐẾN GIÁO VIÊN PHỤ TRÁCH (THEO MÃ GV)
+export async function createOrSendStudentQuestion(params: {
+  studentId: string;
+  studentName: string;
+  studentClass: string;
+  teacherCode: string;
+  teacherName: string;
+  content: string;
+  imageUrl?: string;
+}): Promise<StudentEvaluation> {
+  const currentList = await getAllEvaluations();
+  const cleanId = (params.studentId || "").trim();
+  const cleanName = (params.studentName || "").trim();
+  const cleanTeacherCode = (params.teacherCode || "").trim();
+
+  let existing = currentList.find(
+    (e) =>
+      ((cleanId && e.studentId === cleanId) ||
+        (cleanName && e.studentName.toLowerCase() === cleanName.toLowerCase())) &&
+      (!cleanTeacherCode || !e.teacherCode || e.teacherCode === cleanTeacherCode)
+  );
+
+  const newMessage: StudentFeedbackMessage = {
+    id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+    sender: "student",
+    senderName: cleanName || "Học sinh",
+    content: params.content.trim(),
+    imageUrl: params.imageUrl || undefined,
+    timestamp: new Date().toISOString(),
+    formattedTime: getFormattedCurrentTime(),
+  };
+
+  let targetEval: StudentEvaluation;
+
+  if (existing) {
+    targetEval = {
+      ...existing,
+      studentClass: params.studentClass || existing.studentClass,
+      teacherCode: cleanTeacherCode || existing.teacherCode,
+      teacherName: params.teacherName || existing.teacherName,
+      status: "replied",
+      hasUnreadStudentReply: true,
+      hasUnreadTeacherReply: false,
+      messages: [...existing.messages, newMessage],
+      updatedAt: new Date().toISOString(),
+    };
+  } else {
+    const newId = `eval_${cleanId || cleanName.replace(/\s+/g, "_")}_${Date.now()}`;
+    targetEval = {
+      id: newId,
+      studentId: cleanId,
+      studentName: cleanName,
+      studentClass: params.studentClass || "",
+      teacherCode: cleanTeacherCode,
+      teacherName: params.teacherName,
+      status: "replied",
+      hasUnreadStudentReply: true,
+      hasUnreadTeacherReply: false,
+      messages: [newMessage],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  try {
+    const docRef = doc(db, "student_evaluations", targetEval.id);
+    await setDoc(docRef, {
+      ...targetEval,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.warn("Firestore save student question note:", err);
+  }
+
+  if (typeof window !== "undefined") {
+    const updatedList = existing
+      ? currentList.map((e) => (e.id === targetEval.id ? targetEval : e))
+      : [targetEval, ...currentList];
+    localStorage.setItem(LOCAL_EVALUATIONS_KEY, JSON.stringify(updatedList));
+    broadcastEvaluationUpdate();
+  }
+
+  return targetEval;
+}
+
 // 5. GIÁO VIÊN ĐÁP LẠI TIN NHẮN / CÂU HỎI CỦA HỌC SINH
 export async function sendTeacherReply(
   evalId: string,
   teacherContent: string,
+  teacherName?: string,
+  imageUrl?: string,
   isAiGenerated?: boolean
 ): Promise<StudentEvaluation | null> {
   const currentList = await getAllEvaluations();
   const target = currentList.find((e) => e.id === evalId);
   if (!target) return null;
 
+  const resolvedName = teacherName || target.teacherName || "Giáo viên";
+
   const newMessage: StudentFeedbackMessage = {
     id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
     sender: "teacher",
-    senderName: "Đặng Anh Thư (Giáo viên)",
+    senderName: `${resolvedName} (Giáo viên)`,
     content: teacherContent.trim(),
+    imageUrl: imageUrl || undefined,
     timestamp: new Date().toISOString(),
     formattedTime: getFormattedCurrentTime(),
     isAiGenerated: Boolean(isAiGenerated),

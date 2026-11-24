@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
@@ -63,6 +63,7 @@ import {
   StudentEvaluation,
   StudentFeedbackMessage,
 } from "@/lib/feedbackService";
+import FloatingQAWidget from "@/components/FloatingQAWidget";
 import {
   SchoolClass,
   StudentItem,
@@ -189,12 +190,13 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     name: "",
   });
 
-  // Student Modal State (Chỉ lưu TT, Họ và tên, Ngày sinh, ClassId)
+  // Student Modal State (Lưu TT, Họ và tên, Giới tính, Ngày sinh, ClassId, Mật khẩu)
   const [showStudentModal, setShowStudentModal] = useState<boolean>(false);
   const [editingStudent, setEditingStudent] = useState<StudentItem | null>(null);
   const [studentForm, setStudentForm] = useState({
     orderNumber: 1,
     fullName: "",
+    gender: "Nam",
     dob: "",
     classId: "",
     password: "",
@@ -384,7 +386,21 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
   const [feedbackAiPreset, setFeedbackAiPreset] = useState<"comprehensive" | "encourage" | "remind" | "method" | "urgent">("comprehensive");
   const [showReEvaluateForm, setShowReEvaluateForm] = useState<boolean>(false);
   const [teacherReplyInput, setTeacherReplyInput] = useState<string>("");
+  const [teacherReplyImage, setTeacherReplyImage] = useState<string | null>(null);
   const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
+  const teacherFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Lọc danh sách câu hỏi / trao đổi theo quyền:
+  // Nếu là Giáo viên: CHỈ hiển thị câu hỏi từ học sinh gửi đúng mã GV của mình
+  // Nếu là Super Admin: Xem toàn bộ câu hỏi của tất cả GV
+  const teacherEvaluations: StudentEvaluation[] = useMemo<StudentEvaluation[]>(() => {
+    if (isSuperAdmin) return evaluationsList;
+    const cleanTeacherCode = (currentAdminUser.teacherCode || "").trim();
+    if (!cleanTeacherCode) return evaluationsList;
+    return evaluationsList.filter(
+      (e: StudentEvaluation) => !e.teacherCode || e.teacherCode === cleanTeacherCode
+    );
+  }, [evaluationsList, isSuperAdmin, currentAdminUser.teacherCode]);
 
   // 7. CURRICULUM MANAGEMENT STATE (TẠO & QUẢN LÝ GIÁO TRÌNH)
   const [curriculumsList, setCurriculumsList] = useState<CurriculumItem[]>([]);
@@ -741,18 +757,64 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     await fetchEvaluations();
   };
 
+  // Hỗ trợ dán ảnh trực tiếp từ clipboard (Ctrl+V) khi giáo viên giải đáp
+  const handleTeacherReplyPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          const reader = new FileReader();
+          reader.onload = (loadEv) => {
+            if (loadEv.target?.result) {
+              setTeacherReplyImage(loadEv.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleTeacherFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn tệp hình ảnh (PNG, JPG, JPEG, WEBP)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (loadEv) => {
+      if (loadEv.target?.result) {
+        setTeacherReplyImage(loadEv.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+    if (teacherFileInputRef.current) teacherFileInputRef.current.value = "";
+  };
+
   const handleSendTeacherReply = async (evalId: string) => {
-    if (!teacherReplyInput.trim()) {
-      alert("Vui lòng nhập nội dung đáp lại học sinh!");
+    if (!teacherReplyInput.trim() && !teacherReplyImage) {
+      alert("Vui lòng nhập nội dung hoặc đính kèm ảnh đáp lại học sinh!");
       return;
     }
 
     setSubmittingFeedback(true);
-    await sendTeacherReply(evalId, teacherReplyInput.trim());
+    const resolvedTeacherName = currentAdminUser?.fullName || currentAdminUser?.name || "Giáo viên";
+    await sendTeacherReply(
+      evalId,
+      teacherReplyInput.trim() || (teacherReplyImage ? "Đã gửi một hình ảnh" : ""),
+      resolvedTeacherName,
+      teacherReplyImage || undefined
+    );
     setSubmittingFeedback(false);
 
     showToast("💬 Đã gửi câu trả lời/giải đáp đến học sinh thành công!");
     setTeacherReplyInput("");
+    setTeacherReplyImage(null);
     await fetchEvaluations();
   };
 
@@ -1166,6 +1228,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     setStudentForm({
       orderNumber: maxOrder + 1,
       fullName: "",
+      gender: "Nam",
       dob: "01/01/2015",
       classId: currentClass.id,
       password: "",
@@ -1178,6 +1241,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     setStudentForm({
       orderNumber: student.orderNumber || 1,
       fullName: student.fullName,
+      gender: (student.gender as "Nam" | "Nữ") || "Nam",
       dob: student.dob || "",
       classId: student.classId,
       password: student.password || "",
@@ -1199,6 +1263,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       await updateStudent(editingStudent.id, {
         orderNumber: Number(studentForm.orderNumber) || 1,
         fullName: studentForm.fullName.trim(),
+        gender: studentForm.gender || "Nam",
         dob: studentForm.dob.trim(),
         classId: studentForm.classId,
         className: targetClassName,
@@ -1211,6 +1276,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       const res = await saveNewStudent({
         orderNumber: Number(studentForm.orderNumber) || 1,
         fullName: studentForm.fullName.trim(),
+        gender: studentForm.gender || "Nam",
         dob: studentForm.dob.trim(),
         classId: studentForm.classId,
         className: targetClassName,
@@ -2745,7 +2811,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               <span>Quản lý học tập</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              {evaluationsList.filter((e) => e.hasUnreadStudentReply).length > 0 && (
+              {teacherEvaluations.filter((e) => e.hasUnreadStudentReply).length > 0 && (
                 <span
                   style={{
                     background: "#ef4444",
@@ -2758,9 +2824,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                     alignItems: "center",
                     gap: "2px",
                   }}
-                  title={`Có ${evaluationsList.filter((e) => e.hasUnreadStudentReply).length} học sinh vừa hỏi bài/trả lời!`}
+                  title={`Có ${teacherEvaluations.filter((e) => e.hasUnreadStudentReply).length} học sinh vừa hỏi bài/trả lời!`}
                 >
-                  🔔 {evaluationsList.filter((e) => e.hasUnreadStudentReply).length}
+                  🔔 {teacherEvaluations.filter((e) => e.hasUnreadStudentReply).length}
                 </span>
               )}
               <span className={styles.navCount}>{submissionsList.length}</span>
@@ -3341,6 +3407,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       <tr>
                         <th style={{ width: "80px", textAlign: "center", textTransform: 'uppercase' }}>TT</th>
                         <th style={{ textTransform: 'uppercase' }}>Họ và tên</th>
+                        <th style={{ width: "110px", textAlign: "center", textTransform: 'uppercase' }}>Giới tính</th>
                         <th style={{ textTransform: 'uppercase' }}>Ngày sinh</th>
                         <th style={{ textAlign: "center", textTransform: 'uppercase', minWidth: "150px" }}>MẬT KHẨU</th>
                         <th style={{ textAlign: "right", textTransform: 'uppercase' }}>Thao tác</th>
@@ -3349,7 +3416,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                     <tbody>
                       {currentClassStudents.length === 0 ? (
                         <tr>
-                          <td colSpan={5} style={{ textAlign: "center", padding: "60px 0" }}>
+                          <td colSpan={6} style={{ textAlign: "center", padding: "60px 0" }}>
                             <div style={{ fontSize: '40px', marginBottom: '10px' }}>🔍</div>
                             <div style={{ fontSize: "14px", color: "#64748b", fontWeight: 700, textTransform: 'uppercase' }}>Chưa có học sinh nào.</div>
                             <div style={{ fontSize: '12px', color: '#94a3b8' }}>Vui lòng chọn lớp hoặc nạp danh sách học sinh.</div>
@@ -3370,6 +3437,17 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                   {st.fullName}
                                 </div>
                               </div>
+                            </td>
+                            <td style={{ textAlign: "center" }}>
+                              {st.gender === "Nữ" ? (
+                                <span style={{ background: "#fdf2f8", color: "#db2777", border: "1px solid #fbcfe8", padding: "3px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                  👧 Nữ
+                                </span>
+                              ) : (
+                                <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                  👦 Nam
+                                </span>
+                              )}
                             </td>
                             <td>
                               <span style={{ fontSize: "13px", color: "#475569", fontWeight: 600 }}>
@@ -5344,7 +5422,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
                 {/* BANNER THÔNG BÁO TIN NHẮN MỚI TỪ HỌC SINH */}
                 {(() => {
-                  const unreadStudentEvals = evaluationsList.filter((e) => e.hasUnreadStudentReply);
+                  const unreadStudentEvals = teacherEvaluations.filter((e) => e.hasUnreadStudentReply);
                   if (unreadStudentEvals.length === 0) return null;
 
                   return (
@@ -6921,6 +6999,20 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       required
                       autoFocus
                     />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      <span>🚻</span> Giới tính:
+                    </label>
+                    <select
+                      className={styles.formSelect}
+                      value={studentForm.gender || "Nam"}
+                      onChange={(e) => setStudentForm({ ...studentForm, gender: e.target.value })}
+                    >
+                      <option value="Nam">👦 Nam</option>
+                      <option value="Nữ">👧 Nữ</option>
+                    </select>
                   </div>
 
                   <div className={styles.formGroup}>
@@ -9139,6 +9231,24 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               <div style={{ fontSize: "13px", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
                                 {msg.content}
                               </div>
+                              {msg.imageUrl && (
+                                <div style={{ marginTop: "6px" }}>
+                                  <a href={msg.imageUrl} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={msg.imageUrl}
+                                      alt="Ảnh đính kèm"
+                                      style={{
+                                        maxWidth: "100%",
+                                        maxHeight: "220px",
+                                        borderRadius: "8px",
+                                        border: isTeacher ? "1px solid #bfdbfe" : "1.5px solid #ddd6fe",
+                                        objectFit: "contain",
+                                        cursor: "pointer",
+                                      }}
+                                    />
+                                  </a>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -9154,14 +9264,82 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         rows={2}
                         value={teacherReplyInput}
                         onChange={(e) => setTeacherReplyInput(e.target.value)}
-                        placeholder="Nhập câu trả lời giải đáp câu hỏi của học sinh hoặc lời dặn dò tiếp theo..."
-                        style={{ width: "100%", padding: "8px 12px", fontSize: "13px", borderRadius: "6px", border: "1px solid #cbd5e1", resize: "vertical" }}
+                        onPaste={handleTeacherReplyPaste}
+                        placeholder="Nhập câu trả lời giải đáp câu hỏi của học sinh hoặc dán ảnh (Ctrl+V)..."
+                        style={{ width: "100%", padding: "8px 12px", fontSize: "13px", borderRadius: "6px", border: "1px solid #cbd5e1", resize: "vertical", boxSizing: "border-box" }}
                       />
+
+                      {/* ĐÍNH KÈM ẢNH HOẶC DÁN ẢNH */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+                        <input
+                          type="file"
+                          ref={teacherFileInputRef}
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={handleTeacherFileSelect}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => teacherFileInputRef.current?.click()}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: "4px",
+                            padding: "4px 8px",
+                            fontSize: "11px",
+                            color: "#334155",
+                            cursor: "pointer",
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <span>📷</span> Chọn ảnh giải đáp
+                        </button>
+                        <span style={{ fontSize: "11px", color: "#64748b" }}>
+                          (Hoặc dán ảnh trực tiếp <strong>Ctrl + V</strong>)
+                        </span>
+                      </div>
+
+                      {/* PREVIEW ẢNH ĐÍNH KÈM CỦA GIÁO VIÊN */}
+                      {teacherReplyImage && (
+                        <div style={{ marginTop: "8px", padding: "6px 10px", background: "#eff6ff", borderRadius: "6px", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <img
+                              src={teacherReplyImage}
+                              alt="Ảnh giáo viên gửi"
+                              style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "4px", border: "1px solid #93c5fd" }}
+                            />
+                            <span style={{ fontSize: "11.5px", color: "#1e40af", fontWeight: 700 }}>
+                              🖼️ Đã đính kèm hình ảnh giải đáp
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setTeacherReplyImage(null)}
+                            style={{
+                              background: "#fee2e2",
+                              color: "#991b1b",
+                              border: "none",
+                              borderRadius: "50%",
+                              width: "20px",
+                              height: "20px",
+                              fontWeight: 900,
+                              cursor: "pointer",
+                              fontSize: "11px",
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", flexWrap: "wrap", gap: "6px" }}>
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                           <button
                             type="button"
-                            onClick={() => setTeacherReplyInput(`Cô đã xem câu hỏi của em. Với câu này, em chú ý kiểm tra lại điều kiện xác định và áp dụng công thức cơ bản nhé!`)}
+                            onClick={() => setTeacherReplyInput(`Thầy/Cô đã xem câu hỏi của em. Với câu này, em chú ý kiểm tra lại điều kiện xác định và áp dụng công thức cơ bản nhé!`)}
                             style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", padding: "4px 8px", fontSize: "11px", color: "#475569", cursor: "pointer" }}
                           >
                             💡 Gợi ý giải đáp
@@ -10376,6 +10554,18 @@ service cloud.firestore {
           </div>
         </div>
       )}
+
+      {/* FLOATING 2-WAY Q&A CHAT WIDGET CHO GIÁO VIÊN / ADMIN */}
+      <FloatingQAWidget
+        role={isSuperAdmin ? "admin" : "teacher"}
+        currentUserName={currentAdminUser.fullName || currentAdminUser.name || "Giáo viên"}
+        currentUserId={currentAdminUser.uid}
+        teacherCode={currentAdminUser.teacherCode}
+        teacherName={currentAdminUser.fullName}
+        evaluations={teacherEvaluations}
+        onRefreshEvaluations={fetchEvaluations}
+        defaultPosition="bottom-right"
+      />
     </div>
   );
 }

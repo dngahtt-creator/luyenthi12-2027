@@ -476,18 +476,15 @@ export default function Home() {
     return Boolean(pwd.length > 0);
   }, [popupSelectedStudent]);
 
-  // Kiểm tra học sinh đã được ghi nhớ mật khẩu trên hệ thống / thiết bị này chưa (lần 2 không cần nhập lại)
-  const isPasswordRemembered = useMemo(() => {
-    if (!popupSelectedStudent || typeof window === "undefined") return false;
-    const remembered = localStorage.getItem(`std_remembered_${popupSelectedStudent.id}`);
-    const localPwd = localStorage.getItem(`std_pwd_${popupSelectedStudent.id}`);
-    return Boolean(remembered === "true" || (localPwd && localPwd.length > 0));
-  }, [popupSelectedStudent]);
+  // Kiểm tra học sinh đã được ghi nhớ mật khẩu trên hệ thống / thiết bị này chưa
+  const isPasswordRemembered = false;
 
   // Bước 2: Chuyển sang bước 3 (mật khẩu)
   const handleProceedToPasswordStep = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setStudentLoginError(null);
+    setStudentInputPassword("");
+    setStudentInputConfirmPassword("");
     if (!studentSelectedClassId) {
       setStudentLoginError("Vui lòng chọn lớp học");
       return;
@@ -499,7 +496,7 @@ export default function Home() {
     setPopupStep(3);
   };
 
-  // Bước 3: Hoàn tất đăng nhập học sinh và vào trang cá nhân
+  // Bước 3: Hoàn tất đăng nhập học sinh và vào trang cá nhân (BẮT BUỘC NHẬP MẬT KHẨU)
   const handlePopupStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setStudentLoginError(null);
@@ -551,28 +548,28 @@ export default function Home() {
           return;
         }
 
-        // Lưu mật khẩu vào Firestore & LocalStorage (để lần 2 không cần nhập)
+        // Lưu mật khẩu vào Firestore & LocalStorage
         await setStudentPassword(student.id, studentInputPassword.trim(), student.fullName);
         if (typeof window !== "undefined") {
           localStorage.setItem(`std_pwd_${student.id}`, studentInputPassword.trim());
           localStorage.setItem(`std_pwd_${student.fullName}`, studentInputPassword.trim());
           localStorage.setItem(`std_pwd_${student.fullName.toLowerCase()}`, studentInputPassword.trim());
-          localStorage.setItem(`std_remembered_${student.id}`, "true");
         }
         student.password = studentInputPassword.trim();
         setStudentStudentsList((prev) =>
           prev.map((s) => (s.id === student.id ? { ...s, password: studentInputPassword.trim() } : s))
         );
-      } else if (!isPasswordRemembered) {
-        // Nếu đã có mật khẩu trong hệ thống nhưng đang ở thiết bị mới
+      } else {
+        // Bắt buộc nhập mật khẩu để đăng nhập (yêu cầu từ người dùng)
+        if (!studentInputPassword.trim()) {
+          setStudentLoginError("Vui lòng nhập mật khẩu học sinh để tiếp tục");
+          setStudentLoginLoading(false);
+          return;
+        }
         if (studentInputPassword.trim() !== savedPassword) {
           setStudentLoginError("Mật khẩu không chính xác. Vui lòng kiểm tra lại");
           setStudentLoginLoading(false);
           return;
-        }
-        if (typeof window !== "undefined" && rememberOnDevice) {
-          localStorage.setItem(`std_remembered_${student.id}`, "true");
-          localStorage.setItem(`std_pwd_${student.id}`, savedPassword);
         }
       }
 
@@ -3898,33 +3895,13 @@ return (
                 </button>
               </div>
 
-              {/* TRƯỜNG HỢP 1: LẦN 2 KHÔNG CẦN NHẬP MẬT KHẨU (ĐÃ LƯU TRÊN HỆ THỐNG / THIẾT BỊ NÀY) */}
-              {isPasswordRemembered ? (
-                <div
-                  style={{
-                    background: "#ecfdf5",
-                    border: "1.5px solid #a7f3d0",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    marginBottom: "16px",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ fontSize: "32px", marginBottom: "6px" }}>🎉</div>
-                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#065f46" }}>
-                    Hệ thống đã lưu mật khẩu của em!
-                  </div>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#047857" }}>
-                    Từ lần 2 trở đi, em không cần phải nhập lại mật khẩu. Bấm nút bên dưới để vào trang cá nhân học tập ngay:
-                  </p>
-                </div>
-              ) : !popupStudentHasPassword ? (
-                /* TRƯỜNG HỢP 2: LẦN ĐẦU TIÊN - NHẬP MẬT KHẨU LẦN ĐẦU (LƯU VÀO HỆ THỐNG ĐỂ LẦN 2 KHÔNG CẦN NHẬP) */
+              {!popupStudentHasPassword ? (
+                /* TRƯỜNG HỢP 1: LẦN ĐẦU TIÊN - ĐẶT MẬT KHẨU LẦN ĐẦU & XÁC NHẬN */
                 <>
                   <div className={styles.studentFirstTimeAlert}>
                     <span style={{ fontSize: "18px" }}>💡</span>
                     <div>
-                      <strong>Nhập mật khẩu lần đầu:</strong> Em hãy đặt mật khẩu lần đầu (tối thiểu 4 ký tự). Hệ thống sẽ tự động lưu lại để <strong>từ lần 2 trở đi em không cần nhập mật khẩu nữa!</strong>
+                      <strong>Nhập mật khẩu lần đầu:</strong> Em hãy đặt mật khẩu lần đầu (tối thiểu 4 ký tự) và ghi nhớ để đăng nhập các lần sau!
                     </div>
                   </div>
 
@@ -3958,12 +3935,12 @@ return (
                   </div>
                 </>
               ) : (
-                /* TRƯỜNG HỢP 3: HỌC SINH ĐÃ ĐẶT MẬT KHẨU NHƯNG ĐANG VÀO TỪ THIẾT BỊ MỚI */
+                /* TRƯỜNG HỢP 2: HỌC SINH ĐÃ CÓ MẬT KHẨU - BẮT BUỘC NHẬP MẬT KHẨU ĐỂ ĐĂNG NHẬP */
                 <>
                   <div className={styles.studentExistingAlert}>
                     <span style={{ fontSize: "16px" }}>🔐</span>
                     <div>
-                      <strong>Nhập mật khẩu của em:</strong> Nhập mật khẩu đã đặt để đăng nhập và tự động lưu trên thiết bị này.
+                      <strong>Cần nhập mật khẩu:</strong> Vui lòng nhập mật khẩu học sinh đã đặt để đăng nhập vào trang học tập.
                     </div>
                   </div>
 
@@ -3973,29 +3950,13 @@ return (
                     </label>
                     <input
                       type="password"
-                      placeholder="Nhập mật khẩu của em..."
+                      placeholder="Nhập mật khẩu học sinh của em..."
                       value={studentInputPassword}
                       onChange={(e) => setStudentInputPassword(e.target.value)}
                       className={styles.studentFormInput}
                       required
                       autoFocus
                     />
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0 16px 0" }}>
-                    <input
-                      type="checkbox"
-                      id="chk-remember-student"
-                      checked={rememberOnDevice}
-                      onChange={(e) => setRememberOnDevice(e.target.checked)}
-                      style={{ width: "16px", height: "16px", cursor: "pointer" }}
-                    />
-                    <label
-                      htmlFor="chk-remember-student"
-                      style={{ fontSize: "12.5px", color: "#334155", cursor: "pointer", fontWeight: 600 }}
-                    >
-                      Lưu vào hệ thống để lần sau không cần nhập mật khẩu
-                    </label>
                   </div>
                 </>
               )}
@@ -4034,11 +3995,9 @@ return (
                 >
                   {studentLoginLoading
                     ? "Đang xác thực..."
-                    : isPasswordRemembered
-                      ? "VÀO TRANG CÁ NHÂN NGAY 🚀"
-                      : !popupStudentHasPassword
-                        ? "LƯU & VÀO TRANG CÁ NHÂN 🚀"
-                        : "VÀO TRANG CÁ NHÂN 🚀"}
+                    : !popupStudentHasPassword
+                      ? "LƯU MẬT KHẨU & VÀO HỌC 🚀"
+                      : "ĐĂNG NHẬP VÀO HỌC 🚀"}
                 </button>
               </div>
             </form>

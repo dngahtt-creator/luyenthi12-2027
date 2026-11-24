@@ -32,6 +32,7 @@ export interface StudentItem {
   orderNumber: number; // TT
   fullName: string; // Họ và tên
   dob: string; // Ngày sinh (DD/MM/YYYY)
+  gender?: "Nam" | "Nữ" | string; // Giới tính học sinh
   createdAt?: string | number;
   password?: string; // Mật khẩu học sinh (đặt lần đầu khi vào học)
 }
@@ -80,7 +81,7 @@ export const DEFAULT_CLASSES: SchoolClass[] = [
   },
 ];
 
-// Initial default students - chuẩn xác 3 cột: TT, Họ và tên, Ngày sinh theo đúng mẫu thực tế
+// Initial default students - chuẩn xác: TT, Họ và tên, Giới tính, Ngày sinh theo đúng mẫu thực tế
 export const DEFAULT_STUDENTS: StudentItem[] = [
   {
     id: "std-1",
@@ -88,6 +89,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 1,
     fullName: "Hani Diễm",
+    gender: "Nữ",
     dob: "01/01/2015",
     password: "123456",
   },
@@ -97,6 +99,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 2,
     fullName: "Điểu Dũng",
+    gender: "Nam",
     dob: "10/10/2015",
     password: "123456",
   },
@@ -106,6 +109,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 3,
     fullName: "Điểu Ni Ên",
+    gender: "Nam",
     dob: "02/03/2015",
     password: "123456",
   },
@@ -115,6 +119,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 4,
     fullName: "Thào Thị Gầu",
+    gender: "Nữ",
     dob: "13/11/2015",
     password: "123456",
   },
@@ -124,6 +129,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 5,
     fullName: "Điểu Gióp",
+    gender: "Nam",
     dob: "20/12/2014",
   },
   {
@@ -132,6 +138,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 6,
     fullName: "Chíu Thị Thanh Hiền",
+    gender: "Nữ",
     dob: "04/10/2015",
   },
   {
@@ -140,6 +147,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 7,
     fullName: "Thị Gia Hoan",
+    gender: "Nữ",
     dob: "09/09/2015",
   },
   {
@@ -148,6 +156,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A1",
     orderNumber: 8,
     fullName: "Triệu Quốc Huy",
+    gender: "Nam",
     dob: "16/02/2015",
   },
   // Lớp 12A2
@@ -157,6 +166,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A2",
     orderNumber: 1,
     fullName: "Nguyễn Văn An",
+    gender: "Nam",
     dob: "05/03/2008",
   },
   {
@@ -165,6 +175,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A2",
     orderNumber: 2,
     fullName: "Trần Thị Bích",
+    gender: "Nữ",
     dob: "14/06/2008",
   },
   {
@@ -173,6 +184,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A2",
     orderNumber: 3,
     fullName: "Lê Hoàng Cường",
+    gender: "Nam",
     dob: "22/09/2008",
   },
   {
@@ -181,6 +193,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A2",
     orderNumber: 4,
     fullName: "Phạm Minh Đức",
+    gender: "Nam",
     dob: "18/11/2008",
   },
   {
@@ -189,6 +202,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A2",
     orderNumber: 5,
     fullName: "Vũ Ngọc Hân",
+    gender: "Nữ",
     dob: "08/04/2008",
   },
   {
@@ -197,6 +211,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "12A2",
     orderNumber: 6,
     fullName: "Đặng Gia Huy",
+    gender: "Nam",
     dob: "12/12/2008",
   },
   // Lớp 11A1
@@ -206,6 +221,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "11A1",
     orderNumber: 1,
     fullName: "Bùi Phương Anh",
+    gender: "Nữ",
     dob: "15/01/2009",
   },
   {
@@ -214,6 +230,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "11A1",
     orderNumber: 2,
     fullName: "Đỗ Thành Đạt",
+    gender: "Nam",
     dob: "20/05/2009",
   },
   {
@@ -222,6 +239,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "11A1",
     orderNumber: 3,
     fullName: "Hoàng Khánh Linh",
+    gender: "Nữ",
     dob: "03/08/2009",
   },
   {
@@ -230,6 +248,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "11A1",
     orderNumber: 4,
     fullName: "Mai Quốc Nam",
+    gender: "Nam",
     dob: "11/10/2009",
   },
   {
@@ -238,6 +257,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "11A1",
     orderNumber: 5,
     fullName: "Ngô Bảo Ngọc",
+    gender: "Nữ",
     dob: "25/12/2009",
   },
   // Lớp 10A1
@@ -247,6 +267,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "10A1",
     orderNumber: 1,
     fullName: "Phan Tuấn Anh",
+    gender: "Nam",
     dob: "09/02/2010",
   },
   {
@@ -255,6 +276,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "10A1",
     orderNumber: 2,
     fullName: "Trịnh Mai Chi",
+    gender: "Nữ",
     dob: "19/04/2010",
   },
   {
@@ -263,6 +285,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "10A1",
     orderNumber: 3,
     fullName: "Dương Minh Khôi",
+    gender: "Nam",
     dob: "30/07/2010",
   },
   {
@@ -271,6 +294,7 @@ export const DEFAULT_STUDENTS: StudentItem[] = [
     className: "10A1",
     orderNumber: 4,
     fullName: "Lương Thảo Nguyên",
+    gender: "Nữ",
     dob: "14/11/2010",
   },
 ];
@@ -709,6 +733,7 @@ export async function getAllStudents(): Promise<StudentItem[]> {
           orderNumber: Number(data.orderNumber) || 1,
           fullName: data.fullName || "",
           dob: data.dob || "",
+          gender: (data.gender as "Nam" | "Nữ") || "Nam",
           createdAt: data.createdAt,
           password: pwd,
         };
@@ -770,13 +795,14 @@ export async function saveNewStudent(
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const colRef = collection(db, "students");
-    // Chỉ lưu các thông tin yêu cầu: classId, className, orderNumber, fullName, dob
+    // Lưu các thông tin: classId, className, orderNumber, fullName, dob, gender
     const payload = {
       classId: studentData.classId,
       className: studentData.className,
       orderNumber: Number(studentData.orderNumber) || 1,
       fullName: studentData.fullName.trim(),
       dob: studentData.dob.trim(),
+      gender: studentData.gender || "Nam",
       createdAt: serverTimestamp(),
     };
 
@@ -789,6 +815,7 @@ export async function saveNewStudent(
       orderNumber: payload.orderNumber,
       fullName: payload.fullName,
       dob: payload.dob,
+      gender: payload.gender,
       createdAt: new Date().toISOString(),
     };
 
@@ -810,6 +837,7 @@ export async function saveNewStudent(
       orderNumber: Number(studentData.orderNumber) || 1,
       fullName: studentData.fullName.trim(),
       dob: studentData.dob.trim(),
+      gender: studentData.gender || "Nam",
       createdAt: new Date().toISOString(),
     };
 
@@ -830,7 +858,7 @@ export async function updateStudent(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const docRef = doc(db, "students", studentId);
-    // Chỉ cập nhật các trường được phép
+    // Cập nhật các trường được phép
     const cleanData: Record<string, unknown> = {
       updatedAt: serverTimestamp(),
     };
@@ -839,6 +867,7 @@ export async function updateStudent(
     if (updatedData.orderNumber !== undefined) cleanData.orderNumber = Number(updatedData.orderNumber);
     if (updatedData.fullName !== undefined) cleanData.fullName = updatedData.fullName.trim();
     if (updatedData.dob !== undefined) cleanData.dob = updatedData.dob.trim();
+    if (updatedData.gender !== undefined) cleanData.gender = updatedData.gender;
 
     await setDoc(docRef, cleanData, { merge: true });
   } catch (err) {
@@ -855,6 +884,7 @@ export async function updateStudent(
         orderNumber: Number(updatedData.orderNumber ?? current[idx].orderNumber),
         fullName: updatedData.fullName ? updatedData.fullName.trim() : current[idx].fullName,
         dob: updatedData.dob ? updatedData.dob.trim() : current[idx].dob,
+        gender: updatedData.gender !== undefined ? updatedData.gender : current[idx].gender,
       };
       localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(current));
       broadcastUpdate();
@@ -914,6 +944,7 @@ async function syncStudentClassName(classId: string, newClassName: string) {
 export interface ParsedStudentRow {
   orderNumber: number; // TT
   fullName: string; // Họ và tên
+  gender?: "Nam" | "Nữ" | string; // Giới tính
   dob: string; // Ngày sinh
   isValid: boolean;
   error?: string;
@@ -952,6 +983,18 @@ export function normalizeStudentData(
     const rawName = findVal(["ho va ten", "ho ten", "ten", "fullname", "name", "ho"]);
     const fullName = rawName.replace(/\s+/g, " ").trim();
 
+    // 2.1 Giới tính
+    const rawGender = findVal(["gioi tinh", "gioitinh", "gender", "phai", "nam nu"]);
+    let parsedGender: "Nam" | "Nữ" = "Nam";
+    if (
+      rawGender.toLowerCase().includes("nữ") ||
+      rawGender.toLowerCase().includes("nu") ||
+      rawGender.toLowerCase() === "f" ||
+      rawGender.toLowerCase() === "female"
+    ) {
+      parsedGender = "Nữ";
+    }
+
     // 3. Ngày sinh
     let rawDob = findVal(["ngay sinh", "ngaysinh", "dob", "birth", "nam sinh", "ngay"]);
 
@@ -983,6 +1026,7 @@ export function normalizeStudentData(
     validStudents.push({
       orderNumber: orderNum,
       fullName,
+      gender: parsedGender,
       dob: rawDob || "Chưa cập nhật",
       isValid: true,
     });
@@ -1064,13 +1108,14 @@ export async function importStudentsToClass(
       baseOrder = classStudents.reduce((max, s) => Math.max(max, s.orderNumber), 0);
     }
 
-    // CSDL chỉ lưu đúng: classId, className, orderNumber, fullName, dob
+    // CSDL lưu: classId, className, orderNumber, fullName, gender, dob
     const newItems: StudentItem[] = students.map((s, idx) => ({
       id: "std_" + Date.now() + "_" + idx,
       classId,
       className,
       orderNumber: mode === "append" ? baseOrder + idx + 1 : s.orderNumber || idx + 1,
       fullName: s.fullName,
+      gender: s.gender || "Nam",
       dob: s.dob,
       createdAt: new Date().toISOString(),
     }));
@@ -1090,6 +1135,7 @@ export async function importStudentsToClass(
             className: item.className,
             orderNumber: item.orderNumber,
             fullName: item.fullName,
+            gender: item.gender || "Nam",
             dob: item.dob,
             createdAt: serverTimestamp(),
           });

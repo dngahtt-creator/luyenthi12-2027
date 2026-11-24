@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
@@ -27,9 +27,11 @@ import {
   getEvaluationsForStudent,
   sendStudentReply,
   saveTeacherEvaluation,
+  createOrSendStudentQuestion,
   StudentEvaluation,
   StudentFeedbackMessage,
 } from "@/lib/feedbackService";
+import FloatingQAWidget from "@/components/FloatingQAWidget";
 import {
   getCurriculumsForClass,
   CurriculumItem,
@@ -128,7 +130,9 @@ export default function StudentPortalPage() {
   const [showReplyModal, setShowReplyModal] = useState<boolean>(false);
   const [activeEvalForReply, setActiveEvalForReply] = useState<StudentEvaluation | null>(null);
   const [studentReplyText, setStudentReplyText] = useState<string>("");
+  const [studentReplyImage, setStudentReplyImage] = useState<string | null>(null);
   const [submittingReply, setSubmittingReply] = useState<boolean>(false);
+  const studentFileInputRef = useRef<HTMLInputElement>(null);
 
   // 5. Load Initial Data & Session
   useEffect(() => {
@@ -226,9 +230,48 @@ export default function StudentPortalPage() {
     };
   }, [currentSession]);
 
+  // Hỗ trợ dán ảnh trực tiếp từ clipboard (Ctrl+V) vào ô hỏi bài
+  const handleStudentReplyPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          const reader = new FileReader();
+          reader.onload = (loadEv) => {
+            if (loadEv.target?.result) {
+              setStudentReplyImage(loadEv.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleStudentFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn tệp hình ảnh (PNG, JPG, JPEG, WEBP)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (loadEv) => {
+      if (loadEv.target?.result) {
+        setStudentReplyImage(loadEv.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+    if (studentFileInputRef.current) studentFileInputRef.current.value = "";
+  };
+
   const handleSendStudentQuestionOrReply = async () => {
-    if (!studentReplyText.trim()) {
-      alert("Vui lòng nhập câu hỏi hoặc câu trả lời của em!");
+    if (!studentReplyText.trim() && !studentReplyImage) {
+      alert("Vui lòng nhập câu hỏi hoặc đính kèm ảnh!");
       return;
     }
     if (!currentSession) return;
@@ -236,29 +279,32 @@ export default function StudentPortalPage() {
     setSubmittingReply(true);
 
     if (activeEvalForReply) {
-      await sendStudentReply(activeEvalForReply.id, currentSession.studentName, studentReplyText.trim());
+      await sendStudentReply(
+        activeEvalForReply.id,
+        currentSession.studentName,
+        studentReplyText.trim() || (studentReplyImage ? "Đã gửi một hình ảnh" : ""),
+        studentReplyImage || undefined
+      );
     } else {
-      await saveTeacherEvaluation({
+      await createOrSendStudentQuestion({
         studentId: currentSession.studentId,
         studentName: currentSession.studentName,
         studentClass: currentSession.className,
-        content: `Chào em! Cô đã nhận được câu hỏi từ em: "${studentReplyText.trim()}". Cô sẽ xem xét và giải đáp cho em nhé!`,
-        isAiGenerated: true,
+        teacherCode: currentSession.teacherCode,
+        teacherName: currentSession.teacherName || "Giáo viên phụ trách",
+        content: studentReplyText.trim() || (studentReplyImage ? "Đã gửi một hình ảnh" : ""),
+        imageUrl: studentReplyImage || undefined,
       });
-
-      const updatedEvals = await getEvaluationsForStudent(currentSession.studentId, currentSession.studentName);
-      if (updatedEvals.length > 0) {
-        await sendStudentReply(updatedEvals[0].id, currentSession.studentName, studentReplyText.trim());
-      }
     }
 
     setSubmittingReply(false);
     setStudentReplyText("");
+    setStudentReplyImage(null);
     setShowReplyModal(false);
 
     const refreshed = await getEvaluationsForStudent(currentSession.studentId, currentSession.studentName);
     setStudentEvaluations(refreshed);
-    alert("🎉 Đã gửi câu hỏi / phản hồi tới cô giáo thành công! Cô giáo sẽ đọc và giải đáp cho em sớm nhất.");
+    alert(`🎉 Đã gửi câu hỏi / phản hồi tới Giáo viên ${currentSession.teacherName || ""} thành công!`);
   };
 
   // Handle teacher code input change (Bắt buộc nhập đủ 6 chữ số)
@@ -1237,7 +1283,7 @@ export default function StudentPortalPage() {
                       <span style={{ fontSize: "22px" }}>👩‍🏫</span>
                       <div>
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "#1e3a8a" }}>
-                          Đặng Anh Thư (Giáo viên phụ trách)
+                          {ev.teacherName || currentSession?.teacherName || "Giáo viên phụ trách"} {ev.teacherCode ? `(Mã GV: ${ev.teacherCode})` : ""}
                         </div>
                         <div style={{ fontSize: "11.5px", color: "#64748b" }}>
                           Đánh giá năng lực {ev.examTitle ? `• Đề: ${ev.examTitle}` : ""} {ev.score !== undefined ? `• Điểm: ${ev.score.toFixed(1)}/10` : ""}
@@ -1247,13 +1293,14 @@ export default function StudentPortalPage() {
 
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ background: "#dcfce7", color: "#15803d", padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 800 }}>
-                        ⭐ Đánh giá chính thức
+                        ⭐ Trao đổi 2 chiều
                       </span>
                       <button
                         type="button"
                         onClick={() => {
                           setActiveEvalForReply(ev);
                           setStudentReplyText("");
+                          setStudentReplyImage(null);
                           setShowReplyModal(true);
                         }}
                         style={{
@@ -1296,7 +1343,7 @@ export default function StudentPortalPage() {
                             }}
                           >
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", fontSize: "11px", fontWeight: 700, color: isTeacher ? "#059669" : "#2563eb" }}>
-                              <span>{isTeacher ? "👩‍🏫 Lời nhận xét của Cô giáo" : "👤 Em (" + msg.senderName + ")"}</span>
+                              <span>{isTeacher ? "👩‍🏫 " + msg.senderName : "👤 Em (" + msg.senderName + ")"}</span>
                               {msg.isAiGenerated && (
                                 <span style={{ background: "#e0e7ff", color: "#4338ca", padding: "1px 5px", borderRadius: "4px", fontSize: "10px" }}>
                                   🤖 Phân tích AI
@@ -1309,6 +1356,24 @@ export default function StudentPortalPage() {
                             <div style={{ fontSize: "13.5px", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
                               {msg.content}
                             </div>
+                            {msg.imageUrl && (
+                              <div style={{ marginTop: "6px" }}>
+                                <a href={msg.imageUrl} target="_blank" rel="noopener noreferrer">
+                                  <img
+                                    src={msg.imageUrl}
+                                    alt="Ảnh đính kèm"
+                                    style={{
+                                      maxWidth: "100%",
+                                      maxHeight: "220px",
+                                      borderRadius: "8px",
+                                      border: "1px solid #cbd5e1",
+                                      cursor: "pointer",
+                                      objectFit: "contain",
+                                    }}
+                                  />
+                                </a>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -1363,15 +1428,14 @@ export default function StudentPortalPage() {
                       <div className={styles.examCardHeader}>
                         <div className={styles.badgeRow}>
                           <span
-                            className={`${styles.subjectBadge} ${
-                              exam.subject === "toan"
+                            className={`${styles.subjectBadge} ${exam.subject === "toan"
                                 ? styles.subjectToan
                                 : exam.subject === "ly"
-                                ? styles.subjectLy
-                                : exam.subject === "hoa"
-                                ? styles.subjectHoa
-                                : styles.subjectOther
-                            }`}
+                                  ? styles.subjectLy
+                                  : exam.subject === "hoa"
+                                    ? styles.subjectHoa
+                                    : styles.subjectOther
+                              }`}
                           >
                             {exam.subjectName || "Môn học"}
                           </span>
@@ -2114,7 +2178,7 @@ export default function StudentPortalPage() {
       )}
 
       {/* =========================================================
-          MODAL TRẢ LỜI / HỎI BÀI CÔ GIÁO
+          MODAL TRẢ LỜI / HỎI BÀI GIÁO VIÊN
       ========================================================= */}
       {showReplyModal && (
         <div className={styles.modalOverlay} onClick={() => setShowReplyModal(false)}>
@@ -2138,10 +2202,10 @@ export default function StudentPortalPage() {
                 <span style={{ fontSize: "24px" }}>💬</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "16px", color: "#ffffff", fontWeight: 800 }}>
-                    TRẢ LỜI / HỎI BÀI CÔ GIÁO
+                    HỎI BÀI / TRAO ĐỔI VỚI GIÁO VIÊN
                   </h3>
                   <div style={{ fontSize: "12px", color: "#bfdbfe" }}>
-                    Người nhận: Đặng Anh Thư (Giáo viên phụ trách)
+                    Người nhận: {currentSession?.teacherName || "Giáo viên phụ trách"} {currentSession?.teacherCode ? `(Mã GV: ${currentSession.teacherCode})` : ""}
                   </div>
                 </div>
               </div>
@@ -2162,10 +2226,10 @@ export default function StudentPortalPage() {
                 </label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {[
-                    "Em cảm ơn cô đã nhận xét, em sẽ cố gắng ôn tập thêm phần lý thuyết ạ!",
-                    "Cô ơi cho em hỏi câu khó trong đề thi, cô hướng dẫn giúp em với ạ!",
-                    "Em chưa hiểu rõ cách làm câu trắc nghiệm đúng/sai, cô chỉ cho em với ạ!",
-                    "Cô ơi em đã nộp bài rồi ạ, cô kiểm tra và góp ý giúp em nhé!",
+                    "Em cảm ơn thầy/cô đã nhận xét, em sẽ cố gắng ôn tập thêm phần lý thuyết ạ!",
+                    "Thầy/Cô ơi cho em hỏi câu khó trong đề thi, thầy/cô hướng dẫn giúp em với ạ!",
+                    "Em chưa hiểu rõ cách làm câu trắc nghiệm đúng/sai, thầy/cô chỉ cho em với ạ!",
+                    "Em đã nộp bài rồi ạ, thầy/cô kiểm tra và góp ý giúp em nhé!",
                   ].map((presetText, idx) => (
                     <button
                       key={idx}
@@ -2197,7 +2261,8 @@ export default function StudentPortalPage() {
                   rows={4}
                   value={studentReplyText}
                   onChange={(e) => setStudentReplyText(e.target.value)}
-                  placeholder="Nhập câu trả lời hoặc câu hỏi thắc mắc của em gửi tới cô giáo..."
+                  onPaste={handleStudentReplyPaste}
+                  placeholder="Nhập câu trả lời hoặc câu hỏi thắc mắc của em (Hỗ trợ dán ảnh bài tập Ctrl+V)..."
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -2205,8 +2270,78 @@ export default function StudentPortalPage() {
                     borderRadius: "8px",
                     border: "1.5px solid #cbd5e1",
                     resize: "vertical",
+                    boxSizing: "border-box",
                   }}
                 />
+
+                {/* HỖ TRỢ ĐÍNH KÈM ẢNH HOẶC DÁN ẢNH TRỰC TIẾP */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", flexWrap: "wrap", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="file"
+                      ref={studentFileInputRef}
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={handleStudentFileSelect}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => studentFileInputRef.current?.click()}
+                      style={{
+                        background: "#f1f5f9",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "6px",
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "#334155",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                      }}
+                    >
+                      <span>📷</span>
+                      <span>Chọn ảnh bài tập</span>
+                    </button>
+                    <span style={{ fontSize: "11px", color: "#64748b" }}>
+                      Hoặc chụp màn hình và dán ảnh (<strong>Ctrl + V</strong>)
+                    </span>
+                  </div>
+                </div>
+
+                {/* PREVIEW ẢNH NẾU ĐÃ CHỌN HOẶC DÁN */}
+                {studentReplyImage && (
+                  <div style={{ marginTop: "10px", padding: "8px 12px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <img
+                        src={studentReplyImage}
+                        alt="Ảnh đính kèm"
+                        style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "6px", border: "1px solid #93c5fd" }}
+                      />
+                      <span style={{ fontSize: "12px", color: "#1e40af", fontWeight: 700 }}>
+                        🖼️ Đã đính kèm ảnh câu hỏi/bài tập
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStudentReplyImage(null)}
+                      style={{
+                        background: "#fee2e2",
+                        color: "#991b1b",
+                        border: "none",
+                        borderRadius: "50%",
+                        width: "24px",
+                        height: "24px",
+                        fontWeight: 900,
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
@@ -2231,7 +2366,7 @@ export default function StudentPortalPage() {
                     fontWeight: 800,
                   }}
                 >
-                  {submittingReply ? "Đang gửi..." : "🚀 Gửi tới cô giáo"}
+                  {submittingReply ? "Đang gửi..." : "🚀 Gửi tới Giáo viên"}
                 </button>
               </div>
             </div>
@@ -2577,6 +2712,24 @@ export default function StudentPortalPage() {
           </div>
         </div>
       )}
+
+      {/* FLOATING 2-WAY Q&A WIDGET */}
+      <FloatingQAWidget
+        role="student"
+        currentUserName={currentSession?.studentName || "Học sinh"}
+        currentUserId={currentSession?.studentId}
+        studentClass={currentSession?.className}
+        teacherCode={currentSession?.teacherCode}
+        teacherName={currentSession?.teacherName}
+        evaluations={studentEvaluations}
+        onRefreshEvaluations={async () => {
+          if (currentSession) {
+            const refreshed = await getEvaluationsForStudent(currentSession.studentId, currentSession.studentName);
+            setStudentEvaluations(refreshed);
+          }
+        }}
+        defaultPosition="bottom-right"
+      />
     </div>
   );
 }
