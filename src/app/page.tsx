@@ -3656,23 +3656,32 @@ return (
                     {studentInputTeacherCode.length}/6 số
                   </span>
                 </div>
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="••••••"
-                  value={studentInputTeacherCode}
-                  onChange={(e) => handleStudentTeacherCodeChange(e.target.value)}
-                  className={styles.studentFormInput}
-                  required
-                  autoFocus
-                  style={{
-                    fontFamily: "monospace",
-                    fontSize: "18px",
-                    letterSpacing: "6px",
-                    fontWeight: 700,
-                  }}
-                />
-                <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "#64748b" }}>
+                <div style={{ display: "flex", justifyContent: "center", width: "100%", margin: "4px 0" }}>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="• • • • • •"
+                    value={studentInputTeacherCode}
+                    onChange={(e) => handleStudentTeacherCodeChange(e.target.value)}
+                    className={styles.studentFormInput}
+                    required
+                    autoFocus
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "22px",
+                      letterSpacing: "10px",
+                      paddingLeft: "10px",
+                      fontWeight: 800,
+                      textAlign: "center",
+                      height: "48px",
+                      width: "100%",
+                      maxWidth: "380px",
+                      boxSizing: "border-box",
+                      borderRadius: "12px",
+                    }}
+                  />
+                </div>
+                <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "#64748b", textAlign: "center" }}>
                   💡 Nhập mã giáo viên gồm đúng 6 chữ số do thầy/cô cung cấp để xác thực và tải danh sách lớp học.
                 </p>
               </div>

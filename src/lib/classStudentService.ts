@@ -1518,24 +1518,7 @@ export async function findTeacherByCode(
     };
   }
 
-  // 5. Nếu nhập mã 6 số hợp lệ
-  if (/^\d{6}$/.test(trimmed)) {
-    return {
-      fullName: `Thầy/Cô (Mã: ${trimmed})`,
-      teacherCode: trimmed,
-      schoolName: "THPT DTNT THCS & THPT Tuy Đức",
-    };
-  }
-
-  // 6. Nếu nhập tên giáo viên trực tiếp
-  if (trimmed.length >= 2) {
-    return {
-      fullName: trimmed,
-      teacherCode: trimmed,
-      schoolName: "THPT DTNT THCS & THPT Tuy Đức",
-    };
-  }
-
+  // Nếu không trùng khớp với bất kỳ giáo viên nào trong hệ thống, trả về null (Chỉ khi nhập đúng mã GV mới vào được cổng HS)
   return null;
 }
 

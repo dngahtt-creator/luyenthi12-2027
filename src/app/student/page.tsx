@@ -161,13 +161,24 @@ export default function StudentPortalPage() {
           if (rawSession) {
             try {
               const parsed: StudentSession = JSON.parse(rawSession);
-              // Tự động đồng bộ chuẩn tên giáo viên theo mã GV đã nhập
+              // Tự động kiểm tra tính hợp lệ của mã GV trong phiên đã lưu (Chỉ khi nhập đúng mã GV mới vào được cổng HS)
+              let teacherObj = null;
               if (parsed.teacherCode) {
-                const teacherObj = await findTeacherByCode(parsed.teacherCode);
-                if (teacherObj?.fullName && teacherObj.fullName !== "FC ZO ZO") {
-                  parsed.teacherName = teacherObj.fullName;
-                }
+                teacherObj = await findTeacherByCode(parsed.teacherCode);
               }
+              if (!teacherObj) {
+                sessionStorage.removeItem("student_portal_session");
+                localStorage.removeItem("student_portal_session");
+                setSelectedClassId("");
+                setSelectedStudentId("");
+                setInputTeacherCode("");
+                setMatchedTeacher(null);
+                setCurrentSession(null);
+                setShowLoginModal(true);
+                return;
+              }
+              parsed.teacherName = teacherObj.fullName;
+              parsed.teacherCode = teacherObj.teacherCode;
               try {
                 sessionStorage.setItem("student_portal_session", JSON.stringify(parsed));
               } catch { }
@@ -491,13 +502,15 @@ export default function StudentPortalPage() {
 
     let student = activeSelectedStudent;
 
-    // Resolve teacher name theo mã GV đã nhập
+    // Resolve teacher name theo mã GV đã nhập (chỉ khi nhập đúng mã GV mới vào được cổng HS)
     const resolvedTeacher =
       matchedTeacher ||
-      (await findTeacherByCode(inputTeacherCode.trim())) || {
-        fullName: inputTeacherCode.trim(),
-        teacherCode: inputTeacherCode.trim(),
-      };
+      (await findTeacherByCode(cleanCode));
+
+    if (!resolvedTeacher || cleanCode.length !== 6) {
+      setLoginError("Mã giáo viên không đúng hoặc chưa tồn tại trong hệ thống. Chỉ khi nhập đúng mã GV mới vào được cổng học sinh!");
+      return;
+    }
 
     setLoginLoading(true);
 
@@ -1954,32 +1967,75 @@ export default function StudentPortalPage() {
                     {cleanCode.length}/6 số
                   </span>
                 </div>
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="••••••"
-                  value={inputTeacherCode}
-                  onChange={(e) => handleTeacherCodeChange(e.target.value)}
-                  className={styles.formInput}
-                  required
-                  style={{
-                    fontFamily: "monospace",
-                    fontSize: "18px",
-                    letterSpacing: "6px",
-                    fontWeight: 700,
-                  }}
-                />
+                <div style={{ display: "flex", justifyContent: "center", width: "100%", margin: "4px 0" }}>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="• • • • • •"
+                    value={inputTeacherCode}
+                    onChange={(e) => handleTeacherCodeChange(e.target.value)}
+                    className={styles.formInput}
+                    required
+                    autoFocus
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "22px",
+                      letterSpacing: "10px",
+                      paddingLeft: "10px",
+                      fontWeight: 800,
+                      textAlign: "center",
+                      height: "48px",
+                      width: "100%",
+                      maxWidth: "380px",
+                      boxSizing: "border-box",
+                      borderRadius: "12px",
+                      border:
+                        cleanCode.length === 6
+                          ? matchedTeacher
+                            ? "2px solid #16a34a"
+                            : "2px solid #ef4444"
+                          : "2px solid #3b82f6",
+                      background:
+                        cleanCode.length === 6
+                          ? matchedTeacher
+                            ? "#f0fdf4"
+                            : "#fef2f2"
+                          : "#ffffff",
+                      boxShadow:
+                        cleanCode.length === 6 && matchedTeacher
+                          ? "0 0 0 4px rgba(22, 163, 74, 0.12)"
+                          : "0 0 0 4px rgba(59, 130, 246, 0.08)",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                    }}
+                  />
+                </div>
 
                 {cleanCode.length > 0 && cleanCode.length < 6 && (
-                  <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#64748b" }}>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#64748b", textAlign: "center" }}>
                     🔢 Vui lòng nhập đủ 6 chữ số mã giáo viên do thầy/cô cung cấp.
                   </p>
                 )}
 
                 {cleanCode.length === 6 && !matchedTeacher && (
-                  <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#ef4444", fontWeight: 700 }}>
-                    ⚠️ Không tìm thấy giáo viên với mã {cleanCode}. Vui lòng kiểm tra lại!
-                  </p>
+                  <div
+                    style={{
+                      margin: "8px 0 0 0",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      background: "#fef2f2",
+                      border: "1.5px solid #fecaca",
+                      color: "#b91c1c",
+                      fontSize: "12.5px",
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <span>🚫</span>
+                    <span>Mã giáo viên "{cleanCode}" không chính xác. Chỉ khi nhập đúng mã GV mới vào được cổng học sinh!</span>
+                  </div>
                 )}
 
                 {matchedTeacher && (
