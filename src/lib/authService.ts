@@ -109,7 +109,8 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
   if (typeof window === "undefined") return null;
 
   try {
-    // 1. Kiểm tra session học sinh trước
+    const isAtAdminPage =
+      typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
     const studentSessionRaw = localStorage.getItem("student_portal_session");
     const schoolUserRaw = localStorage.getItem("school_current_user");
 
@@ -125,11 +126,16 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
 
         const isGoogleAuth = u.authProvider === "google" || u.authProvider === "google.com";
 
+        // Tài khoản học sinh (chỉ áp dụng khi không truy cập trang /admin)
         if (
           !isSuperAdminEmail &&
           !isGoogleAuth &&
           (u.role === "student" || (u.studentClass?.includes("Học sinh") && !u.teacherCode))
         ) {
+          if (isAtAdminPage) {
+            // Khi vào trang Quản trị, không áp dụng quyền học sinh để tránh bị chặn
+            return null;
+          }
           return {
             uid: u.uid || u.studentId,
             email: u.email,
@@ -183,7 +189,7 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
       }
     }
 
-    if (studentSessionRaw) {
+    if (studentSessionRaw && !isAtAdminPage) {
       const s = JSON.parse(studentSessionRaw);
       if (s && s.studentId) {
         return {

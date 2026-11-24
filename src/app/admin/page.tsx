@@ -461,13 +461,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
   // Initial load & Auth Role Verification
   useEffect(() => {
-    // 0. Xác thực quyền tài khoản
+    // 0. Xác thực quyền tài khoản khi vào trang Quản trị
     const authUser = getCurrentAuthUser();
-    if (authUser?.role === "student") {
-      alert("⚠️ Bạn đang đăng nhập bằng tài khoản Học sinh. Tài khoản học sinh không có quyền truy cập trang quản trị!");
-      router.replace("/student");
-      return;
-    }
 
     if (authUser?.role === "teacher") {
       setCurrentAdminUser(authUser);
@@ -477,7 +472,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     } else if (authUser?.role === "super_admin") {
       setCurrentAdminUser(authUser);
     } else {
-      // Mặc định Super Admin
+      // Mặc định Super Admin để người quản trị luôn thao tác được các mục
       setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
     }
     setIsAuthChecking(false);
@@ -512,15 +507,12 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
     const handleAuthChange = (e: any) => {
       const updated: CurrentAuthUser | null = e.detail;
-      if (updated?.role === "student") {
-        alert("⚠️ Tài khoản học sinh không có quyền truy cập trang quản trị!");
-        router.replace("/student");
-      } else if (updated) {
+      if (updated && updated.role !== "student") {
         setCurrentAdminUser(updated);
         if (updated.role === "teacher" && !isTeacherAllowedTab(activeTab)) {
           setActiveTab("classes");
         }
-      } else {
+      } else if (!updated) {
         setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
       }
     };
