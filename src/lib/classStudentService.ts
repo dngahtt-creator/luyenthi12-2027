@@ -795,7 +795,7 @@ export async function saveNewStudent(
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const colRef = collection(db, "students");
-    // Lưu các thông tin: classId, className, orderNumber, fullName, dob, gender
+    // Lưu các thông tin: classId, className, orderNumber, fullName, dob, gender, password
     const payload = {
       classId: studentData.classId,
       className: studentData.className,
@@ -803,6 +803,7 @@ export async function saveNewStudent(
       fullName: studentData.fullName.trim(),
       dob: studentData.dob.trim(),
       gender: studentData.gender || "Nam",
+      ...(studentData.password ? { password: studentData.password.trim() } : {}),
       createdAt: serverTimestamp(),
     };
 
@@ -816,10 +817,15 @@ export async function saveNewStudent(
       fullName: payload.fullName,
       dob: payload.dob,
       gender: payload.gender,
+      password: studentData.password ? studentData.password.trim() : undefined,
       createdAt: new Date().toISOString(),
     };
 
     if (typeof window !== "undefined") {
+      if (studentData.password && studentData.password.trim()) {
+        localStorage.setItem(`std_pwd_${docRef.id}`, studentData.password.trim());
+        localStorage.setItem(`std_pwd_${newStudent.fullName}`, studentData.password.trim());
+      }
       const current = await getAllStudents();
       const updated = [...current, newStudent];
       localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(updated));
@@ -868,6 +874,7 @@ export async function updateStudent(
     if (updatedData.fullName !== undefined) cleanData.fullName = updatedData.fullName.trim();
     if (updatedData.dob !== undefined) cleanData.dob = updatedData.dob.trim();
     if (updatedData.gender !== undefined) cleanData.gender = updatedData.gender;
+    if (updatedData.password !== undefined) cleanData.password = updatedData.password.trim();
 
     await setDoc(docRef, cleanData, { merge: true });
   } catch (err) {
@@ -885,7 +892,14 @@ export async function updateStudent(
         fullName: updatedData.fullName ? updatedData.fullName.trim() : current[idx].fullName,
         dob: updatedData.dob ? updatedData.dob.trim() : current[idx].dob,
         gender: updatedData.gender !== undefined ? updatedData.gender : current[idx].gender,
+        password: updatedData.password !== undefined ? updatedData.password.trim() : current[idx].password,
       };
+      if (updatedData.password !== undefined && updatedData.password.trim()) {
+        localStorage.setItem(`std_pwd_${studentId}`, updatedData.password.trim());
+        if (current[idx].fullName) {
+          localStorage.setItem(`std_pwd_${current[idx].fullName}`, updatedData.password.trim());
+        }
+      }
       localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(current));
       broadcastUpdate();
     }
@@ -993,6 +1007,12 @@ export function normalizeStudentData(
       rawGender.toLowerCase() === "female"
     ) {
       parsedGender = "Nữ";
+    } else if (!rawGender) {
+      if (/\b(thị|nhi|ngọc|hương|trang|mai|lan|hoa|linh|diễm|gầu|hiền|hoan)\b/i.test(fullName)) {
+        parsedGender = "Nữ";
+      } else {
+        parsedGender = "Nam";
+      }
     }
 
     // 3. Ngày sinh

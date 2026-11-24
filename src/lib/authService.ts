@@ -44,14 +44,28 @@ export const DEFAULT_TEACHER: CurrentAuthUser = {
 };
 
 /**
- * Lấy tên tài khoản hiển thị cho người dùng, đảm bảo hiển thị đúng tên tài khoản của GV (sogaminh123, email prefix hoặc fullName)
+ * Lấy tên tài khoản hiển thị cho người dùng, đảm bảo hiển thị đúng tên tài khoản của GV (sogaminh123, email prefix hoặc fullName từ Google)
  */
 export function getDisplayedAccountName(user?: CurrentAuthUser | null): string {
   if (!user) return "Bạn";
 
-  const genericNames = ["thầy/cô", "giáo viên", "thầy/cô giáo viên", "bạn", "teacher"];
+  const genericNames = [
+    "thầy/cô",
+    "giáo viên",
+    "thầy/cô giáo viên",
+    "thầy cô giáo viên",
+    "thầy cô",
+    "bạn",
+    "teacher",
+    "user",
+  ];
 
-  const rawName = (user.name || user.fullName || "").trim();
+  const rawFullName = (user.fullName || "").trim();
+  if (rawFullName && !genericNames.includes(rawFullName.toLowerCase())) {
+    return rawFullName;
+  }
+
+  const rawName = (user.name || "").trim();
   if (rawName && !genericNames.includes(rawName.toLowerCase())) {
     return rawName;
   }
@@ -63,11 +77,15 @@ export function getDisplayedAccountName(user?: CurrentAuthUser | null): string {
     }
   }
 
+  if (user.role === "super_admin") {
+    return "Đặng Anh Thư";
+  }
+
   if (user.role === "teacher") {
     return DEFAULT_TEACHER.name;
   }
 
-  return rawName || "Bạn";
+  return rawFullName || rawName || "Bạn";
 }
 
 /**

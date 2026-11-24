@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   getCurrentAuthUser,
   setCurrentAuthUser,
@@ -11,7 +13,6 @@ import {
   DEFAULT_TEACHER,
   CurrentAuthUser,
   isTeacherAllowedTab,
-  switchMockRole,
   logoutAllSessions,
   getDisplayedAccountName,
 } from "@/lib/authService";
@@ -481,6 +482,34 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     }
     setIsAuthChecking(false);
 
+    // Lắng nghe Firebase Auth trực tiếp để nhận diện tài khoản Google đã đăng nhập
+    const unsubscribeFirebase = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        const email = (fbUser.email || "").toLowerCase().trim();
+        const isSuperAdminEmail =
+          email === "thudanganh670@gmail.com" ||
+          email === "danganhthu@tuyduc.edu.vn" ||
+          email.includes("danganhthu");
+
+        const teacherAccountName = fbUser.displayName || email.split("@")[0] || "Giáo viên";
+
+        const resolvedUser: CurrentAuthUser = {
+          uid: fbUser.uid,
+          email: email,
+          name: isSuperAdminEmail ? "Đặng Anh Thư" : teacherAccountName,
+          fullName: isSuperAdminEmail ? "Đặng Anh Thư" : teacherAccountName,
+          role: isSuperAdminEmail ? "super_admin" : "teacher",
+          teacherCode: isSuperAdminEmail ? "571024" : (authUser?.teacherCode || "628842"),
+          studentClass: isSuperAdminEmail ? "Ban Giám Hiệu / Quản Trị" : "Giáo viên bộ môn",
+          schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+          avatarUrl: fbUser.photoURL || undefined,
+        };
+
+        setCurrentAdminUser(resolvedUser);
+        setCurrentAuthUser(resolvedUser);
+      }
+    });
+
     const handleAuthChange = (e: any) => {
       const updated: CurrentAuthUser | null = e.detail;
       if (updated?.role === "student") {
@@ -582,6 +611,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
     window.addEventListener("school_community_docs_updated", handleSync);
     window.addEventListener("storage", handleSync);
     return () => {
+      unsubscribeFirebase();
       unsubEvaluations();
       window.removeEventListener("school_auth_changed", handleAuthChange);
       window.removeEventListener("school_class_student_updated", handleSync);
@@ -1238,13 +1268,22 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
   const handleOpenEditStudent = (student: StudentItem) => {
     setEditingStudent(student);
+    const existingPwd =
+      student.password ||
+      getSavedStudentPassword(student.id, student.fullName) ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem(`std_pwd_${student.id}`) ||
+          localStorage.getItem(`std_pwd_${student.fullName}`) ||
+          localStorage.getItem(`std_pwd_${student.fullName?.toLowerCase()}`)
+        : "") ||
+      "";
     setStudentForm({
       orderNumber: student.orderNumber || 1,
       fullName: student.fullName,
       gender: (student.gender as "Nam" | "Nữ") || "Nam",
       dob: student.dob || "",
       classId: student.classId,
-      password: student.password || "",
+      password: existingPwd,
     });
     setShowStudentModal(true);
   };
@@ -1258,6 +1297,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
     const targetClass = classesList.find((c) => c.id === studentForm.classId) || currentClass;
     const targetClassName = targetClass ? targetClass.name : "12A1";
+    const cleanPwd = studentForm.password.trim();
 
     if (editingStudent) {
       await updateStudent(editingStudent.id, {
@@ -1267,9 +1307,10 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
         dob: studentForm.dob.trim(),
         classId: studentForm.classId,
         className: targetClassName,
+        password: cleanPwd,
       });
-      if (studentForm.password.trim() !== (editingStudent.password || "")) {
-        await setStudentPassword(editingStudent.id, studentForm.password.trim());
+      if (cleanPwd) {
+        await setStudentPassword(editingStudent.id, cleanPwd, studentForm.fullName.trim());
       }
       showToast(`✅ Đã cập nhật học sinh "${studentForm.fullName}" vào Firebase Firestore!`);
     } else {
@@ -1280,9 +1321,10 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
         dob: studentForm.dob.trim(),
         classId: studentForm.classId,
         className: targetClassName,
+        password: cleanPwd || "123456",
       });
-      if (studentForm.password.trim() && res.id) {
-        await setStudentPassword(res.id, studentForm.password.trim());
+      if (res.id) {
+        await setStudentPassword(res.id, cleanPwd || "123456", studentForm.fullName.trim());
       }
       showToast(`🎉 Đã thêm học sinh "${studentForm.fullName}" vào Lớp ${targetClassName} (Firestore)!`);
     }
@@ -2628,77 +2670,6 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             <span>Firebase & Cloudinary: Hoạt động</span>
           </div>
 
-          {/* Nút chuyển đổi nhanh chế độ thử nghiệm quyền cho Thầy/Cô */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "#f8fafc",
-              border: "1.5px solid #cbd5e1",
-              borderRadius: "12px",
-              padding: "3px 6px",
-            }}
-          >
-            <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b", paddingLeft: "4px" }}>
-              Quyền:
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                switchMockRole("super_admin");
-                setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
-                showToast("👑 Đã chuyển sang chế độ Super Admin (Toàn quyền tất cả chức năng)!");
-              }}
-              style={{
-                border: "none",
-                background: isSuperAdmin ? "#2563eb" : "transparent",
-                color: isSuperAdmin ? "#ffffff" : "#475569",
-                borderRadius: "8px",
-                padding: "5px 10px",
-                fontSize: "12px",
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-              title="Super Admin: Nhìn và sử dụng tất cả chức năng"
-            >
-              👑 Super Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                switchMockRole("teacher");
-                setCurrentAdminUser({
-                  uid: DEFAULT_TEACHER.uid || "teacher_sogaminh123",
-                  email: DEFAULT_TEACHER.email || "sogaminh123@gmail.com",
-                  name: DEFAULT_TEACHER.name || "sogaminh123",
-                  fullName: DEFAULT_TEACHER.fullName || "sogaminh123",
-                  role: "teacher",
-                  teacherCode: DEFAULT_TEACHER.teacherCode || "628842",
-                  studentClass: "Giáo viên bộ môn",
-                  schoolName: "THPT DTNT THCS & THPT Tuy Đức",
-                });
-                setActiveTab("classes");
-                showToast("👨‍🏫 Đã chuyển sang chế độ Giáo viên (Tài khoản: sogaminh123 - 4 quyền theo ảnh)!");
-              }}
-              style={{
-                border: "none",
-                background: !isSuperAdmin ? "#059669" : "transparent",
-                color: !isSuperAdmin ? "#ffffff" : "#475569",
-                borderRadius: "8px",
-                padding: "5px 10px",
-                fontSize: "12px",
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-              title="Giáo viên: Chỉ sử dụng 4 quyền trên ảnh (Lớp & HS, Quản lý học tập, Giao đề thi, Giao tài liệu)"
-            >
-              👨‍🏫 Giáo viên
-            </button>
-          </div>
-
           <div className={styles.userCard}>
             <div
               className={styles.userAvatar}
@@ -2711,7 +2682,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             </div>
             <div>
               <div className={styles.userName}>
-                {getDisplayedAccountName(currentAdminUser) || "Đặng Anh Thư"}
+                {getDisplayedAccountName(currentAdminUser)}
               </div>
               <div
                 className={styles.userRole}
@@ -2720,7 +2691,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   fontWeight: 800,
                 }}
               >
-                {isSuperAdmin ? "Super Admin (Toàn quyền)" : "Giáo viên (4 quyền theo ảnh)"}
+                {isSuperAdmin ? "Super Admin" : "Giáo viên"}
               </div>
             </div>
           </div>
@@ -4137,36 +4108,6 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               Đã chọn: {assignedStudents.length} HS
                             </span>
                           )}
-                        </div>
-
-                        {/* HÀNG NÚT BẢNG CHỮ CÁI TIẾNG VIỆT ĐỂ BẤM TÌM NHANH THEO CHỮ CÁI ĐẦU TRONG TÊN */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#6b21a8', marginRight: '2px' }}>
-                            🔤 Chữ cái đầu:
-                          </span>
-                          {VN_ALPHABET_KEYS.map((key) => {
-                            const isSelected = studentInitialLetter === key;
-                            return (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => setStudentInitialLetter(key)}
-                                style={{
-                                  padding: '2px 7px',
-                                  fontSize: '11px',
-                                  fontWeight: 800,
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  border: isSelected ? '1px solid #7c3aed' : '1px solid #e2e8f0',
-                                  background: isSelected ? '#7c3aed' : '#f8fafc',
-                                  color: isSelected ? '#ffffff' : '#475569',
-                                  transition: 'all 0.15s ease',
-                                }}
-                              >
-                                {key === "ALL" ? "Tất cả" : key}
-                              </button>
-                            );
-                          })}
                         </div>
                       </div>
                     )}
@@ -6385,35 +6326,6 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             </button>
                           </div>
 
-                          {/* Bảng chữ cái tiếng Việt tìm kiếm theo chữ cái đầu trong tên */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "3px", flexWrap: "wrap", marginBottom: "8px", background: "#ffffff", padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 800, color: "#9333ea", marginRight: "4px" }}>
-                              🔤 Chữ cái đầu:
-                            </span>
-                            {VN_ALPHABET_KEYS.map((key) => {
-                              const isSelected = docStudentInitialLetter === key;
-                              return (
-                                <button
-                                  key={key}
-                                  type="button"
-                                  onClick={() => setDocStudentInitialLetter(key)}
-                                  style={{
-                                    padding: "2px 6px",
-                                    fontSize: "11px",
-                                    fontWeight: 800,
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    border: isSelected ? "1px solid #9333ea" : "1px solid #e2e8f0",
-                                    background: isSelected ? "#9333ea" : "#f8fafc",
-                                    color: isSelected ? "#ffffff" : "#475569",
-                                  }}
-                                >
-                                  {key === "ALL" ? "Tất cả" : key}
-                                </button>
-                              );
-                            })}
-                          </div>
-
                           <div
                             style={{
                               maxHeight: "140px",
@@ -6995,7 +6907,15 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       className={styles.formInput}
                       placeholder="Ví dụ: Nguyễn Văn An"
                       value={studentForm.fullName}
-                      onChange={(e) => setStudentForm({ ...studentForm, fullName: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const isFemale = /\b(thị|nhi|ngọc|hương|trang|mai|lan|hoa|linh|diễm|gầu|hiền|hoan)\b/i.test(val);
+                        setStudentForm((prev) => ({
+                          ...prev,
+                          fullName: val,
+                          gender: isFemale ? "Nữ" : prev.gender,
+                        }));
+                      }}
                       required
                       autoFocus
                     />
@@ -7678,7 +7598,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       />
                       <span style={{ fontSize: "18px" }}>👨‍🏫</span>
                       <span style={{ fontSize: "12px", fontWeight: 800, color: "#059669" }}>Giáo viên</span>
-                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>4 quyền theo ảnh</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>Giáo viên bộ môn</span>
                     </label>
 
                     <label
@@ -8144,7 +8064,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       />
                       <span style={{ fontSize: "18px" }}>👨‍🏫</span>
                       <span style={{ fontSize: "12px", fontWeight: 800, color: "#059669" }}>Giáo viên</span>
-                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>4 quyền theo ảnh</span>
+                      <span style={{ fontSize: "10.5px", color: "#64748b" }}>Giáo viên bộ môn</span>
                     </label>
 
                     <label
