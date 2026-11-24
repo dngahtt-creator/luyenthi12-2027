@@ -160,6 +160,16 @@ export default function StudentPortalPage() {
           if (rawSession) {
             try {
               const parsed: StudentSession = JSON.parse(rawSession);
+              // Tự động đồng bộ chuẩn tên giáo viên theo mã GV đã nhập
+              if (parsed.teacherCode) {
+                const teacherObj = await findTeacherByCode(parsed.teacherCode);
+                if (teacherObj?.fullName && teacherObj.fullName !== "FC ZO ZO") {
+                  parsed.teacherName = teacherObj.fullName;
+                  try {
+                    localStorage.setItem("student_portal_session", JSON.stringify(parsed));
+                  } catch {}
+                }
+              }
               setCurrentSession(parsed);
               const matchedCls = classes.find(
                 (c) =>
@@ -476,11 +486,13 @@ export default function StudentPortalPage() {
 
     let student = activeSelectedStudent;
 
-    // Resolve teacher name
-    const resolvedTeacher = matchedTeacher || {
-      fullName: inputTeacherCode.trim(),
-      teacherCode: inputTeacherCode.trim(),
-    };
+    // Resolve teacher name theo mã GV đã nhập
+    const resolvedTeacher =
+      matchedTeacher ||
+      (await findTeacherByCode(inputTeacherCode.trim())) || {
+        fullName: inputTeacherCode.trim(),
+        teacherCode: inputTeacherCode.trim(),
+      };
 
     setLoginLoading(true);
 
@@ -847,9 +859,18 @@ export default function StudentPortalPage() {
     );
   }
 
-  const studentDisplayName = currentSession?.studentName || "Hani Diễm";
+  const studentDisplayName = currentSession?.studentName || "Học sinh";
   const studentGrade = currentSession?.grade || "12";
-  const teacherDisplayName = currentSession?.teacherName || "FC ZO ZO";
+  const teacherDisplayName =
+    currentSession?.teacherName && currentSession.teacherName !== "FC ZO ZO"
+      ? currentSession.teacherName
+      : currentSession?.teacherCode
+      ? (currentSession.teacherCode === "571024" || currentSession.teacherCode === "5710"
+          ? "Đặng Anh Thư"
+          : currentSession.teacherCode === "276648" || currentSession.teacherCode === "628842"
+          ? "sogaminh123"
+          : `Thầy/Cô (Mã: ${currentSession.teacherCode})`)
+      : "Giáo viên bộ môn";
 
   return (
     <div className={styles.container}>

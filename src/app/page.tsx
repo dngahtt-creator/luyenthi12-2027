@@ -517,10 +517,12 @@ export default function Home() {
       studentClassesList[0];
 
     const student = popupSelectedStudent;
-    const resolvedTeacher = studentMatchedTeacher || {
-      fullName: studentInputTeacherCode.trim(),
-      teacherCode: studentInputTeacherCode.trim(),
-    };
+    const resolvedTeacher =
+      studentMatchedTeacher ||
+      (await findTeacherByCode(studentInputTeacherCode.trim())) || {
+        fullName: studentInputTeacherCode.trim(),
+        teacherCode: studentInputTeacherCode.trim(),
+      };
 
     const savedPassword = (
       student.password ||
