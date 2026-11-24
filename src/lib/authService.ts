@@ -103,7 +103,7 @@ export function isTeacherAllowedTab(tab: string): boolean {
 }
 
 /**
- * Lấy thông tin tài khoản hiện tại từ localStorage
+ * Lấy thông tin tài khoản hiện tại (Ưu tiên đọc từ sessionStorage của tab hiện tại để đảm bảo các tab hoàn toàn độc lập)
  */
 export function getCurrentAuthUser(): CurrentAuthUser | null {
   if (typeof window === "undefined") return null;
@@ -111,9 +111,90 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
   try {
     const isAtAdminPage =
       typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
-    const studentSessionRaw = localStorage.getItem("student_portal_session");
-    const schoolUserRaw = localStorage.getItem("school_current_user");
 
+    // Đọc riêng theo tab: sessionStorage trước, fallback sang localStorage
+    const studentSessionRaw =
+      sessionStorage.getItem("student_portal_session") ||
+      (!isAtAdminPage ? localStorage.getItem("student_portal_session") : null);
+
+    const schoolUserRaw =
+      sessionStorage.getItem("school_current_user") ||
+      localStorage.getItem("school_current_user");
+
+    // Nếu ở trang Quản trị: Tuyệt đối chỉ nhận diện tài khoản Admin / Giáo viên
+    if (isAtAdminPage) {
+      if (schoolUserRaw) {
+        const u = JSON.parse(schoolUserRaw);
+        if (u) {
+          const emailNorm = (u.email || "").toLowerCase().trim();
+          const isSuperAdminEmail =
+            SUPER_ADMIN_EMAILS.includes(emailNorm) ||
+            emailNorm.includes("danganhthu") ||
+            u.role === "super_admin" ||
+            (u.role === "admin" && !u.studentClass?.includes("Học sinh"));
+
+          if (isSuperAdminEmail) {
+            return {
+              uid: u.uid || DEFAULT_SUPER_ADMIN.uid,
+              email: u.email || DEFAULT_SUPER_ADMIN.email,
+              name: u.fullName || u.name || DEFAULT_SUPER_ADMIN.name,
+              fullName: u.fullName || u.name || DEFAULT_SUPER_ADMIN.fullName,
+              role: "super_admin",
+              teacherCode: u.teacherCode || DEFAULT_SUPER_ADMIN.teacherCode,
+              studentClass: u.studentClass || DEFAULT_SUPER_ADMIN.studentClass,
+              schoolName: u.schoolName || DEFAULT_SUPER_ADMIN.schoolName,
+              avatarUrl: u.avatarUrl,
+            };
+          }
+
+          // Quyền Giáo viên
+          const fallbackTeacherName =
+            u.email && u.email.includes("@") ? u.email.split("@")[0] : DEFAULT_TEACHER.name;
+          const rawTeacherName = (u.fullName || u.name || "").trim();
+          const isGeneric =
+            !rawTeacherName ||
+            ["thầy/cô", "giáo viên", "thầy/cô giáo viên", "bạn", "teacher"].includes(
+              rawTeacherName.toLowerCase()
+            );
+          const teacherName = isGeneric ? fallbackTeacherName : rawTeacherName;
+
+          return {
+            uid: u.uid || DEFAULT_TEACHER.uid,
+            email: u.email || DEFAULT_TEACHER.email,
+            name: teacherName,
+            fullName: teacherName,
+            role: "teacher",
+            teacherCode: u.teacherCode || DEFAULT_TEACHER.teacherCode,
+            studentClass:
+              u.studentClass && !u.studentClass.includes("Học sinh")
+                ? u.studentClass
+                : "Giáo viên bộ môn",
+            schoolName: u.schoolName || "THPT DTNT THCS & THPT Tuy Đức",
+            avatarUrl: u.avatarUrl,
+          };
+        }
+      }
+      return null;
+    }
+
+    // Nếu ở trang Học sinh hoặc tab hiện tại đang có phiên học sinh:
+    if (studentSessionRaw) {
+      const s = JSON.parse(studentSessionRaw);
+      if (s && s.studentId) {
+        return {
+          uid: s.studentId,
+          name: s.studentName,
+          fullName: s.studentName,
+          role: "student",
+          studentClass: s.className,
+          studentId: s.studentId,
+          teacherCode: s.teacherCode,
+          schoolName: "THPT DTNT THCS & THPT Tuy Đức",
+        };
+      }
+    }
+
+    // Các trang khác (Trang chủ, bài thi...): Đọc schoolUserRaw
     if (schoolUserRaw) {
       const u = JSON.parse(schoolUserRaw);
       if (u) {
@@ -123,30 +204,6 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
           emailNorm.includes("danganhthu") ||
           u.role === "super_admin" ||
           (u.role === "admin" && !u.studentClass?.includes("Học sinh"));
-
-        const isGoogleAuth = u.authProvider === "google" || u.authProvider === "google.com";
-
-        // Tài khoản học sinh (chỉ áp dụng khi không truy cập trang /admin)
-        if (
-          !isSuperAdminEmail &&
-          !isGoogleAuth &&
-          (u.role === "student" || (u.studentClass?.includes("Học sinh") && !u.teacherCode))
-        ) {
-          if (isAtAdminPage) {
-            // Khi vào trang Quản trị, không áp dụng quyền học sinh để tránh bị chặn
-            return null;
-          }
-          return {
-            uid: u.uid || u.studentId,
-            email: u.email,
-            name: u.fullName || u.name || "Học sinh",
-            fullName: u.fullName || u.name || "Học sinh",
-            role: "student",
-            studentClass: u.studentClass || u.className,
-            studentId: u.studentId,
-            schoolName: u.schoolName,
-          };
-        }
 
         if (isSuperAdminEmail) {
           return {
@@ -162,11 +219,21 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
           };
         }
 
-        // Quyền Giáo viên (Tất cả tài khoản đăng nhập Google hoặc giáo viên)
-        const fallbackTeacherName = u.email && u.email.includes("@")
-          ? u.email.split("@")[0]
-          : DEFAULT_TEACHER.name;
+        if (u.role === "student") {
+          return {
+            uid: u.uid || u.studentId,
+            email: u.email,
+            name: u.fullName || u.name || "Học sinh",
+            fullName: u.fullName || u.name || "Học sinh",
+            role: "student",
+            studentClass: u.studentClass || u.className,
+            studentId: u.studentId,
+            schoolName: u.schoolName,
+          };
+        }
 
+        const fallbackTeacherName =
+          u.email && u.email.includes("@") ? u.email.split("@")[0] : DEFAULT_TEACHER.name;
         const rawTeacherName = (u.fullName || u.name || "").trim();
         const isGeneric =
           !rawTeacherName ||
@@ -182,24 +249,12 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
           fullName: teacherName,
           role: "teacher",
           teacherCode: u.teacherCode || DEFAULT_TEACHER.teacherCode,
-          studentClass: (u.studentClass && !u.studentClass.includes("Học sinh")) ? u.studentClass : "Giáo viên bộ môn",
+          studentClass:
+            u.studentClass && !u.studentClass.includes("Học sinh")
+              ? u.studentClass
+              : "Giáo viên bộ môn",
           schoolName: u.schoolName || "THPT DTNT THCS & THPT Tuy Đức",
           avatarUrl: u.avatarUrl,
-        };
-      }
-    }
-
-    if (studentSessionRaw && !isAtAdminPage) {
-      const s = JSON.parse(studentSessionRaw);
-      if (s && s.studentId) {
-        return {
-          uid: s.studentId,
-          name: s.studentName,
-          fullName: s.studentName,
-          role: "student",
-          studentClass: s.className,
-          studentId: s.studentId,
-          schoolName: "THPT DTNT THCS & THPT Tuy Đức",
         };
       }
     }
@@ -211,17 +266,20 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
 }
 
 /**
- * Lưu phiên đăng nhập tài khoản vào localStorage và phát sự kiện
+ * Lưu phiên đăng nhập tài khoản vào sessionStorage (cho tab hiện tại) và localStorage (khi cần)
  */
 export function setCurrentAuthUser(user: CurrentAuthUser | null) {
   if (typeof window === "undefined") return;
 
   try {
     if (!user) {
+      sessionStorage.removeItem("school_current_user");
+      sessionStorage.removeItem("student_portal_session");
       localStorage.removeItem("school_current_user");
-      localStorage.removeItem("student_portal_session");
     } else {
-      localStorage.setItem("school_current_user", JSON.stringify(user));
+      // Lưu vào sessionStorage để cô lập riêng cho tab này
+      sessionStorage.setItem("school_current_user", JSON.stringify(user));
+
       if (user.role === "student" && user.studentId) {
         const studentSession = {
           studentId: user.studentId,
@@ -230,9 +288,11 @@ export function setCurrentAuthUser(user: CurrentAuthUser | null) {
           classId: user.studentClass || "12A1",
           loggedInAt: Date.now(),
         };
+        sessionStorage.setItem("student_portal_session", JSON.stringify(studentSession));
         localStorage.setItem("student_portal_session", JSON.stringify(studentSession));
       } else {
-        localStorage.removeItem("student_portal_session");
+        // Giáo viên / Super Admin: Lưu vào localStorage cho Admin, TUYỆT ĐỐI KHÔNG XÓA student_portal_session của các tab học sinh!
+        localStorage.setItem("school_current_user", JSON.stringify(user));
       }
     }
 
@@ -282,15 +342,34 @@ export function switchMockRole(role: "super_admin" | "teacher" | "student", cust
 }
 
 /**
+ * Đăng xuất học sinh CHỈ trên tab hiện tại (Tuyệt đối KHÔNG đăng xuất tài khoản Giáo viên/Admin ở các tab khác)
+ */
+export function logoutStudentSession() {
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem("student_portal_session");
+      sessionStorage.removeItem("school_current_user");
+      // Xóa trong localStorage nếu localStorage đang chứa session của học sinh này
+      localStorage.removeItem("student_portal_session");
+    } catch {}
+    window.dispatchEvent(new CustomEvent("school_auth_changed", { detail: null }));
+  }
+}
+
+/**
  * Đăng xuất hoàn toàn
  */
 export async function logoutAllSessions() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("school_current_user");
-    localStorage.removeItem("student_portal_session");
+    try {
+      sessionStorage.removeItem("school_current_user");
+      sessionStorage.removeItem("student_portal_session");
+      localStorage.removeItem("school_current_user");
+      localStorage.removeItem("student_portal_session");
+    } catch {}
     window.dispatchEvent(new CustomEvent("school_auth_changed", { detail: null }));
   }
   try {
     await firebaseSignOut(auth);
-  } catch {}
+  } catch { }
 }

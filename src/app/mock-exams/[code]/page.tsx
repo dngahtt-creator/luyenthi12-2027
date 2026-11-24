@@ -205,9 +205,11 @@ export default function MockExamRoomPage() {
         setClassesList(classes);
         setStudentsList(students);
 
-        // Check if student logged in previously
+        // Check if student logged in previously (ưu tiên sessionStorage của tab hiện tại)
         if (typeof window !== "undefined") {
-          const rawPortal = localStorage.getItem("student_portal_session");
+          const rawPortal =
+            sessionStorage.getItem("student_portal_session") ||
+            localStorage.getItem("student_portal_session");
           if (rawPortal) {
             try {
               const ps = JSON.parse(rawPortal);
@@ -218,7 +220,9 @@ export default function MockExamRoomPage() {
               console.warn("Portal parse note:", e);
             }
           } else {
-            const cachedUser = localStorage.getItem("school_current_user");
+            const cachedUser =
+              sessionStorage.getItem("school_current_user") ||
+              localStorage.getItem("school_current_user");
             if (cachedUser) {
               try {
                 const u = JSON.parse(cachedUser);
@@ -332,71 +336,23 @@ export default function MockExamRoomPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [examStarted, examSubmitted]);
 
-  // Anti-cheat: Track tab switching / window blur to prevent looking up answers
+  // Cho phép học sinh mở nhiều tab khác nhau thoải mái, các tab không ảnh hưởng đến nhau
   useEffect(() => {
-    if (!examStarted || examSubmitted || examLockedByViolation) return;
+    if (!examStarted || examSubmitted) return;
 
-    const recordViolation = () => {
-      const now = Date.now();
-      // Throttle 1500ms to prevent double counting on blur + visibilitychange
-      if (now - lastViolationTimeRef.current < 1500) return;
-      lastViolationTimeRef.current = now;
-
-      setTabViolationCount((prev) => {
-        const next = prev + 1;
-        if (next >= 3) {
-          // Thoát từ 3 lần trở lên -> Đóng bài thi ngay lập tức
-          setExamLockedByViolation(true);
-          setViolationInfo({
-            title: "BÀI THI ĐÃ BỊ ĐÓNG DO VI PHẠM (3/3)!",
-            desc: "Bạn đã rời khỏi màn hình bài thi từ 3 lần trở lên để tra bài. Theo quy chế thi trực tuyến, bài thi của bạn đã bị ĐÓNG và thu hồi tự động ngay lập tức.",
-            count: 3,
-            locked: true,
-          });
-          setShowViolationModal(true);
-          executeGradingAndSave("Vi phạm quy chế: Thoát tab bài thi 3 lần");
-          return 3;
-        } else if (next === 2) {
-          setViolationInfo({
-            title: "CẢNH BÁO NGUY HIỂM (Lần 2/3)!",
-            desc: "Bạn đã rời khỏi tab bài thi lần thứ 2! Chú ý: Nếu bạn rời khỏi màn hình bài thi thêm 1 lần nữa, bài thi sẽ NGAY LẬP TỨC BỊ ĐÓNG VÀ NỘP BÀI TỰ ĐỘNG!",
-            count: 2,
-            locked: false,
-          });
-          setShowViolationModal(true);
-          return 2;
-        } else {
-          setViolationInfo({
-            title: "CẢNH BÁO VI PHẠM QUY CHẾ (Lần 1/3)!",
-            desc: "Bạn vừa rời khỏi màn hình bài thi! Quy chế thi nghiêm cấm chuyển tab hoặc mở ứng dụng khác để tra cứu bài. Nếu vi phạm từ 3 lần trở lên, bài thi sẽ bị ĐÓNG tự động!",
-            count: 1,
-            locked: false,
-          });
-          setShowViolationModal(true);
-          return 1;
-        }
-      });
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        recordViolation();
-      }
-    };
-
-    const handleWindowBlur = () => {
-      recordViolation();
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", handleWindowBlur);
-
-    // Prevent key combinations used for cheating / inspecting
+    // Ngăn chặn phím tắt F12/Inspect cơ bản nếu cần
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === "F12" ||
         (e.ctrlKey && (e.key === "u" || e.key === "U" || e.key === "p" || e.key === "P")) ||
-        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c"))
+        (e.ctrlKey &&
+          e.shiftKey &&
+          (e.key === "I" ||
+            e.key === "i" ||
+            e.key === "J" ||
+            e.key === "j" ||
+            e.key === "C" ||
+            e.key === "c"))
       ) {
         e.preventDefault();
       }
@@ -405,11 +361,9 @@ export default function MockExamRoomPage() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [examStarted, examSubmitted, examLockedByViolation]);
+  }, [examStarted, examSubmitted]);
 
   // Format Time (MM:SS)
   const formatTime = (seconds: number) => {
@@ -1030,7 +984,7 @@ export default function MockExamRoomPage() {
             </div>
           )}
 
-          {/* Anti-cheat Tab Violation Badge */}
+          {/* Chế độ thi trực tuyến */}
           <div
             style={{
               padding: "5px 14px",
@@ -1041,34 +995,14 @@ export default function MockExamRoomPage() {
               alignItems: "center",
               gap: "6px",
               letterSpacing: "0.3px",
-              background:
-                tabViolationCount >= 3
-                  ? "#991b1b"
-                  : tabViolationCount === 2
-                  ? "#dc2626"
-                  : tabViolationCount === 1
-                  ? "#d97706"
-                  : "rgba(255, 255, 255, 0.15)",
+              background: "rgba(255, 255, 255, 0.15)",
               color: "#ffffff",
-              border:
-                tabViolationCount >= 2
-                  ? "1.5px solid #fca5a5"
-                  : tabViolationCount === 1
-                  ? "1.5px solid #fde68a"
-                  : "1px solid rgba(255, 255, 255, 0.3)",
-              boxShadow:
-                tabViolationCount >= 2
-                  ? "0 0 12px rgba(220, 38, 38, 0.6)"
-                  : "none",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
             }}
-            title="Hệ thống giám sát chống chuyển tab tra bài. Thoát từ 3 lần trở lên bài thi sẽ tự động đóng."
+            title="Hệ thống thi trực tuyến độc lập từng tab"
           >
-            <span>{tabViolationCount >= 3 ? "🚫" : tabViolationCount === 2 ? "🚨" : tabViolationCount === 1 ? "⚠️" : "🛡️"}</span>
-            <span>
-              {tabViolationCount >= 3
-                ? "ĐÃ KHÓA (3/3)"
-                : `RỜI TAB: ${tabViolationCount}/3`}
-            </span>
+            <span>🛡️</span>
+            <span>THI TRỰC TUYẾN</span>
           </div>
 
           {/* Progress Pill if Not Submitted */}

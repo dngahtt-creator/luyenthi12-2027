@@ -49,6 +49,7 @@ import {
   setCurrentAuthUser,
   CurrentAuthUser,
   logoutAllSessions,
+  logoutStudentSession,
   SUPER_ADMIN_EMAILS,
   UserRole,
   getDisplayedAccountName,
@@ -363,7 +364,9 @@ export default function Home() {
 
     try {
       if (typeof window !== "undefined") {
-        const rawSession = localStorage.getItem("student_portal_session");
+        const rawSession =
+          sessionStorage.getItem("student_portal_session") ||
+          localStorage.getItem("student_portal_session");
         if (rawSession) {
           try {
             setSavedStudentSession(JSON.parse(rawSession));
@@ -589,16 +592,19 @@ export default function Home() {
         loggedInAt: Date.now(),
       };
 
+      try {
+        sessionStorage.setItem("student_portal_session", JSON.stringify(newSession));
+        sessionStorage.setItem(
+          "school_current_user",
+          JSON.stringify({
+            name: student.fullName,
+            studentClass: currentClass.name,
+            studentId: student.id,
+            role: "student",
+          })
+        );
+      } catch {}
       localStorage.setItem("student_portal_session", JSON.stringify(newSession));
-      localStorage.setItem(
-        "school_current_user",
-        JSON.stringify({
-          name: student.fullName,
-          studentClass: currentClass.name,
-          studentId: student.id,
-          role: "student",
-        })
-      );
       const studentAuthUser: CurrentAuthUser = {
         uid: student.id,
         name: student.fullName,
@@ -1424,7 +1430,11 @@ return (
                 type="button"
                 className={styles.logoutBtn}
                 onClick={async () => {
-                  await logoutAllSessions();
+                  if (currentUser?.role === "student") {
+                    logoutStudentSession();
+                  } else {
+                    await logoutAllSessions();
+                  }
                   setCurrentUser(null);
                   alert("Đã đăng xuất tài khoản!");
                 }}

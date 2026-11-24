@@ -22,7 +22,7 @@ import {
   ExamItem,
   DocumentItem,
 } from "@/lib/examService";
-import { logoutAllSessions, setCurrentAuthUser, CurrentAuthUser } from "@/lib/authService";
+import { logoutAllSessions, logoutStudentSession, setCurrentAuthUser, CurrentAuthUser } from "@/lib/authService";
 import {
   getEvaluationsForStudent,
   sendStudentReply,
@@ -152,7 +152,8 @@ export default function StudentPortalPage() {
 
         const rawSession =
           typeof window !== "undefined"
-            ? localStorage.getItem("student_portal_session")
+            ? sessionStorage.getItem("student_portal_session") ||
+              localStorage.getItem("student_portal_session")
             : null;
 
         if (classes.length > 0) {
@@ -165,11 +166,11 @@ export default function StudentPortalPage() {
                 const teacherObj = await findTeacherByCode(parsed.teacherCode);
                 if (teacherObj?.fullName && teacherObj.fullName !== "FC ZO ZO") {
                   parsed.teacherName = teacherObj.fullName;
-                  try {
-                    localStorage.setItem("student_portal_session", JSON.stringify(parsed));
-                  } catch { }
                 }
               }
+              try {
+                sessionStorage.setItem("student_portal_session", JSON.stringify(parsed));
+              } catch { }
               setCurrentSession(parsed);
               const matchedCls = classes.find(
                 (c) =>
@@ -603,18 +604,20 @@ export default function StudentPortalPage() {
         loggedInAt: Date.now(),
       };
 
-      // Save session
+      // Lưu session tab-isolated vào sessionStorage
+      try {
+        sessionStorage.setItem("student_portal_session", JSON.stringify(newSession));
+        sessionStorage.setItem(
+          "school_current_user",
+          JSON.stringify({
+            name: student.fullName,
+            studentClass: currentClass.name,
+            studentId: student.id,
+            role: "student",
+          })
+        );
+      } catch {}
       localStorage.setItem("student_portal_session", JSON.stringify(newSession));
-      // Also sync to school_current_user for mock exams
-      localStorage.setItem(
-        "school_current_user",
-        JSON.stringify({
-          name: student.fullName,
-          studentClass: currentClass.name,
-          studentId: student.id,
-          role: "student",
-        })
-      );
 
       const studentAuthUser: CurrentAuthUser = {
         uid: student.id,
@@ -940,9 +943,13 @@ export default function StudentPortalPage() {
 
               <button
                 type="button"
-                onClick={async () => {
-                  await logoutAllSessions();
-                  window.location.href = "/";
+                onClick={() => {
+                  logoutStudentSession();
+                  setCurrentSession(null);
+                  setSelectedStudentId("");
+                  setInputTeacherCode("");
+                  setMatchedTeacher(null);
+                  setShowLoginModal(true);
                 }}
                 style={{
                   background: "rgba(255, 255, 255, 0.2)",

@@ -686,7 +686,9 @@ export function getSavedStudentPassword(studentId?: string, fullName?: string): 
   } catch {}
 
   try {
-    const rawSess = localStorage.getItem("student_portal_session");
+    const rawSess =
+      sessionStorage.getItem("student_portal_session") ||
+      localStorage.getItem("student_portal_session");
     if (rawSess) {
       const sess = JSON.parse(rawSess);
       if (
@@ -1379,7 +1381,9 @@ export async function setStudentPassword(
     } catch {}
 
     try {
-      const rawSess = localStorage.getItem("student_portal_session");
+      const rawSess =
+      sessionStorage.getItem("student_portal_session") ||
+      localStorage.getItem("student_portal_session");
       if (rawSess) {
         const sess = JSON.parse(rawSess);
         if (
@@ -1387,6 +1391,9 @@ export async function setStudentPassword(
           (resolvedName && sess.studentName && sess.studentName.trim().toLowerCase() === resolvedName.toLowerCase())
         ) {
           sess.password = pwdTrimmed;
+          try {
+            sessionStorage.setItem("student_portal_session", JSON.stringify(sess));
+          } catch {}
           localStorage.setItem("student_portal_session", JSON.stringify(sess));
         }
       }
