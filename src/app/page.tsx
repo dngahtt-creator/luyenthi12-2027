@@ -3773,7 +3773,7 @@ return (
                   <option value="">-- Chọn lớp học của em --</option>
                   {studentClassesList.map((cls) => (
                     <option key={cls.id} value={cls.id}>
-                      Lớp {cls.name} (Khối {cls.grade || "12"}) - {cls.homeroomTeacher || "GVCN"}
+                      {cls.name.toLowerCase().startsWith("lớp") ? cls.name : `Lớp ${cls.name}`} (Khối {cls.grade || "12"})
                     </option>
                   ))}
                 </select>

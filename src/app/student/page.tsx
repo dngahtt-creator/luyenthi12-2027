@@ -2070,7 +2070,7 @@ export default function StudentPortalPage() {
                     <option value="">-- Chọn lớp học --</option>
                     {classesList.map((cls) => (
                       <option key={cls.id} value={cls.id}>
-                        Lớp {cls.name} (Khối {cls.grade}) - {cls.homeroomTeacher || "GVCN"}
+                        {cls.name.toLowerCase().startsWith("lớp") ? cls.name : `Lớp ${cls.name}`} (Khối {cls.grade || "12"})
                       </option>
                     ))}
                   </select>
