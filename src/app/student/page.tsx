@@ -174,7 +174,7 @@ export default function StudentPortalPage() {
                 setInputTeacherCode("");
                 setMatchedTeacher(null);
                 setCurrentSession(null);
-                setShowLoginModal(true);
+                setShowLoginModal(false);
                 return;
               }
               parsed.teacherName = teacherObj.fullName;
@@ -203,15 +203,15 @@ export default function StudentPortalPage() {
               setSelectedStudentId("");
               setInputTeacherCode("");
               setMatchedTeacher(null);
-              setShowLoginModal(true);
+              setShowLoginModal(false);
             }
           } else {
-            // Chưa có phiên: Mở modal với form trống để nhập lần lượt
+            // Chưa có phiên: Giữ modal đóng, chỉ mở khi học sinh bấm 'VÀO HỌC'
             setSelectedClassId("");
             setSelectedStudentId("");
             setInputTeacherCode("");
             setMatchedTeacher(null);
-            setShowLoginModal(true);
+            setShowLoginModal(false);
           }
         }
       } catch (err) {
@@ -912,121 +912,158 @@ export default function StudentPortalPage() {
           </div>
 
           <div className={styles.navRight} style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            {/* THẺ TÀI KHOẢN HỌC SINH ĐÃ ĐĂNG NHẬP (CHUẨN THEO ẢNH NGƯỜI DÙNG YÊU CẦU) */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "12px",
-                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                border: "1.5px solid #60a5fa",
-                padding: "6px 14px",
-                borderRadius: "10px",
-                boxShadow: "0 3px 10px rgba(37, 99, 235, 0.25)",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, textAlign: "left" }}>
+            {currentSession ? (
+              <>
+                {/* THẺ TÀI KHOẢN HỌC SINH ĐÃ ĐĂNG NHẬP */}
                 <div
                   style={{
-                    fontSize: "13px",
-                    color: "#ffffff",
-                    fontWeight: 700,
-                    letterSpacing: "0.2px",
-                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                    border: "1.5px solid #60a5fa",
+                    padding: "6px 14px",
+                    borderRadius: "10px",
+                    boxShadow: "0 3px 10px rgba(37, 99, 235, 0.25)",
                   }}
                 >
-                  Chào, {studentDisplayName}
-                </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "#facc15",
-                    fontWeight: 800,
-                    letterSpacing: "0.4px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {currentSession?.className
-                    ? (currentSession.className.toLowerCase().includes("lớp")
-                      ? currentSession.className
-                      : `Lớp: ${currentSession.className}`)
-                    : `Lớp: ${studentGrade}A`}
-                </div>
-              </div>
+                  <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, textAlign: "left" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#ffffff",
+                        fontWeight: 700,
+                        letterSpacing: "0.2px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Chào, {studentDisplayName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#facc15",
+                        fontWeight: 800,
+                        letterSpacing: "0.4px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {currentSession?.className
+                        ? (currentSession.className.toLowerCase().includes("lớp")
+                          ? currentSession.className
+                          : `Lớp: ${currentSession.className}`)
+                        : `Lớp: ${studentGrade}A`}
+                    </div>
+                  </div>
 
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logoutStudentSession();
+                      setCurrentSession(null);
+                      setSelectedStudentId("");
+                      setInputTeacherCode("");
+                      setMatchedTeacher(null);
+                      setShowLoginModal(false);
+                    }}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      color: "#ffffff",
+                      border: "1px solid rgba(255, 255, 255, 0.35)",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                      whiteSpace: "nowrap",
+                    }}
+                    title="Đăng xuất khỏi tài khoản học sinh"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+
+                {/* Trophy badge on top right - exact to screenshot: 2/0 */}
+                <div className={styles.trophyBadge} title="Tổng lượt thi / Điểm tích lũy">
+                  <span className={styles.trophyIcon}>🏆</span>
+                  <span>2/0</span>
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.switchStudentBtn}
+                  onClick={() => {
+                    setNewPassword("");
+                    setConfirmNewPassword("");
+                    setPasswordModalError(null);
+                    setShowChangePasswordModal(true);
+                  }}
+                  style={{
+                    background: "#f0fdf4",
+                    color: "#166534",
+                    border: "1.5px solid #86efac",
+                    fontWeight: 700,
+                  }}
+                  title="Đổi hoặc cập nhật mật khẩu đăng nhập của em"
+                >
+                  🔑 Đổi mật khẩu
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.switchStudentBtn}
+                  onClick={() => {
+                    setInputTeacherCode("");
+                    setMatchedTeacher(null);
+                    setSelectedClassId("");
+                    setSelectedStudentId("");
+                    setIsCustomStudent(false);
+                    setCustomStudentName("");
+                    setInputPassword("");
+                    setInputConfirmPassword("");
+                    setLoginError(null);
+                    setShowLoginModal(true);
+                  }}
+                  title="Đổi học sinh hoặc nhập mã giáo viên khác"
+                >
+                  🔄 Đổi học sinh
+                </button>
+              </>
+            ) : (
+              /* NÚT VÀO HỌC NỔI BẬT: CHỈ HIỆN KHI CHƯA ĐĂNG NHẬP */
               <button
                 type="button"
+                id="btn-student-header-vao-hoc"
                 onClick={() => {
-                  logoutStudentSession();
-                  setCurrentSession(null);
-                  setSelectedStudentId("");
                   setInputTeacherCode("");
                   setMatchedTeacher(null);
+                  setSelectedClassId("");
+                  setSelectedStudentId("");
+                  setLoginError(null);
                   setShowLoginModal(true);
                 }}
                 style={{
-                  background: "rgba(255, 255, 255, 0.2)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
                   color: "#ffffff",
-                  border: "1px solid rgba(255, 255, 255, 0.35)",
-                  borderRadius: "6px",
-                  padding: "4px 8px",
-                  fontSize: "11px",
-                  fontWeight: 700,
+                  border: "1.5px solid #60a5fa",
+                  padding: "8px 18px",
+                  borderRadius: "10px",
+                  fontSize: "13.5px",
+                  fontWeight: 800,
                   cursor: "pointer",
-                  transition: "background 0.2s",
-                  whiteSpace: "nowrap",
+                  boxShadow: "0 3px 12px rgba(37, 99, 235, 0.35)",
+                  transition: "all 0.15s ease",
                 }}
-                title="Đăng xuất khỏi tài khoản học sinh"
+                title="Bấm để mở cổng vào học"
               >
-                Đăng xuất
+                <span style={{ fontSize: "16px" }}>🎒</span>
+                <span>VÀO HỌC</span>
               </button>
-            </div>
-
-            {/* Trophy badge on top right - exact to screenshot: 2/0 */}
-            <div className={styles.trophyBadge} title="Tổng lượt thi / Điểm tích lũy">
-              <span className={styles.trophyIcon}>🏆</span>
-              <span>2/0</span>
-            </div>
-
-            <button
-              type="button"
-              className={styles.switchStudentBtn}
-              onClick={() => {
-                setNewPassword("");
-                setConfirmNewPassword("");
-                setPasswordModalError(null);
-                setShowChangePasswordModal(true);
-              }}
-              style={{
-                background: "#f0fdf4",
-                color: "#166534",
-                border: "1.5px solid #86efac",
-                fontWeight: 700,
-              }}
-              title="Đổi hoặc cập nhật mật khẩu đăng nhập của em"
-            >
-              🔑 Đổi mật khẩu
-            </button>
-
-            <button
-              type="button"
-              className={styles.switchStudentBtn}
-              onClick={() => {
-                setInputTeacherCode("");
-                setMatchedTeacher(null);
-                setSelectedClassId("");
-                setSelectedStudentId("");
-                setIsCustomStudent(false);
-                setCustomStudentName("");
-                setInputPassword("");
-                setInputConfirmPassword("");
-                setLoginError(null);
-                setShowLoginModal(true);
-              }}
-              title="Đổi học sinh hoặc nhập mã giáo viên khác"
-            >
-              🔄 Đổi học sinh
-            </button>
+            )}
           </div>
         </div>
       </header>
@@ -1035,6 +1072,70 @@ export default function StudentPortalPage() {
           2. MAIN CONTENT (THỐNG KÊ, BÀI TẬP & ĐỀ THI, TÀI LIỆU)
       ========================================================= */}
       <main className={styles.mainContent}>
+        {!currentSession ? (
+          /* MÀN HÌNH CHÀO ĐÓN: CỔNG VÀO HỌC CHỈ MỞ KHI ẤN "VÀO HỌC" */
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1.5px solid #e2e8f0",
+              borderRadius: "16px",
+              padding: "48px 24px",
+              textAlign: "center",
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.05)",
+              maxWidth: "680px",
+              margin: "36px auto",
+            }}
+          >
+            <div style={{ fontSize: "56px", marginBottom: "16px" }}>🎒</div>
+            <h2 style={{ fontSize: "21px", fontWeight: 800, color: "#1e293b", marginBottom: "10px" }}>
+              CỔNG HỌC TẬP & THI TRỰC TUYẾN DÀNH CHO HỌC SINH
+            </h2>
+            <p
+              style={{
+                fontSize: "14.5px",
+                color: "#64748b",
+                marginBottom: "26px",
+                lineHeight: 1.6,
+                maxWidth: "520px",
+                margin: "0 auto 26px auto",
+              }}
+            >
+              Chào mừng em đến với Cổng học sinh THPT DTNT THCS & THPT Tuy Đức. Nhấn nút <strong>"VÀO HỌC"</strong> bên dưới để nhập mã giáo viên, chọn lớp học và bắt đầu luyện thi, làm bài tập.
+            </p>
+            <button
+              type="button"
+              id="btn-main-vao-hoc-ngay"
+              onClick={() => {
+                setInputTeacherCode("");
+                setMatchedTeacher(null);
+                setSelectedClassId("");
+                setSelectedStudentId("");
+                setLoginError(null);
+                setShowLoginModal(true);
+              }}
+              style={{
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                color: "#ffffff",
+                border: "none",
+                padding: "14px 34px",
+                borderRadius: "12px",
+                fontSize: "16px",
+                fontWeight: 800,
+                cursor: "pointer",
+                boxShadow: "0 6px 20px rgba(37, 99, 235, 0.35)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                letterSpacing: "0.4px",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <span>🎒</span>
+              <span>VÀO HỌC NGAY</span>
+            </button>
+          </div>
+        ) : (
+          <>
         {/* BA THẺ THỐNG KÊ NĂNG LỰC TRỰC QUAN: TRẮC NGHIỆM, ĐÚNG/SAI, TRẢ LỜI NGẮN (CHỈ HIỂN THỊ KHI HỌC SINH ĐÃ LÀM BÀI) */}
         {submissionsList.length > 0 && stats.hasData && (() => {
           const p1Comp = getPartCompetence(stats.p1.pct, stats.p1.total);
@@ -1894,6 +1995,8 @@ export default function StudentPortalPage() {
             </div>
           </section>
         )}
+        </>
+        )}
       </main>
 
       {/* =========================================================
@@ -1902,21 +2005,17 @@ export default function StudentPortalPage() {
       {showLoginModal && (
         <div
           className={styles.modalOverlay}
-          onClick={() => {
-            if (currentSession) setShowLoginModal(false);
-          }}
+          onClick={() => setShowLoginModal(false)}
         >
           <div className={styles.loginModalBox} onClick={(e) => e.stopPropagation()}>
-            {currentSession && (
-              <button
-                type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setShowLoginModal(false)}
-                title="Đóng"
-              >
-                ✕
-              </button>
-            )}
+            <button
+              type="button"
+              className={styles.modalCloseBtn}
+              onClick={() => setShowLoginModal(false)}
+              title="Đóng cổng vào học"
+            >
+              ✕
+            </button>
 
             <div className={styles.modalHeader}>
               <div className={styles.modalHeaderBadge}>🎓</div>
@@ -2849,27 +2948,29 @@ export default function StudentPortalPage() {
         </div>
       )}
 
-      {/* FLOATING 2-WAY Q&A WIDGET */}
-      <FloatingQAWidget
-        role="student"
-        currentUserName={currentSession?.studentName || "Học sinh"}
-        currentUserId={currentSession?.studentId}
-        studentClass={currentSession?.className}
-        teacherCode={currentSession?.teacherCode}
-        teacherName={currentSession?.teacherName}
-        evaluations={studentEvaluations}
-        onRefreshEvaluations={async () => {
-          if (currentSession) {
-            const refreshed = await getEvaluationsForStudent(
-              currentSession.studentId,
-              currentSession.studentName,
-              currentSession.teacherCode
-            );
-            setStudentEvaluations(refreshed);
-          }
-        }}
-        defaultPosition="bottom-right"
-      />
+      {/* FLOATING 2-WAY Q&A WIDGET (CHỈ HIỂN THỊ KHI HỌC SINH ĐÃ ĐĂNG NHẬP VÀO HỌC) */}
+      {currentSession && (
+        <FloatingQAWidget
+          role="student"
+          currentUserName={currentSession.studentName || "Học sinh"}
+          currentUserId={currentSession.studentId}
+          studentClass={currentSession.className}
+          teacherCode={currentSession.teacherCode}
+          teacherName={currentSession.teacherName}
+          evaluations={studentEvaluations}
+          onRefreshEvaluations={async () => {
+            if (currentSession) {
+              const refreshed = await getEvaluationsForStudent(
+                currentSession.studentId,
+                currentSession.studentName,
+                currentSession.teacherCode
+              );
+              setStudentEvaluations(refreshed);
+            }
+          }}
+          defaultPosition="bottom-right"
+        />
+      )}
     </div>
   );
 }

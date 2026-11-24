@@ -14,6 +14,8 @@ import {
   CurrentAuthUser,
   isTeacherAllowedTab,
   logoutAllSessions,
+  logoutCurrentTabSession,
+  setTabPortalMode,
   getDisplayedAccountName,
 } from "@/lib/authService";
 import {
@@ -462,19 +464,33 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
   // Initial load & Auth Role Verification
   useEffect(() => {
-    // 0. Xác thực quyền tài khoản khi vào trang Quản trị
-    const authUser = getCurrentAuthUser();
+    // 0. Xác thực quyền tài khoản khi vào trang Quản trị theo cổng của tab hiện tại
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const urlPortal = (searchParams?.get("portal") || searchParams?.get("role") || "").toLowerCase().trim();
 
-    if (authUser?.role === "teacher") {
-      setCurrentAdminUser(authUser);
+    if (urlPortal === "teacher") {
+      setTabPortalMode("teacher");
+      const teacherUser = { ...DEFAULT_TEACHER };
+      setCurrentAdminUser(teacherUser);
       if (!isTeacherAllowedTab(initialTab)) {
-        setActiveTab("classes"); // Mặc định Lớp và Học sinh như Ảnh 1
+        setActiveTab("classes");
       }
-    } else if (authUser?.role === "super_admin") {
-      setCurrentAdminUser(authUser);
-    } else {
-      // Mặc định Super Admin để người quản trị luôn thao tác được các mục
+    } else if (urlPortal === "super_admin" || urlPortal === "admin") {
+      setTabPortalMode("super_admin");
       setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
+    } else {
+      const authUser = getCurrentAuthUser();
+      if (authUser?.role === "teacher") {
+        setCurrentAdminUser(authUser);
+        if (!isTeacherAllowedTab(initialTab)) {
+          setActiveTab("classes"); // Mặc định Lớp và Học sinh như Ảnh 1
+        }
+      } else if (authUser?.role === "super_admin") {
+        setCurrentAdminUser(authUser);
+      } else {
+        // Mặc định Super Admin để người quản trị luôn thao tác được các mục
+        setCurrentAdminUser(DEFAULT_SUPER_ADMIN);
+      }
     }
     setIsAuthChecking(false);
 
@@ -489,20 +505,26 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
         const teacherAccountName = fbUser.displayName || email.split("@")[0] || "Giáo viên";
 
+        // Tôn trọng cổng của tab hiện tại để các cổng không ảnh hưởng tới nhau
+        const currentTabPortal = typeof window !== "undefined" ? sessionStorage.getItem("school_portal_mode") : null;
+        const targetRole = currentTabPortal === "teacher" ? "teacher" : (isSuperAdminEmail ? "super_admin" : "teacher");
+
         const resolvedUser: CurrentAuthUser = {
           uid: fbUser.uid,
           email: email,
-          name: isSuperAdminEmail ? "Đặng Anh Thư" : teacherAccountName,
-          fullName: isSuperAdminEmail ? "Đặng Anh Thư" : teacherAccountName,
-          role: isSuperAdminEmail ? "super_admin" : "teacher",
-          teacherCode: isSuperAdminEmail ? "571024" : (authUser?.teacherCode || "628842"),
-          studentClass: isSuperAdminEmail ? "Ban Giám Hiệu / Quản Trị" : "Giáo viên bộ môn",
+          name: targetRole === "super_admin" ? "Đặng Anh Thư" : teacherAccountName,
+          fullName: targetRole === "super_admin" ? "Đặng Anh Thư" : teacherAccountName,
+          role: targetRole,
+          teacherCode: targetRole === "super_admin" ? "571024" : (currentAdminUser?.teacherCode || "628842"),
+          studentClass: targetRole === "super_admin" ? "Ban Giám Hiệu / Quản Trị" : "Giáo viên bộ môn",
           schoolName: "THPT DTNT THCS & THPT Tuy Đức",
           avatarUrl: fbUser.photoURL || undefined,
         };
 
         setCurrentAdminUser(resolvedUser);
-        setCurrentAuthUser(resolvedUser);
+        try {
+          sessionStorage.setItem("school_current_user", JSON.stringify(resolvedUser));
+        } catch {}
       }
     });
 
@@ -2678,6 +2700,97 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             <span>Firebase & Cloudinary: Hoạt động</span>
           </div>
 
+          {/* Phân định Cổng rõ ràng: Cổng Super Admin vs Cổng Giáo Viên độc lập */}
+          {isSuperAdmin ? (
+            <>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                  border: "1.5px solid #93c5fd",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  color: "#1e40af",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  letterSpacing: "0.2px",
+                }}
+                title="Cổng Super Admin: Toàn quyền quản trị hệ thống"
+              >
+                <span>👑</span>
+                <span>CỔNG SUPER ADMIN</span>
+              </div>
+              <a
+                href="/admin?portal=teacher"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#f0fdf4",
+                  border: "1px solid #86efac",
+                  borderRadius: "8px",
+                  padding: "5px 10px",
+                  color: "#15803d",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+                title="Mở thêm Cổng Giáo Viên trên tab mới (Các tab hoàn toàn độc lập, không ảnh hưởng nhau)"
+              >
+                <span>👨‍🏫</span>
+                <span>Mở Cổng Giáo Viên (Tab mới) ↗</span>
+              </a>
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
+                  border: "1.5px solid #6ee7b7",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  color: "#065f46",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  letterSpacing: "0.2px",
+                }}
+                title="Cổng Giáo Viên: 4 quyền chuyên môn độc lập"
+              >
+                <span>👨‍🏫</span>
+                <span>CỔNG GIÁO VIÊN</span>
+              </div>
+              <a
+                href="/admin?portal=super_admin"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#eff6ff",
+                  border: "1px solid #93c5fd",
+                  borderRadius: "8px",
+                  padding: "5px 10px",
+                  color: "#1d4ed8",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+                title="Mở thêm Cổng Super Admin trên tab mới (Các tab hoàn toàn độc lập, không ảnh hưởng nhau)"
+              >
+                <span>👑</span>
+                <span>Mở Cổng Super Admin (Tab mới) ↗</span>
+              </a>
+            </>
+          )}
+
           <div className={styles.userCard}>
             <div
               className={styles.userAvatar}
@@ -2702,6 +2815,27 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 {isSuperAdmin ? "Super Admin" : "Giáo viên"}
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                logoutCurrentTabSession();
+                window.location.href = "/";
+              }}
+              style={{
+                marginLeft: "8px",
+                background: "#fee2e2",
+                color: "#b91c1c",
+                border: "1px solid #fca5a5",
+                borderRadius: "6px",
+                padding: "3px 8px",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+              title="Đăng xuất khỏi cổng này trên tab hiện tại"
+            >
+              Đăng xuất
+            </button>
           </div>
         </div>
       </header>

@@ -103,26 +103,113 @@ export function isTeacherAllowedTab(tab: string): boolean {
 }
 
 /**
+ * Chuyển đổi và cố định cổng làm việc cho riêng tab hiện tại (Cô lập 100% bằng sessionStorage)
+ */
+export function setTabPortalMode(portal: "super_admin" | "teacher" | "student") {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem("school_portal_mode", portal);
+    if (portal === "super_admin") {
+      sessionStorage.setItem("school_current_user", JSON.stringify(DEFAULT_SUPER_ADMIN));
+    } else if (portal === "teacher") {
+      sessionStorage.setItem("school_current_user", JSON.stringify(DEFAULT_TEACHER));
+    }
+    window.dispatchEvent(new CustomEvent("school_auth_changed", { detail: getCurrentAuthUser() }));
+  } catch (e) {
+    console.warn("Lỗi setTabPortalMode:", e);
+  }
+}
+
+/**
  * Lấy thông tin tài khoản hiện tại (Ưu tiên đọc từ sessionStorage của tab hiện tại để đảm bảo các tab hoàn toàn độc lập)
  */
 export function getCurrentAuthUser(): CurrentAuthUser | null {
   if (typeof window === "undefined") return null;
 
   try {
-    const isAtAdminPage =
-      typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+    const isAtAdminPage = window.location.pathname.startsWith("/admin");
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlPortal = (searchParams.get("portal") || searchParams.get("role") || "").toLowerCase().trim();
+
+    // 1. Nếu URL chỉ định rõ cổng: lưu ngay vào sessionStorage của tab này
+    if (urlPortal === "teacher") {
+      sessionStorage.setItem("school_portal_mode", "teacher");
+    } else if (urlPortal === "super_admin" || urlPortal === "admin") {
+      sessionStorage.setItem("school_portal_mode", "super_admin");
+    }
+
+    const tabPortalMode = sessionStorage.getItem("school_portal_mode");
 
     // Đọc riêng theo tab: sessionStorage trước, fallback sang localStorage
     const studentSessionRaw =
       sessionStorage.getItem("student_portal_session") ||
       (!isAtAdminPage ? localStorage.getItem("student_portal_session") : null);
 
-    const schoolUserRaw =
-      sessionStorage.getItem("school_current_user") ||
-      localStorage.getItem("school_current_user");
+    // Ưu tiên TUYỆT ĐỐI sessionStorage để các tab không bao giờ ghi đè lên nhau
+    const tabUserRaw = sessionStorage.getItem("school_current_user");
+    const schoolUserRaw = tabUserRaw || localStorage.getItem("school_current_user");
 
-    // Nếu ở trang Quản trị: Tuyệt đối chỉ nhận diện tài khoản Admin / Giáo viên
+    // Nếu ở trang Quản trị:
     if (isAtAdminPage) {
+      // Nếu tab này đang được chỉ định cố định là Cổng Giáo Viên
+      if (tabPortalMode === "teacher") {
+        if (schoolUserRaw) {
+          try {
+            const u = JSON.parse(schoolUserRaw);
+            if (u && u.role === "teacher") {
+              const fallbackTeacherName =
+                u.email && u.email.includes("@") ? u.email.split("@")[0] : DEFAULT_TEACHER.name;
+              const rawTeacherName = (u.fullName || u.name || "").trim();
+              const isGeneric =
+                !rawTeacherName ||
+                ["thầy/cô", "giáo viên", "thầy/cô giáo viên", "bạn", "teacher"].includes(
+                  rawTeacherName.toLowerCase()
+                );
+              const teacherName = isGeneric ? fallbackTeacherName : rawTeacherName;
+
+              return {
+                uid: u.uid || DEFAULT_TEACHER.uid,
+                email: u.email || DEFAULT_TEACHER.email,
+                name: teacherName,
+                fullName: teacherName,
+                role: "teacher",
+                teacherCode: u.teacherCode || DEFAULT_TEACHER.teacherCode,
+                studentClass:
+                  u.studentClass && !u.studentClass.includes("Học sinh")
+                    ? u.studentClass
+                    : "Giáo viên bộ môn",
+                schoolName: u.schoolName || "THPT DTNT THCS & THPT Tuy Đức",
+                avatarUrl: u.avatarUrl,
+              };
+            }
+          } catch {}
+        }
+        return DEFAULT_TEACHER;
+      }
+
+      // Nếu tab này đang được chỉ định cố định là Cổng Super Admin
+      if (tabPortalMode === "super_admin") {
+        if (schoolUserRaw) {
+          try {
+            const u = JSON.parse(schoolUserRaw);
+            if (u && (u.role === "super_admin" || u.role === "admin")) {
+              return {
+                uid: u.uid || DEFAULT_SUPER_ADMIN.uid,
+                email: u.email || DEFAULT_SUPER_ADMIN.email,
+                name: u.fullName || u.name || DEFAULT_SUPER_ADMIN.name,
+                fullName: u.fullName || u.name || DEFAULT_SUPER_ADMIN.fullName,
+                role: "super_admin",
+                teacherCode: u.teacherCode || DEFAULT_SUPER_ADMIN.teacherCode,
+                studentClass: u.studentClass || DEFAULT_SUPER_ADMIN.studentClass,
+                schoolName: u.schoolName || DEFAULT_SUPER_ADMIN.schoolName,
+                avatarUrl: u.avatarUrl,
+              };
+            }
+          } catch {}
+        }
+        return DEFAULT_SUPER_ADMIN;
+      }
+
       if (schoolUserRaw) {
         const u = JSON.parse(schoolUserRaw);
         if (u) {
@@ -339,6 +426,20 @@ export function switchMockRole(role: "super_admin" | "teacher" | "student", cust
   }
 
   setCurrentAuthUser(user);
+}
+
+/**
+ * Đăng xuất CHỈ TRÊN TAB HIỆN TẠI (Giữ nguyên phiên làm việc của các tab cổng khác)
+ */
+export function logoutCurrentTabSession() {
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem("school_current_user");
+      sessionStorage.removeItem("school_portal_mode");
+      sessionStorage.removeItem("student_portal_session");
+    } catch { }
+    window.dispatchEvent(new CustomEvent("school_auth_changed", { detail: null }));
+  }
 }
 
 /**

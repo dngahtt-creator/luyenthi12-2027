@@ -558,7 +558,7 @@ export async function deleteMultipleExams(examIds: string[]): Promise<boolean> {
   try {
     for (const examId of examIds) {
       const docRef = doc(db, "exams", examId);
-      await deleteDoc(docRef).catch(() => {});
+      await deleteDoc(docRef).catch(() => { });
     }
   } catch (err) {
     console.warn("Firestore delete multiple exams note:", err);
@@ -611,7 +611,7 @@ export async function getAllDocuments(): Promise<DocumentItem[]> {
       // Tự động dọn dẹp vĩnh viễn các tài liệu mẫu cũ trên Firestore
       if (sampleDocRefs.length > 0) {
         sampleDocRefs.forEach((ref) => {
-          deleteDoc(ref).catch(() => {});
+          deleteDoc(ref).catch(() => { });
         });
       }
 
@@ -655,7 +655,7 @@ export async function purgeSystemSampleDocuments(): Promise<{ deletedCount: numb
         const item: DocumentItem = { ...data, id: docSnap.id } as DocumentItem;
         if (isSystemSampleDocument(item)) {
           count++;
-          deletePromises.push(deleteDoc(docSnap.ref).catch(() => {}));
+          deletePromises.push(deleteDoc(docSnap.ref).catch(() => { }));
         }
       });
       await Promise.all(deletePromises);
@@ -671,7 +671,7 @@ export async function purgeSystemSampleDocuments(): Promise<{ deletedCount: numb
         const list: DocumentItem[] = JSON.parse(cached);
         const filtered = list.filter((d) => !isSystemSampleDocument(d));
         localStorage.setItem("school_documents_cache", JSON.stringify(filtered));
-      } catch {}
+      } catch { }
     }
     broadcastDataUpdate();
   }
@@ -773,7 +773,7 @@ export async function deleteMultipleDocuments(docIds: string[]): Promise<boolean
   try {
     for (const docId of docIds) {
       const docRef = doc(db, "documents", docId);
-      await deleteDoc(docRef).catch(() => {});
+      await deleteDoc(docRef).catch(() => { });
     }
   } catch (err) {
     console.warn("Firestore delete multiple documents note:", err);
