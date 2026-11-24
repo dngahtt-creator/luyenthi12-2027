@@ -920,7 +920,7 @@ export default function Home() {
   const [showMoreDocs, setShowMoreDocs] = useState(false);
   const [showMoreExams, setShowMoreExams] = useState(false);
 
-  // 3 Mục chính theo chuẩn hình 2
+  // 3 Mục chính theo chuẩn hình 2: Mỗi loại chỉ hiển thị 1 trang bìa duy nhất
   const documentCategories = useMemo(() => {
     const list = learningCategories.filter((c) => c.type === "document");
     const docPriority = (name: string) => {
@@ -939,7 +939,15 @@ export default function Home() {
       if (l.includes("công nghệ")) return 11;
       return 50;
     };
-    return [...list].sort((a, b) => docPriority(a.name) - docPriority(b.name));
+    const sorted = [...list].sort((a, b) => docPriority(a.name) - docPriority(b.name));
+    // DEDUPLICATE: Mỗi loại chỉ hiển thị 1 trang bìa
+    const seenCovers = new Set<string>();
+    return sorted.filter((cat) => {
+      const cover = getSubjectCoverPath(cat.name, cat.type);
+      if (seenCovers.has(cover)) return false;
+      seenCovers.add(cover);
+      return true;
+    });
   }, [learningCategories]);
 
   const examCategories = useMemo(() => {
@@ -959,13 +967,42 @@ export default function Home() {
       if (l.includes("khxh")) return 10;
       return 50;
     };
-    return [...list].sort((a, b) => examPriority(a.name) - examPriority(b.name));
+    const sorted = [...list].sort((a, b) => examPriority(a.name) - examPriority(b.name));
+    // DEDUPLICATE: Mỗi loại chỉ hiển thị 1 trang bìa (loại bỏ lặp bìa Đề Vật lí)
+    const seenCovers = new Set<string>();
+    return sorted.filter((cat) => {
+      const cover = getSubjectCoverPath(cat.name, cat.type);
+      if (seenCovers.has(cover)) return false;
+      seenCovers.add(cover);
+      return true;
+    });
   }, [learningCategories]);
 
-  const videoCategories = useMemo(
-    () => learningCategories.filter((c) => c.type === "video"),
-    [learningCategories]
-  );
+  const videoCategories = useMemo(() => {
+    const list = learningCategories.filter((c) => c.type === "video");
+    const videoPriority = (name: string) => {
+      const l = name.toLowerCase();
+      if (l.includes("toán")) return 1;
+      if (l.includes("văn") || l.includes("ngữ văn")) return 2;
+      if (l.includes("anh") || l.includes("tiếng anh")) return 3;
+      if (l.includes("tin") || l.includes("python") || l.includes("website")) return 4;
+      if (l.includes("lí") || l.includes("vật lí")) return 5;
+      if (l.includes("hóa") || l.includes("hoá")) return 6;
+      if (l.includes("sinh")) return 7;
+      if (l.includes("sử")) return 8;
+      if (l.includes("địa")) return 9;
+      return 50;
+    };
+    const sorted = [...list].sort((a, b) => videoPriority(a.name) - videoPriority(b.name));
+    // DEDUPLICATE: Mỗi loại chỉ hiển thị 1 trang bìa
+    const seenCovers = new Set<string>();
+    return sorted.filter((cat) => {
+      const cover = getSubjectCoverPath(cat.name, cat.type);
+      if (seenCovers.has(cover)) return false;
+      seenCovers.add(cover);
+      return true;
+    });
+  }, [learningCategories]);
 
   // Filtered exams
   const filteredExams = useMemo(() => {
@@ -1106,18 +1143,22 @@ export default function Home() {
     setTimeout(() => setDownloadSuccessMsg(null), 4000);
   };
 
-  // Helper xác định vai trò khi đăng nhập
+  // Helper xác định vai trò khi đăng nhập: đăng nhập Google luôn là Giáo viên (riêng Super Admin giữ nguyên)
   const resolveAuthRole = (u: any): UserRole => {
     const emailNorm = (u.email || "").toLowerCase().trim();
     if (
       SUPER_ADMIN_EMAILS.includes(emailNorm) ||
       emailNorm.includes("danganhthu") ||
       u.role === "super_admin" ||
-      u.role === "admin"
+      (u.role === "admin" && !u.studentClass?.includes("Học sinh"))
     ) {
       return "super_admin";
     }
-    if (u.role === "student") return "student";
+    // Đăng nhập Google hoặc tài khoản giáo viên: luôn là giáo viên
+    if (u.authProvider === "google" || u.authProvider === "google.com") {
+      return "teacher";
+    }
+    if (u.role === "student" && !u.teacherCode) return "student";
     return "teacher";
   };
 

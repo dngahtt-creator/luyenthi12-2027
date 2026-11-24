@@ -516,12 +516,12 @@ export async function loginWithGoogleFirebase() {
 
     // BƯỚC 1: KIỂM TRA CƠ SỞ DỮ LIỆU
     let existingUser = await findUserInDatabase(email);
-    if (!existingUser) {
-      const isAdminEmail =
-        email === "thudanganh670@gmail.com" ||
-        email === "danganhthu@tuyduc.edu.vn" ||
-        email.includes("danganhthu");
+    const isAdminEmail =
+      email === "thudanganh670@gmail.com" ||
+      email === "danganhthu@tuyduc.edu.vn" ||
+      email.includes("danganhthu");
 
+    if (!existingUser) {
       const newUserData: UserAccountData = {
         uid: fbUser.uid,
         email: email,
@@ -530,9 +530,9 @@ export async function loginWithGoogleFirebase() {
         registeredDate: getRegistrationDateString(),
         status: "active",
         schoolName: DEFAULT_SCHOOL,
-        studentClass: isAdminEmail ? "Ban Giám Hiệu / Quản Trị" : "Học sinh / Thành viên",
+        studentClass: isAdminEmail ? "Ban Giám Hiệu / Quản Trị" : "Giáo viên bộ môn",
         authProvider: "google",
-        role: isAdminEmail ? "admin" : "student",
+        role: isAdminEmail ? "admin" : "teacher",
         avatarUrl: fbUser.photoURL || undefined,
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
@@ -540,6 +540,31 @@ export async function loginWithGoogleFirebase() {
 
       await saveUserToFirestore(newUserData);
       existingUser = newUserData;
+    } else {
+      // Đăng nhập Google: luôn là Giáo viên (riêng Super Admin giữ nguyên tài khoản)
+      if (!isAdminEmail) {
+        existingUser.role = "teacher";
+        if (!existingUser.studentClass || existingUser.studentClass.includes("Học sinh")) {
+          existingUser.studentClass = "Giáo viên bộ môn";
+        }
+        if (!existingUser.teacherCode) {
+          existingUser.teacherCode = generateTeacherCode(email);
+        }
+        try {
+          const docId = existingUser.uid || email.replace(/[.@]/g, "_");
+          await setDoc(
+            doc(db, "users", docId),
+            {
+              role: "teacher",
+              studentClass: existingUser.studentClass,
+              teacherCode: existingUser.teacherCode,
+            },
+            { merge: true }
+          );
+        } catch {
+          // ignore
+        }
+      }
     }
 
     // BƯỚC 2: KIỂM TRA TRẠNG THÁI KÍCH HOẠT
@@ -654,9 +679,34 @@ export async function getAllRegisteredUsers(maxResults = 50): Promise<UserAccoun
         resolvedTeacherCode = "571024";
       }
 
+      const isSuperAdminUser =
+        emailNorm === "thudanganh670@gmail.com" ||
+        emailNorm === "danganhthu@tuyduc.edu.vn" ||
+        emailNorm.includes("danganhthu") ||
+        data.role === "super_admin" ||
+        data.role === "admin";
+
+      const isGoogleAuth = data.authProvider === "google" || data.authProvider === "google.com";
+
+      const resolvedRole = isSuperAdminUser
+        ? "admin"
+        : isGoogleAuth
+        ? "teacher"
+        : data.role || "teacher";
+
+      const resolvedClass = isSuperAdminUser
+        ? "Ban Giám Hiệu / Quản Trị"
+        : isGoogleAuth || resolvedRole === "teacher"
+        ? data.studentClass && !data.studentClass.includes("Học sinh")
+          ? data.studentClass
+          : "Giáo viên bộ môn"
+        : data.studentClass || "Học sinh";
+
       users.push({
         ...data,
         uid: data.uid || docSnap.id,
+        role: resolvedRole,
+        studentClass: resolvedClass,
         teacherCode: resolvedTeacherCode,
         registeredDate: data.registeredDate || getRegistrationDateString(),
         status: data.status || "active",

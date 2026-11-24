@@ -105,9 +105,12 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
           u.role === "super_admin" ||
           (u.role === "admin" && !u.studentClass?.includes("Học sinh"));
 
+        const isGoogleAuth = u.authProvider === "google" || u.authProvider === "google.com";
+
         if (
-          u.role === "student" ||
-          (!isSuperAdminEmail && u.studentClass?.includes("Học sinh") && !u.teacherCode)
+          !isSuperAdminEmail &&
+          !isGoogleAuth &&
+          (u.role === "student" || (u.studentClass?.includes("Học sinh") && !u.teacherCode))
         ) {
           return {
             uid: u.uid || u.studentId,
@@ -135,7 +138,7 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
           };
         }
 
-        // Quyền Giáo viên
+        // Quyền Giáo viên (Tất cả tài khoản đăng nhập Google hoặc giáo viên)
         const fallbackTeacherName = u.email && u.email.includes("@")
           ? u.email.split("@")[0]
           : DEFAULT_TEACHER.name;
@@ -155,7 +158,7 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
           fullName: teacherName,
           role: "teacher",
           teacherCode: u.teacherCode || DEFAULT_TEACHER.teacherCode,
-          studentClass: u.studentClass || "Giáo viên bộ môn",
+          studentClass: (u.studentClass && !u.studentClass.includes("Học sinh")) ? u.studentClass : "Giáo viên bộ môn",
           schoolName: u.schoolName || "THPT DTNT THCS & THPT Tuy Đức",
           avatarUrl: u.avatarUrl,
         };

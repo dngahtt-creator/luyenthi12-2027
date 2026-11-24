@@ -746,16 +746,16 @@ export default function StudentPortalPage() {
     };
   };
 
-  // Filter documents: keep documents assigned to student's class or personally assigned
+  // Filter documents: CHỈ HIỂN THỊ TÀI LIỆU ĐÃ GIAO (giao riêng cho học sinh hoặc giao cho lớp)
   const relevantDocs = useMemo(() => {
     if (documentsList.length === 0) return [];
-    if (!currentSession) return documentsList;
+    if (!currentSession) return [];
 
     const studentClassId = (currentSession.classId || "").toLowerCase();
     const studentClassName = (currentSession.className || "").toLowerCase();
     const studentId = currentSession.studentId;
     const studentName = (currentSession.studentName || "").toLowerCase();
-    const studentGrade = (currentSession.grade || "12").toLowerCase();
+    const studentGrade = (currentSession.grade || "").toLowerCase();
 
     return documentsList.filter((doc) => {
       const hasClass = Array.isArray(doc.assignedClasses) && doc.assignedClasses.length > 0;
@@ -766,7 +766,8 @@ export default function StudentPortalPage() {
         if (!hasStudents) return false;
         return (
           doc.assignedStudents!.includes(studentId) ||
-          (doc.assignedStudentNames && doc.assignedStudentNames.some((n) => n.toLowerCase() === studentName))
+          (doc.assignedStudentNames &&
+            doc.assignedStudentNames.some((n) => n.toLowerCase() === studentName))
         );
       }
 
@@ -776,18 +777,16 @@ export default function StudentPortalPage() {
         return doc.assignedClasses!.some((cl) => {
           const c = (cl || "").trim().toLowerCase();
           return (
-            c === "all" ||
-            c === studentClassId ||
+            (c !== "all" && c === studentClassId) ||
             c === studentClassName ||
-            c === studentGrade ||
-            (studentGrade && c.includes(studentGrade)) ||
-            (studentClassName && studentClassName.includes(c))
+            (studentGrade && c === studentGrade) ||
+            (studentClassName && c && studentClassName.includes(c))
           );
         });
       }
 
-      // 3. Mặc định: tài liệu công khai toàn trường
-      return true;
+      // KHÔNG hiển thị tài liệu không được giao
+      return false;
     });
   }, [documentsList, currentSession]);
 
@@ -1465,59 +1464,61 @@ export default function StudentPortalPage() {
         </section>
 
         {/* =========================================================
-            MỤC 2: TÀI LIỆU (TÀI LIỆU PDF)
+            MỤC 2: TÀI LIỆU (TÀI LIỆU PDF) - CHỈ HIỂN THỊ KHI CÓ TÀI LIỆU ĐÃ GIAO
         ========================================================= */}
-        <section className={styles.sectionBlock}>
-          <div className={styles.documentsSectionHeading}>
-            <span className={styles.sectionHeadingIcon}>📁</span>
-            <span>TÀI LIỆU ({relevantDocs.length})</span>
-          </div>
+        {relevantDocs.length > 0 && (
+          <section className={styles.sectionBlock}>
+            <div className={styles.documentsSectionHeading}>
+              <span className={styles.sectionHeadingIcon}>📁</span>
+              <span>TÀI LIỆU ({relevantDocs.length})</span>
+            </div>
 
-          <div className={styles.docCardContainer}>
-            {relevantDocs.map((doc) => (
-              <div key={doc.id} className={styles.docItemRow}>
-                <div className={styles.docLeft}>
-                  {/* Biểu tượng file PDF màu đỏ chuẩn ảnh */}
-                  <svg
-                    className={styles.docRedIcon}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                    <polyline points="10 9 9 9 8 9" />
-                  </svg>
-                  <div className={styles.docInfo}>
-                    <h4 className={styles.docItemTitle}>{doc.title}</h4>
-                    <span className={styles.docFormatSub}>
-                      TÀI LIỆU {doc.format || "PDF"}
-                    </span>
+            <div className={styles.docCardContainer}>
+              {relevantDocs.map((doc) => (
+                <div key={doc.id} className={styles.docItemRow}>
+                  <div className={styles.docLeft}>
+                    {/* Biểu tượng file PDF màu đỏ chuẩn ảnh */}
+                    <svg
+                      className={styles.docRedIcon}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    <div className={styles.docInfo}>
+                      <h4 className={styles.docItemTitle}>{doc.title}</h4>
+                      <span className={styles.docFormatSub}>
+                        TÀI LIỆU {doc.format || "PDF"}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  type="button"
-                  className={styles.docViewBtn}
-                  onClick={() => {
-                    if (doc.fileUrl) {
-                      window.open(doc.fileUrl, "_blank");
-                    } else {
-                      setSelectedDoc(doc);
-                    }
-                  }}
-                >
-                  Xem
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
+                  <button
+                    type="button"
+                    className={styles.docViewBtn}
+                    onClick={() => {
+                      if (doc.fileUrl) {
+                        window.open(doc.fileUrl, "_blank");
+                      } else {
+                        setSelectedDoc(doc);
+                      }
+                    }}
+                  >
+                    Xem
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* =========================================================
             SECTION: GIÁO TRÌNH & KHUNG PHÂN PHỐI CHƯƠNG TRÌNH

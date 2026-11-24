@@ -3604,17 +3604,17 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                   <span style={{ fontWeight: 800, color: "#0f172a", fontSize: "14.5px" }}>
                                     {u.fullName || "Chưa đặt tên"}
                                   </span>
-                                  {u.email === "thudanganh670@gmail.com" || u.role === "super_admin" || u.role === "admin" ? (
+                                  {u.email === "thudanganh670@gmail.com" || u.role === "super_admin" || (u.role === "admin" && !u.studentClass?.includes("Học sinh")) ? (
                                     <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#b45309", background: "#fef3c7", padding: "1px 7px", borderRadius: "10px", border: "1px solid #fde68a" }}>
                                       👑 Super Admin
                                     </span>
-                                  ) : u.role === "student" ? (
-                                    <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#6d28d9", background: "#f5f3ff", padding: "1px 7px", borderRadius: "10px", border: "1px solid #ddd6fe" }}>
-                                      🎒 Học sinh
-                                    </span>
-                                  ) : (
+                                  ) : (u.authProvider === "google" || u.authProvider === "google.com" || u.role === "teacher" || u.teacherCode) ? (
                                     <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#047857", background: "#ecfdf5", padding: "1px 7px", borderRadius: "10px", border: "1px solid #a7f3d0" }}>
                                       👨‍🏫 Giáo viên
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#6d28d9", background: "#f5f3ff", padding: "1px 7px", borderRadius: "10px", border: "1px solid #ddd6fe" }}>
+                                      🎒 Học sinh
                                     </span>
                                   )}
                                 </div>
