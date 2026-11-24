@@ -298,138 +298,66 @@ export const DEFAULT_EXAMS: ExamItem[] = [
   },
 ];
 
-// Default initial study documents
-export const DEFAULT_DOCUMENTS: DocumentItem[] = [
-  {
-    id: "doc-tich-phan-12",
-    title: "Chương 3. Tích phân",
-    subject: "toan",
-    subjectName: "Toán học",
-    format: "PDF",
-    size: "3.2 MB",
-    downloads: "14.5k",
-    description: "Chuyên đề nguyên hàm, tích phân và ứng dụng hình học diện tích, thể tích.",
-    uploader: "Giáo viên bộ môn",
-    assignedClasses: ["12"],
-    assignType: "class",
-    createdAt: "10/10/2026",
-    fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-  },
-  {
-    id: "doc-luyen-thi-chuong-1",
-    title: "Luyện thi Chương 1",
-    subject: "toan",
-    subjectName: "Toán học",
-    format: "PDF",
-    size: "2.5 MB",
-    downloads: "8.2k",
-    description: "Tài liệu ôn tập và luyện giải các dạng bài trọng tâm Chương 1.",
-    uploader: "Giáo viên bộ môn",
-    assignedClasses: ["12"],
-    assignType: "class",
-    createdAt: "21/9/2026",
-    fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-  },
-  {
-    id: "doc-2",
-    title: "Bộ công thức trọng tâm Vật lí 12 thi THPT 2027",
-    subject: "ly",
-    subjectName: "Vật lí",
-    format: "PDF",
-    size: "2.8 MB",
-    downloads: "28.4k",
-    description: "Đầy đủ công thức Dao động cơ, Sóng cơ, Dòng điện xoay chiều và Sóng ánh sáng tinh gọn 8 trang.",
-    uploader: "Tổ Vật Lí - Tuy Đức",
-  },
-  {
-    id: "doc-3",
-    title: "Phương pháp Dồn chất & Đồng đẳng hóa Hóa hữu cơ 9+",
-    subject: "hoa",
-    subjectName: "Hóa học",
-    format: "PDF",
-    size: "3.5 MB",
-    downloads: "22.1k",
-    description: "Bí quyết giải quyết nhanh các bài toán Este đa chức, Peptit và hợp chất tạp chức phân hóa cao.",
-    uploader: "Tổ Hóa Học - Tuy Đức",
-  },
-  {
-    id: "doc-4",
-    title: "Tuyển tập 100 bài đọc hiểu phân loại 9+ Tiếng Anh THPT",
-    subject: "anh",
-    subjectName: "Tiếng Anh",
-    format: "PDF",
-    size: "5.1 MB",
-    downloads: "19.6k",
-    description: "Giải chi tiết từng câu bẫy từ vựng học thuật, liên từ và cấu trúc suy luận ngữ cảnh thực tế.",
-    uploader: "Tổ Ngoại Ngữ - Tuy Đức",
-  },
-  {
-    id: "doc-5",
-    title: "Sơ đồ tư duy Di truyền học & Sinh thái học lớp 12",
-    subject: "sinh",
-    subjectName: "Sinh học",
-    format: "PDF",
-    size: "3.1 MB",
-    downloads: "14.2k",
-    description: "Mindmap hệ thống hóa toàn bộ lý thuyết chống sai ngu và mẹo tính nhanh xác suất phả hệ.",
-    uploader: "Tổ Sinh Học - Tuy Đức",
-  },
-  {
-    id: "doc-6",
-    title: "Bộ 50 đoạn văn Nghị luận xã hội 200 chữ điểm 1.75/2.0",
-    subject: "van",
-    subjectName: "Ngữ văn",
-    format: "PDF",
-    size: "2.4 MB",
-    downloads: "31.0k",
-    description: "Dẫn chứng thời sự cập nhật mới nhất năm 2026, luận điểm sắc bén và cấu trúc mở rộng độc đáo.",
-    uploader: "Tổ Ngữ Văn - Tuy Đức",
-  },
-  {
-    id: "doc-7",
-    title: "Sổ tay mốc thời gian & Từ khóa then chốt Lịch sử 12",
-    subject: "su",
-    subjectName: "Lịch sử",
-    format: "PDF",
-    size: "3.8 MB",
-    downloads: "18.5k",
-    description: "Hệ thống toàn bộ niên biểu lịch sử Việt Nam và thế giới, mẹo loại trừ phương án nhiễu 9+.",
-    uploader: "Tổ Lịch Sử - Tuy Đức",
-  },
-  {
-    id: "doc-8",
-    title: "Kỹ năng khai thác Atlat Địa lí & Nhận dạng biểu đồ thi THPT",
-    subject: "dia",
-    subjectName: "Địa lí",
-    format: "PDF",
-    size: "4.5 MB",
-    downloads: "17.2k",
-    description: "Bí quyết ăn trọn 15 câu Atlat trong 5 phút và công thức tính nhanh số liệu bảng thống kê.",
-    uploader: "Tổ Địa Lí - Tuy Đức",
-  },
-  {
-    id: "doc-9",
-    title: "Sơ đồ tư duy môn Giáo dục Kinh tế & Pháp luật 12",
-    subject: "ktpl",
-    subjectName: "GDKT & Pháp luật",
-    format: "PDF",
-    size: "3.2 MB",
-    downloads: "12.8k",
-    description: "Tóm tắt các quy định pháp luật và kiến thức kinh tế vi mô, vĩ mô dễ nhớ, chuẩn cấu trúc.",
-    uploader: "Tổ GDKT & PL - Tuy Đức",
-  },
-  {
-    id: "doc-10",
-    title: "Cẩm nang ôn thi Tin học 12: Thuật toán & Câu hỏi trắc nghiệm CSDL",
-    subject: "tin",
-    subjectName: "Tin học",
-    format: "PDF",
-    size: "2.9 MB",
-    downloads: "11.4k",
-    description: "Tổng hợp lý thuyết Hệ quản trị CSDL, an toàn thông tin và kỹ thuật lập trình trắc nghiệm.",
-    uploader: "Tổ Tin Học - Tuy Đức",
-  },
-];
+// Danh sách ID và tiêu chí nhận diện tài liệu mẫu mặc định cần loại bỏ
+export const SYSTEM_DEFAULT_DOC_IDS = new Set([
+  "doc-tich-phan-12",
+  "doc-luyen-thi-chuong-1",
+  "doc-2",
+  "doc-3",
+  "doc-4",
+  "doc-5",
+  "doc-6",
+  "doc-7",
+  "doc-8",
+  "doc-9",
+  "doc-10",
+]);
+
+export function isSystemSampleDocument(docItem: Partial<DocumentItem>): boolean {
+  if (docItem.id && SYSTEM_DEFAULT_DOC_IDS.has(docItem.id)) return true;
+  const uploader = (docItem.uploader || "").trim().toLowerCase();
+  const title = (docItem.title || "").trim().toLowerCase();
+
+  // Nhận diện theo tiêu đề mẫu hệ thống
+  const sampleTitles = [
+    "chương 3. tích phân",
+    "luyện thi chương 1",
+    "bộ công thức trọng tâm vật lí 12 thi thpt 2027",
+    "phương pháp dồn chất & đồng đẳng hóa hóa hữu cơ 9+",
+    "tuyển tập 100 bài đọc hiểu phân loại 9+ tiếng anh thpt",
+    "sơ đồ tư duy di truyền học & sinh thái học lớp 12",
+    "bộ 50 đoạn văn nghị luận xã hội 200 chữ điểm 1.75/2.0",
+    "sổ tay mốc thời gian & từ khóa then chốt lịch sử 12",
+    "kỹ năng khai thác atlat địa lí & nhận dạng biểu đồ thi thpt",
+    "sơ đồ tư duy môn giáo dục kinh tế & pháp luật 12",
+    "cẩm nang ôn thi tin học 12: thuật toán & câu hỏi trắc nghiệm csdl",
+  ];
+
+  if (sampleTitles.some((st) => title === st || title.includes(st))) {
+    return true;
+  }
+
+  if (
+    uploader.includes("- tuy đức") ||
+    uploader === "giáo viên bộ môn" ||
+    uploader.includes("tổ vật lí") ||
+    uploader.includes("tổ hóa học") ||
+    uploader.includes("tổ ngoại ngữ") ||
+    uploader.includes("tổ sinh học") ||
+    uploader.includes("tổ ngữ văn") ||
+    uploader.includes("tổ lịch sử") ||
+    uploader.includes("tổ địa lí") ||
+    uploader.includes("tổ gdkt") ||
+    uploader.includes("tổ tin học")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+// Default initial study documents: Rỗng để chỉ lưu tài liệu do người dùng tự tạo/thêm
+export const DEFAULT_DOCUMENTS: DocumentItem[] = [];
 
 // Helper to notify other components/tabs that data changed
 function broadcastDataUpdate() {
@@ -663,36 +591,34 @@ export async function getAllDocuments(): Promise<DocumentItem[]> {
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      const remoteDocs: DocumentItem[] = snapshot.docs.map((docSnap) => ({
+      const allDocs: DocumentItem[] = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...(docSnap.data() as Omit<DocumentItem, "id">),
       }));
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem("school_documents_cache", JSON.stringify(remoteDocs));
-      }
-      return remoteDocs;
-    } else {
-      // Khi Firestore chưa có tài liệu:
-      if (typeof window !== "undefined") {
-        const cleared = localStorage.getItem("school_documents_cleared");
-        const cached = localStorage.getItem("school_documents_cache");
-        if (cleared === "true" || (cached && JSON.parse(cached).length === 0)) {
-          return [];
+      // Lọc bỏ toàn bộ tài liệu mẫu hệ thống, chỉ giữ lại tài liệu do người dùng tạo/thêm
+      const userDocs: DocumentItem[] = [];
+      const sampleDocRefs: any[] = [];
+
+      allDocs.forEach((d, idx) => {
+        if (isSystemSampleDocument(d)) {
+          sampleDocRefs.push(snapshot.docs[idx].ref);
+        } else {
+          userDocs.push(d);
         }
+      });
+
+      // Tự động dọn dẹp vĩnh viễn các tài liệu mẫu cũ trên Firestore
+      if (sampleDocRefs.length > 0) {
+        sampleDocRefs.forEach((ref) => {
+          deleteDoc(ref).catch(() => {});
+        });
       }
 
-      // Chỉ nạp tài liệu mặc định nếu chưa từng xóa sạch
-      try {
-        const batch = writeBatch(db);
-        DEFAULT_DOCUMENTS.forEach((docItem) => {
-          const docRef = doc(db, "documents", docItem.id);
-          batch.set(docRef, { ...docItem, createdAt: serverTimestamp() }, { merge: true });
-        });
-        batch.commit().catch((err) => console.warn("Auto sync documents note:", err));
-      } catch (e) {
-        console.warn("Auto sync documents error:", e);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("school_documents_cache", JSON.stringify(userDocs));
       }
+      return userDocs;
     }
   } catch (err) {
     console.warn("Firestore fetch documents note (using local cache):", err);
@@ -704,14 +630,53 @@ export async function getAllDocuments(): Promise<DocumentItem[]> {
     const cached = localStorage.getItem("school_documents_cache");
     if (cached) {
       try {
-        return JSON.parse(cached);
+        const list: DocumentItem[] = JSON.parse(cached);
+        const filtered = list.filter((d) => !isSystemSampleDocument(d));
+        return filtered;
       } catch {
         // ignore parse error
       }
     }
   }
 
-  return DEFAULT_DOCUMENTS;
+  return [];
+}
+
+// Xóa triệt để toàn bộ tài liệu mẫu mặc định khỏi Firestore và LocalStorage
+export async function purgeSystemSampleDocuments(): Promise<{ deletedCount: number }> {
+  let count = 0;
+  try {
+    const colRef = collection(db, "documents");
+    const snapshot = await getDocs(colRef);
+    if (!snapshot.empty) {
+      const deletePromises: Promise<any>[] = [];
+      snapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data();
+        const item: DocumentItem = { ...data, id: docSnap.id } as DocumentItem;
+        if (isSystemSampleDocument(item)) {
+          count++;
+          deletePromises.push(deleteDoc(docSnap.ref).catch(() => {}));
+        }
+      });
+      await Promise.all(deletePromises);
+    }
+  } catch (err) {
+    console.warn("Purge sample documents error:", err);
+  }
+
+  if (typeof window !== "undefined") {
+    const cached = localStorage.getItem("school_documents_cache");
+    if (cached) {
+      try {
+        const list: DocumentItem[] = JSON.parse(cached);
+        const filtered = list.filter((d) => !isSystemSampleDocument(d));
+        localStorage.setItem("school_documents_cache", JSON.stringify(filtered));
+      } catch {}
+    }
+    broadcastDataUpdate();
+  }
+
+  return { deletedCount: count };
 }
 
 export async function saveNewDocument(

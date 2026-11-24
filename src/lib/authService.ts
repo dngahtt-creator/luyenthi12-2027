@@ -351,7 +351,7 @@ export function logoutStudentSession() {
       sessionStorage.removeItem("school_current_user");
       // Xóa trong localStorage nếu localStorage đang chứa session của học sinh này
       localStorage.removeItem("student_portal_session");
-    } catch {}
+    } catch { }
     window.dispatchEvent(new CustomEvent("school_auth_changed", { detail: null }));
   }
 }
@@ -366,7 +366,7 @@ export async function logoutAllSessions() {
       sessionStorage.removeItem("student_portal_session");
       localStorage.removeItem("school_current_user");
       localStorage.removeItem("student_portal_session");
-    } catch {}
+    } catch { }
     window.dispatchEvent(new CustomEvent("school_auth_changed", { detail: null }));
   }
   try {

@@ -775,7 +775,7 @@ export default function Home() {
   const [examsList, setExamsList] = useState<ExamItem[]>(DEFAULT_EXAMS);
 
   // Dynamic Documents Library Dataset synced with Admin portal
-  const [documentsList, setDocumentsList] = useState<DocumentItem[]>(DEFAULT_DOCUMENTS);
+  const [documentsList, setDocumentsList] = useState<DocumentItem[]>([]);
 
   // DỮ LIỆU CÁC MỤC HỌC LIỆU TRÊN TRANG CHỦ (TÀI LIỆU, VIDEO, ĐỀ THI - CHUẨN HÌNH 2)
   const [learningCategories, setLearningCategories] = useState<LearningCategory[]>(DEFAULT_CATEGORIES);
@@ -874,7 +874,7 @@ export default function Home() {
           })
           : [];
 
-        const baseDocs = publicLiveDocs.length > 0 ? [...publicLiveDocs] : [...DEFAULT_DOCUMENTS];
+        const baseDocs = publicLiveDocs.length > 0 ? [...publicLiveDocs] : [];
 
         // Merge approved Grade 12 community documents
         if (liveCommDocs && liveCommDocs.length > 0) {

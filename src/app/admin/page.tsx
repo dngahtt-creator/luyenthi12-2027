@@ -44,6 +44,7 @@ import {
   updateDocument,
   deleteDocument,
   deleteMultipleDocuments,
+  purgeSystemSampleDocuments,
   getRecentSubmissions,
   exportExamResultsToExcel,
   deleteSubmission,
@@ -1265,8 +1266,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       getSavedStudentPassword(student.id, student.fullName) ||
       (typeof window !== "undefined"
         ? localStorage.getItem(`std_pwd_${student.id}`) ||
-          localStorage.getItem(`std_pwd_${student.fullName}`) ||
-          localStorage.getItem(`std_pwd_${student.fullName?.toLowerCase()}`)
+        localStorage.getItem(`std_pwd_${student.fullName}`) ||
+        localStorage.getItem(`std_pwd_${student.fullName?.toLowerCase()}`)
         : "") ||
       "";
     setStudentForm({
@@ -1554,14 +1555,14 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       prev.map((item) =>
         item.uid === editingUser.uid
           ? {
-              ...item,
-              fullName: userEditForm.fullName.trim(),
-              email: userEditForm.email.trim(),
-              teacherCode: finalCode,
-              registeredDate: userEditForm.registeredDate.trim() || item.registeredDate,
-              status: userEditForm.status,
-              role: userEditForm.role,
-            }
+            ...item,
+            fullName: userEditForm.fullName.trim(),
+            email: userEditForm.email.trim(),
+            teacherCode: finalCode,
+            registeredDate: userEditForm.registeredDate.trim() || item.registeredDate,
+            status: userEditForm.status,
+            role: userEditForm.role,
+          }
           : item
       )
     );
@@ -2316,6 +2317,21 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
       showToast(`🗑️ Đã xóa thành công ${count} tài liệu khỏi hệ thống.`);
       await fetchDocuments();
     }
+  };
+
+  const handlePurgeSampleDocuments = async () => {
+    if (
+      !confirm(
+        "Hệ thống sẽ quét và XÓA TOÀN BỘ các tài liệu mẫu mặc định (không phải do bạn tự tạo/thêm) khỏi Firebase Firestore và bộ nhớ máy.\n\nChỉ giữ lại các tài liệu do chính bạn tạo. Bạn có chắc chắn muốn dọn dẹp?"
+      )
+    ) {
+      return;
+    }
+    setLoadingDocs(true);
+    const res = await purgeSystemSampleDocuments();
+    await fetchDocuments();
+    setLoadingDocs(false);
+    showToast(`🧹 Đã dọn dẹp và xóa ${res.deletedCount} tài liệu mẫu mặc định!`);
   };
 
   // =========================================================
@@ -3079,7 +3095,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 style={{ display: "none" }}
                 onChange={handleQuickFileUpload}
               />
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', background: '#ffffff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
                 {/* LEFT COLUMN: Manage Classes */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
@@ -3106,16 +3122,16 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       </button>
                     )}
                   </div>
-                  
+
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel} style={{textTransform: 'uppercase', color: editingQuickClass ? '#16a34a' : '#64748b', fontSize: '12px', fontWeight: 800}}>
+                    <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: editingQuickClass ? '#16a34a' : '#64748b', fontSize: '12px', fontWeight: 800 }}>
                       {editingQuickClass ? "Tên Lớp Học Mới" : "Tên Lớp Học"}
                     </label>
-                    <input 
+                    <input
                       ref={quickClassInputRef}
-                      type="text" 
-                      className={styles.formInput} 
-                      placeholder="VD: 12A1, 11B2..." 
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="VD: 12A1, 11B2..."
                       value={quickClassName}
                       onChange={(e) => setQuickClassName(e.target.value)}
                       onKeyDown={(e) => {
@@ -3136,16 +3152,16 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   <div>
                     {editingQuickClass ? (
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={handleSaveQuickEditClass}
                           disabled={loadingClasses}
                           style={{ flex: 1, background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', padding: '12px 16px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)' }}
                         >
                           💾 LƯU TÊN LỚP
                         </button>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={handleCancelEditQuickClass}
                           style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
                         >
@@ -3154,8 +3170,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       </div>
                     ) : (
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={handleQuickCreateClass}
                           disabled={quickUploadLoading}
                           style={{ flex: 1, background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', padding: '12px 16px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}
@@ -3212,56 +3228,56 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               onClick={() => {
                                 setSelectedClassId(cls.id);
                               }}
-                            style={{ 
-                              display: 'inline-flex', alignItems: 'center', gap: '6px', 
-                              padding: '6px 12px', borderRadius: '20px', 
-                              fontSize: '12.5px', fontWeight: 700, 
-                              border: isEditingThis ? '2px solid #16a34a' : isSelected ? '1px solid #2563eb' : '1px solid #e2e8f0', 
-                              background: isEditingThis ? '#f0fdf4' : isSelected ? '#eff6ff' : '#ffffff', 
-                              color: isEditingThis ? '#15803d' : isSelected ? '#1d4ed8' : '#475569', 
-                              cursor: 'pointer', transition: 'all 0.2s ease'
-                            }}
-                          >
-                            <span>{cls.name}</span>
-                            <span style={{background: isEditingThis ? '#dcfce7' : isSelected ? '#dbeafe' : '#f1f5f9', padding: '2px 6px', borderRadius: '10px', fontSize: '10.5px'}}>{count} HS</span>
-                            
-                            {/* NÚT SỬA TÊN LỚP */}
-                            <span
-                              title={`Sửa tên lớp ${cls.name}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStartEditQuickClass(cls);
-                              }}
-                              style={{ 
-                                color: '#2563eb', 
-                                fontWeight: 800, 
-                                marginLeft: '4px', 
-                                cursor: 'pointer',
-                                padding: '2px 4px',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '6px 12px', borderRadius: '20px',
+                                fontSize: '12.5px', fontWeight: 700,
+                                border: isEditingThis ? '2px solid #16a34a' : isSelected ? '1px solid #2563eb' : '1px solid #e2e8f0',
+                                background: isEditingThis ? '#f0fdf4' : isSelected ? '#eff6ff' : '#ffffff',
+                                color: isEditingThis ? '#15803d' : isSelected ? '#1d4ed8' : '#475569',
+                                cursor: 'pointer', transition: 'all 0.2s ease'
                               }}
                             >
-                              ✏️
-                            </span>
+                              <span>{cls.name}</span>
+                              <span style={{ background: isEditingThis ? '#dcfce7' : isSelected ? '#dbeafe' : '#f1f5f9', padding: '2px 6px', borderRadius: '10px', fontSize: '10.5px' }}>{count} HS</span>
 
-                            {/* NÚT XÓA LỚP */}
-                            <span
-                              title={`Xóa lớp ${cls.name}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteClass(cls.id, cls.name);
-                              }}
-                              style={{ color: '#ef4444', fontWeight: 900, marginLeft: '2px', cursor: 'pointer', padding: '2px 4px', fontSize: '12px' }}
-                            >
-                              ✕
-                            </span>
-                          </button>
-                        );
-                      }))}
+                              {/* NÚT SỬA TÊN LỚP */}
+                              <span
+                                title={`Sửa tên lớp ${cls.name}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStartEditQuickClass(cls);
+                                }}
+                                style={{
+                                  color: '#2563eb',
+                                  fontWeight: 800,
+                                  marginLeft: '4px',
+                                  cursor: 'pointer',
+                                  padding: '2px 4px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                ✏️
+                              </span>
+
+                              {/* NÚT XÓA LỚP */}
+                              <span
+                                title={`Xóa lớp ${cls.name}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClass(cls.id, cls.name);
+                                }}
+                                style={{ color: '#ef4444', fontWeight: 900, marginLeft: '2px', cursor: 'pointer', padding: '2px 4px', fontSize: '12px' }}
+                              >
+                                ✕
+                              </span>
+                            </button>
+                          );
+                        }))}
                     </div>
                   </div>
                 </div>
@@ -3277,13 +3293,13 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       <span>Tải lên danh sách học sinh từ file Excel hoặc CSV để thêm hàng loạt.</span>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button 
+                      <button
                         onClick={handleDownloadExcelTemplateClick}
                         style={{ background: '#ffffff', color: '#10b981', border: '1px solid #10b981', borderRadius: '6px', padding: '8px 14px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', flex: 1 }}
                       >
                         📥 TẢI MẪU EXCEL
                       </button>
-                      <button 
+                      <button
                         onClick={() => quickFileInputRef.current?.click()}
                         disabled={quickUploadLoading}
                         style={{ background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', flex: 1, opacity: quickUploadLoading ? 0.6 : 1 }}
@@ -3294,17 +3310,17 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   </div>
 
                   <div style={{ marginTop: 'auto', paddingTop: '10px' }}>
-                    <button 
+                    <button
                       onClick={() => handleOpenImportModal()}
-                      style={{ 
-                        width: '100%', 
-                        padding: '16px', 
-                        fontSize: '15px', 
-                        fontWeight: 800, 
-                        background: '#f8fafc', 
-                        color: '#2563eb', 
-                        border: '1.5px solid #bfdbfe', 
-                        borderRadius: '10px', 
+                      style={{
+                        width: '100%',
+                        padding: '16px',
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        background: '#f8fafc',
+                        color: '#2563eb',
+                        border: '1.5px solid #bfdbfe',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                       }}
                     >
@@ -3347,12 +3363,12 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px' }}>
                       <span style={{ fontSize: '18px' }}>🔍</span>
-                      <input 
-                        type="text" 
-                        placeholder="Tìm kiếm..." 
+                      <input
+                        type="text"
+                        placeholder="Tìm kiếm..."
                         value={studentSearch}
                         onChange={(e) => setStudentSearch(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', fontSize: '13px', outline: 'none', fontWeight: 600, width: '150px' }} 
+                        style={{ border: 'none', background: 'transparent', fontSize: '13px', outline: 'none', fontWeight: 600, width: '150px' }}
                       />
                     </div>
                     <button onClick={fetchClassesAndStudents} style={{ border: '1px solid #cbd5e1', background: '#f8fafc', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3425,8 +3441,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                   getSavedStudentPassword(st.id, st.fullName) ||
                                   (typeof window !== "undefined"
                                     ? localStorage.getItem(`std_pwd_${st.id}`) ||
-                                      localStorage.getItem(`std_pwd_${st.fullName}`) ||
-                                      localStorage.getItem(`std_pwd_${st.fullName?.toLowerCase()}`)
+                                    localStorage.getItem(`std_pwd_${st.fullName}`) ||
+                                    localStorage.getItem(`std_pwd_${st.fullName?.toLowerCase()}`)
                                     : "") ||
                                   (st.fullName === "Hani Diễm" ? "123456" : "123456");
                                 return (
@@ -3754,11 +3770,11 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 {/* LEFT COLUMN */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800}}>Tên bài tập / Đề thi</label>
-                    <input 
-                      type="text" 
-                      className={styles.formInput} 
-                      placeholder="Nhập tên bài thi..." 
+                    <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800 }}>Tên bài tập / Đề thi</label>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="Nhập tên bài thi..."
                       value={examForm.title}
                       onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
                     />
@@ -3766,11 +3782,11 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
 
 
-                  
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800}}>Khối lớp</label>
-                      <select 
+                      <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800 }}>Khối lớp</label>
+                      <select
                         className={styles.formSelect}
                         value={examGrade}
                         onChange={(e) => setExamGrade(e.target.value)}
@@ -3781,8 +3797,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       </select>
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800}}>Môn học</label>
-                      <select 
+                      <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800 }}>Môn học</label>
+                      <select
                         className={styles.formSelect}
                         value={examForm.subject}
                         onChange={(e) => handleExamSubjectChange(e.target.value)}
@@ -3803,7 +3819,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
                   <div className={styles.formGroup}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800, margin: 0}}>
+                      <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800, margin: 0 }}>
                         Tải lên đề
                       </label>
                       <button
@@ -3817,23 +3833,23 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '8px' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => setUploadMode('link')} 
+                      <button
+                        type="button"
+                        onClick={() => setUploadMode('link')}
                         className={`${styles.glowBtn} ${uploadMode === 'link' ? styles.glowBtnActive : styles.glowBtnInactive}`}
                       >
                         <span>🔗</span> Dán Link
                       </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setUploadMode('pdf')} 
+                      <button
+                        type="button"
+                        onClick={() => setUploadMode('pdf')}
                         className={`${styles.glowBtn} ${uploadMode === 'pdf' ? styles.glowBtnActive : styles.glowBtnInactive}`}
                       >
                         <span>⬆️</span> Upload PDF
                       </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setUploadMode('image')} 
+                      <button
+                        type="button"
+                        onClick={() => setUploadMode('image')}
                         className={`${styles.glowBtn} ${uploadMode === 'image' ? styles.glowBtnActive : styles.glowBtnInactive}`}
                       >
                         <span>🖼️</span> Dán Ảnh
@@ -3842,10 +3858,10 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
                     {uploadMode === 'link' && (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input 
-                          type="text" 
-                          className={styles.formInput} 
-                          placeholder="Nhập Link Google Drive hoặc link PDF..." 
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          placeholder="Nhập Link Google Drive hoặc link PDF..."
                           value={examForm.fileUrl || ""}
                           onChange={(e) => setExamForm({ ...examForm, fileUrl: e.target.value })}
                           style={{ flex: 1 }}
@@ -3862,11 +3878,11 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                     )}
                     {uploadMode === 'pdf' && (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input 
-                          type="file" 
-                          accept=".pdf" 
-                          className={styles.formInput} 
-                          style={{ padding: '8px', flex: 1 }} 
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          className={styles.formInput}
+                          style={{ padding: '8px', flex: 1 }}
                           onChange={handleExamPdfFileSelect}
                         />
                         <button
@@ -3881,12 +3897,12 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                     )}
                     {uploadMode === 'image' && (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          multiple 
-                          className={styles.formInput} 
-                          style={{ padding: '8px', flex: 1 }} 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className={styles.formInput}
+                          style={{ padding: '8px', flex: 1 }}
                           onChange={handleExamImageFileSelect}
                         />
                         <button
@@ -3900,36 +3916,36 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                       </div>
                     )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '11.5px', color: '#1d4ed8', fontWeight: 600 }}>
-                      <span>🔒</span> 
+                      <span>🔒</span>
                       <span>Chế độ Giáo viên: Bạn có thể xem trước nội dung đề. Học sinh không được phép xem trước đề khi chưa vào thi.</span>
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end' }}>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800}}>Thời gian (Phút)</label>
-                      <input 
-                        type="number" 
-                        className={styles.formInput} 
-                        value={examTimeMinutes} 
+                      <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#64748b', fontSize: '12px', fontWeight: 800 }}>Thời gian (Phút)</label>
+                      <input
+                        type="number"
+                        className={styles.formInput}
+                        value={examTimeMinutes}
                         onChange={(e) => setExamTimeMinutes(Number(e.target.value) || 0)}
-                        style={{textAlign: 'center', fontSize: '16px', fontWeight: 800}} 
+                        style={{ textAlign: 'center', fontSize: '16px', fontWeight: 800 }}
                       />
                     </div>
                     <div style={{ padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', height: '42px', background: '#f8fafc' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={examAllowReview} 
+                      <input
+                        type="checkbox"
+                        checked={examAllowReview}
                         onChange={(e) => setExamAllowReview(e.target.checked)}
-                        style={{ width: '16px', height: '16px', accentColor: '#0ea5e9' }} 
+                        style={{ width: '16px', height: '16px', accentColor: '#0ea5e9' }}
                       />
-                      <span style={{fontSize: '12px', fontWeight: 700, color: '#334155'}}>Cho học sinh xem đáp án sau thi</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>Cho học sinh xem đáp án sau thi</span>
                     </div>
                   </div>
 
                   <div style={{ padding: '16px', border: '1.5px solid #fde047', borderRadius: '12px', background: '#fefce8' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-                      <label style={{color: '#ca8a04', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', margin: 0}}>
+                      <label style={{ color: '#ca8a04', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', margin: 0 }}>
                         <span>⚙️</span> Cấu hình điểm
                       </label>
                       {examForm.subject === 'tin' ? (
@@ -3945,110 +3961,110 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                       {/* TỔNG P.1 */}
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                        <span style={{fontSize: '10px', fontWeight: 800, color: '#3b82f6'}}>TỔNG P.1</span>
-                        <input 
-                          type="number" 
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6' }}>TỔNG P.1</span>
+                        <input
+                          type="number"
                           step="0.5"
-                          value={scoreConfig.p1Total} 
+                          value={scoreConfig.p1Total}
                           onChange={(e) => setScoreConfig({ ...scoreConfig, p1Total: Number(e.target.value) || 0 })}
-                          style={{width: '45px', height: '32px', textAlign: 'center', border: '1.5px solid #3b82f6', borderRadius: '6px', fontWeight: 800, color: '#1d4ed8', background: '#ffffff'}} 
+                          style={{ width: '45px', height: '32px', textAlign: 'center', border: '1.5px solid #3b82f6', borderRadius: '6px', fontWeight: 800, color: '#1d4ed8', background: '#ffffff' }}
                         />
                       </div>
 
                       {/* TỔNG P.2 (Cho môn Tin học hiển thị rõ 4đ) */}
                       {examForm.subject === 'tin' && (
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                          <span style={{fontSize: '10px', fontWeight: 800, color: '#8b5cf6'}}>TỔNG P.2</span>
-                          <input 
-                            type="number" 
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 800, color: '#8b5cf6' }}>TỔNG P.2</span>
+                          <input
+                            type="number"
                             step="0.5"
-                            value={scoreConfig.p2Total} 
+                            value={scoreConfig.p2Total}
                             onChange={(e) => setScoreConfig({ ...scoreConfig, p2Total: Number(e.target.value) || 0 })}
-                            style={{width: '45px', height: '32px', textAlign: 'center', border: '1.5px solid #8b5cf6', borderRadius: '6px', fontWeight: 800, color: '#6d28d9', background: '#ffffff'}} 
+                            style={{ width: '45px', height: '32px', textAlign: 'center', border: '1.5px solid #8b5cf6', borderRadius: '6px', fontWeight: 800, color: '#6d28d9', background: '#ffffff' }}
                           />
                         </div>
                       )}
 
                       {/* TỔNG P.3: Ẩn khi là môn Tin học, hiển thị với các môn khác */}
                       {examForm.subject !== 'tin' && (
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                          <span style={{fontSize: '10px', fontWeight: 800, color: '#3b82f6'}}>TỔNG P.3</span>
-                          <input 
-                            type="number" 
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6' }}>TỔNG P.3</span>
+                          <input
+                            type="number"
                             step="0.5"
-                            value={scoreConfig.p3Total} 
+                            value={scoreConfig.p3Total}
                             onChange={(e) => setScoreConfig({ ...scoreConfig, p3Total: Number(e.target.value) || 0 })}
-                            style={{width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#334155', background: '#ffffff'}} 
+                            style={{ width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#334155', background: '#ffffff' }}
                           />
                         </div>
                       )}
 
                       {/* CÁC MỨC ĐIỂM Ý CON PHẦN 2 */}
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                        <span style={{fontSize: '10px', fontWeight: 800, color: '#475569'}}>P2: 1 Ý</span>
-                        <input 
-                          type="number" 
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#475569' }}>P2: 1 Ý</span>
+                        <input
+                          type="number"
                           step="0.05"
-                          value={scoreConfig.p2_1} 
+                          value={scoreConfig.p2_1}
                           onChange={(e) => setScoreConfig({ ...scoreConfig, p2_1: Number(e.target.value) || 0 })}
-                          style={{width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff'}} 
+                          style={{ width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff' }}
                         />
                       </div>
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                        <span style={{fontSize: '10px', fontWeight: 800, color: '#475569'}}>P2: 2 Ý</span>
-                        <input 
-                          type="number" 
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#475569' }}>P2: 2 Ý</span>
+                        <input
+                          type="number"
                           step="0.05"
-                          value={scoreConfig.p2_2} 
+                          value={scoreConfig.p2_2}
                           onChange={(e) => setScoreConfig({ ...scoreConfig, p2_2: Number(e.target.value) || 0 })}
-                          style={{width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff'}} 
+                          style={{ width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff' }}
                         />
                       </div>
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                        <span style={{fontSize: '10px', fontWeight: 800, color: '#475569'}}>P2: 3 Ý</span>
-                        <input 
-                          type="number" 
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#475569' }}>P2: 3 Ý</span>
+                        <input
+                          type="number"
                           step="0.05"
-                          value={scoreConfig.p2_3} 
+                          value={scoreConfig.p2_3}
                           onChange={(e) => setScoreConfig({ ...scoreConfig, p2_3: Number(e.target.value) || 0 })}
-                          style={{width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff'}} 
+                          style={{ width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff' }}
                         />
                       </div>
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center'}}>
-                        <span style={{fontSize: '10px', fontWeight: 800, color: '#475569'}}>P2: 4 Ý</span>
-                        <input 
-                          type="number" 
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#475569' }}>P2: 4 Ý</span>
+                        <input
+                          type="number"
                           step="0.1"
-                          value={scoreConfig.p2_4} 
+                          value={scoreConfig.p2_4}
                           onChange={(e) => setScoreConfig({ ...scoreConfig, p2_4: Number(e.target.value) || 0 })}
-                          style={{width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff'}} 
+                          style={{ width: '45px', height: '32px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: 700, color: '#d97706', background: '#ffffff' }}
                         />
                       </div>
                     </div>
-                    <div style={{fontSize: '11px', color: '#78716c', marginTop: '10px', textAlign: 'center', fontWeight: 600}}>
-                      {examForm.subject === 'tin' 
-                        ? '💡 Tin học: Phần 1 (6.0đ), Phần 2 (4.0đ: 4 câu × 1.0đ/câu, mỗi câu: 0.1đ/1 ý, 0.25đ/2 ý, 0.5đ/3 ý, 1.0đ/4 ý). Không có Phần 3.' 
+                    <div style={{ fontSize: '11px', color: '#78716c', marginTop: '10px', textAlign: 'center', fontWeight: 600 }}>
+                      {examForm.subject === 'tin'
+                        ? '💡 Tin học: Phần 1 (6.0đ), Phần 2 (4.0đ: 4 câu × 1.0đ/câu, mỗi câu: 0.1đ/1 ý, 0.25đ/2 ý, 0.5đ/3 ý, 1.0đ/4 ý). Không có Phần 3.'
                         : `💡 Tổng điểm Phần 1 mặc định: ${scoreConfig.p1Total}đ | P2: 0.1đ/1 ý, 0.25đ/2 ý, 0.5đ/3 ý, 1.0đ/4 ý`
                       }
                     </div>
                   </div>
 
                   <div style={{ padding: '16px', border: '1.5px solid #bfdbfe', borderRadius: '12px', background: '#eff6ff' }}>
-                    <label style={{color: '#1d4ed8', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px', fontSize: '13px'}}>
+                    <label style={{ color: '#1d4ed8', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px', fontSize: '13px' }}>
                       <span>👤</span> Giao đề đến
                     </label>
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => { setAssignMode('class'); setAssignedClasses(classesList.map(c => c.id)); setExpandedClass(null); }} 
+                      <button
+                        type="button"
+                        onClick={() => { setAssignMode('class'); setAssignedClasses(classesList.map(c => c.id)); setExpandedClass(null); }}
                         className={`${styles.glowBtn} ${assignMode === 'class' ? styles.glowBtnActive : styles.glowBtnInactive}`}
                       >
                         GIAO CẢ LỚP
                       </button>
-                      <button 
-                        type="button" 
-                        onClick={() => { setAssignMode('student'); setAssignedClasses([]); }} 
+                      <button
+                        type="button"
+                        onClick={() => { setAssignMode('student'); setAssignedClasses([]); }}
                         className={`${styles.glowBtn} ${assignMode === 'student' ? styles.glowBtnActive : styles.glowBtnInactive}`}
                       >
                         GIAO TỪNG HS
@@ -4114,7 +4130,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         const count = classStudents.length;
                         return (
                           <div key={cls.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <div 
+                            <div
                               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', border: assignMode === 'class' && assignedClasses.includes(cls.id) ? '2px solid #2563eb' : (assignMode === 'student' && expandedClass === cls.id ? '2px solid #8b5cf6' : '1px solid #e2e8f0'), padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}
                               onClick={() => {
                                 if (assignMode === 'class') {
@@ -4130,9 +4146,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 {assignMode === 'class' ? (
-                                  <input 
-                                    type="checkbox" 
-                                    style={{width: '16px', height: '16px', pointerEvents: 'none'}} 
+                                  <input
+                                    type="checkbox"
+                                    style={{ width: '16px', height: '16px', pointerEvents: 'none' }}
                                     checked={assignedClasses.includes(cls.id)}
                                     readOnly
                                   />
@@ -4141,11 +4157,11 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                     {expandedClass === cls.id ? '▼' : '▶'}
                                   </span>
                                 )}
-                                <span style={{fontSize: '13px', fontWeight: 700, color: '#334155'}}>{cls.name}</span>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>{cls.name}</span>
                               </div>
-                              <span style={{fontSize: '11px', color: '#94a3b8', fontWeight: 600}}>{count} HS</span>
+                              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{count} HS</span>
                             </div>
-                            
+
                             {/* Students List Expansion */}
                             {assignMode === 'student' && expandedClass === cls.id && (() => {
                               const filteredStudents = classStudents.filter((st) =>
@@ -4243,44 +4259,44 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <h3 style={{ margin: 0, color: '#ea580c', textTransform: 'uppercase', fontSize: '16px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times' }}>KHUNG ĐÁP ÁN</h3>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={handleDownloadExamTemplate}
-                        className={styles.clickEffect} 
+                        className={styles.clickEffect}
                         style={{ border: '1px solid #cbd5e1', background: '#f8fafc', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: '#1e3a8a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <span style={{fontSize: '14px'}}>📥</span> TẢI FORM
+                        <span style={{ fontSize: '14px' }}>📥</span> TẢI FORM
                       </button>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => document.getElementById('upload-exam-excel')?.click()}
-                        className={styles.clickEffect} 
+                        className={styles.clickEffect}
                         style={{ border: 'none', background: '#059669', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <span style={{fontSize: '14px'}}>📊</span> {examImportLoading ? "⏳ ĐANG NẠP..." : "NẠP EXCEL"}
+                        <span style={{ fontSize: '14px' }}>📊</span> {examImportLoading ? "⏳ ĐANG NẠP..." : "NẠP EXCEL"}
                       </button>
-                      <input 
+                      <input
                         id="upload-exam-excel"
-                        type="file" 
-                        accept=".xlsx, .xls, .csv" 
+                        type="file"
+                        accept=".xlsx, .xls, .csv"
                         onChange={handleExamExcelUpload}
-                        style={{ display: 'none' }} 
+                        style={{ display: 'none' }}
                       />
                     </div>
                   </div>
 
                   <div className={styles.formGroup} style={{ gap: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#3b82f6', fontSize: '13px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times', margin: 0}}>
+                      <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#3b82f6', fontSize: '13px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times', margin: 0 }}>
                         PHẦN I: CÂU TRẮC NGHIỆM
                       </label>
                       <span style={{ fontSize: '11px', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '4px', fontWeight: 800 }}>
                         {examForm.subject === 'tin' ? '6.0 điểm' : `${scoreConfig.p1Total} điểm`}
                       </span>
                     </div>
-                    <textarea 
-                      className={styles.formInput} 
-                      style={{minHeight: '100px', resize: 'vertical', padding: '12px', borderRadius: '8px', fontSize: '14px', color: '#334155'}} 
+                    <textarea
+                      className={styles.formInput}
+                      style={{ minHeight: '100px', resize: 'vertical', padding: '12px', borderRadius: '8px', fontSize: '14px', color: '#334155' }}
                       value={part1AnswerText}
                       onChange={(e) => setPart1AnswerText(e.target.value)}
                       placeholder="1D 2B 3C 4C 5A..."
@@ -4289,16 +4305,16 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
                   <div className={styles.formGroup} style={{ gap: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#d946ef', fontSize: '13px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times', margin: 0}}>
+                      <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#d946ef', fontSize: '13px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times', margin: 0 }}>
                         PHẦN II: CÂU ĐÚNG/SAI
                       </label>
                       <span style={{ fontSize: '11px', background: '#fae8ff', color: '#86198f', padding: '2px 8px', borderRadius: '4px', fontWeight: 800 }}>
                         {examForm.subject === 'tin' ? '4.0 điểm (4 câu)' : '4 câu (chuẩn GDPT)'}
                       </span>
                     </div>
-                    <textarea 
-                      className={styles.formInput} 
-                      style={{minHeight: '100px', resize: 'vertical', padding: '12px', borderRadius: '8px', fontSize: '14px', color: '#334155'}} 
+                    <textarea
+                      className={styles.formInput}
+                      style={{ minHeight: '100px', resize: 'vertical', padding: '12px', borderRadius: '8px', fontSize: '14px', color: '#334155' }}
                       value={part2AnswerText}
                       onChange={(e) => setPart2AnswerText(e.target.value)}
                       placeholder="1: Đ Đ Đ S 2: Đ S S S..."
@@ -4308,16 +4324,16 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   {examForm.subject !== 'tin' ? (
                     <div className={styles.formGroup} style={{ gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <label className={styles.formLabel} style={{textTransform: 'uppercase', color: '#d97706', fontSize: '13px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times', margin: 0}}>
+                        <label className={styles.formLabel} style={{ textTransform: 'uppercase', color: '#d97706', fontSize: '13px', fontWeight: 800, fontFamily: 'serif, "Times New Roman", Times', margin: 0 }}>
                           PHẦN III: TRẢ LỜI NGẮN
                         </label>
                         <span style={{ fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '4px', fontWeight: 800 }}>
                           {scoreConfig.p3Total} điểm
                         </span>
                       </div>
-                      <textarea 
-                        className={styles.formInput} 
-                        style={{minHeight: '100px', resize: 'vertical', padding: '12px', borderRadius: '8px', fontSize: '14px', color: '#334155'}} 
+                      <textarea
+                        className={styles.formInput}
+                        style={{ minHeight: '100px', resize: 'vertical', padding: '12px', borderRadius: '8px', fontSize: '14px', color: '#334155' }}
                         value={part3AnswerText}
                         onChange={(e) => setPart3AnswerText(e.target.value)}
                         placeholder="1: 1  2: 85  3: 0.31..."
@@ -4336,38 +4352,38 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   )}
 
                   <div style={{ marginTop: 'auto', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => handleCreateExam()}
                       className={styles.glowBtn}
-                      style={{ 
-                        width: '100%', 
-                        padding: '14px', 
-                        fontSize: '15px', 
-                        fontWeight: 800, 
-                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '10px', 
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                         boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
                       }}
                     >
                       🚀 XUẤT BẢN / TẠO ĐỀ THI RA TRANG CHỦ
                     </button>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => handleOpenAssignHomeworkModal()}
                       className={styles.glowBtn}
-                      style={{ 
-                        width: '100%', 
-                        padding: '14px', 
-                        fontSize: '15px', 
-                        fontWeight: 800, 
-                        background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '10px', 
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                         boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
                         display: 'flex',
@@ -4378,18 +4394,18 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                     >
                       📝 GIAO BÀI TẬP (CHO CẢ LỚP HOẶC TỪNG HỌC SINH)
                     </button>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setShowExamPreviewModal(true)}
-                      style={{ 
-                        width: '100%', 
-                        padding: '10px', 
-                        fontSize: '13px', 
-                        fontWeight: 700, 
-                        background: '#f8fafc', 
-                        color: '#475569', 
-                        border: '1px solid #cbd5e1', 
-                        borderRadius: '8px', 
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        background: '#f8fafc',
+                        color: '#475569',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
                         cursor: 'pointer',
                       }}
                     >
@@ -4855,165 +4871,164 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             {filteredExams.map((exam, idx) => {
                               const isSelected = selectedExamIds.includes(exam.id);
                               return (
-                              <tr
-                                key={exam.id}
-                                style={{
-                                  background: isSelected ? "#eff6ff" : undefined,
-                                }}
-                              >
-                                {isExamMultiSelectMode && (
-                                  <td style={{ textAlign: "center" }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={isSelected}
-                                      onChange={() => {
-                                        setSelectedExamIds((prev) =>
-                                          prev.includes(exam.id)
-                                            ? prev.filter((id) => id !== exam.id)
-                                            : [...prev, exam.id]
-                                        );
-                                      }}
-                                      style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#2563eb" }}
-                                    />
+                                <tr
+                                  key={exam.id}
+                                  style={{
+                                    background: isSelected ? "#eff6ff" : undefined,
+                                  }}
+                                >
+                                  {isExamMultiSelectMode && (
+                                    <td style={{ textAlign: "center" }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => {
+                                          setSelectedExamIds((prev) =>
+                                            prev.includes(exam.id)
+                                              ? prev.filter((id) => id !== exam.id)
+                                              : [...prev, exam.id]
+                                          );
+                                        }}
+                                        style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#2563eb" }}
+                                      />
+                                    </td>
+                                  )}
+                                  <td style={{ textAlign: "center", fontWeight: 700, color: "#64748b" }}>
+                                    {idx + 1}
                                   </td>
-                                )}
-                                <td style={{ textAlign: "center", fontWeight: 700, color: "#64748b" }}>
-                                  {idx + 1}
-                                </td>
-                                <td>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                    <div
-                                      style={{
-                                        fontWeight: 800,
-                                        color: "#0f172a",
-                                        fontSize: "13.5px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "8px",
-                                        flexWrap: "wrap",
-                                      }}
-                                    >
-                                      <span>{exam.title}</span>
-                                      {exam.tag && (
-                                        <span
-                                          style={{
-                                            fontSize: "10.5px",
-                                            background: "#fef2f2",
-                                            color: "#dc2626",
-                                            border: "1px solid #fecaca",
-                                            padding: "1px 6px",
-                                            borderRadius: "4px",
-                                            fontWeight: 700,
-                                          }}
-                                        >
-                                          {exam.tag}
-                                        </span>
-                                      )}
+                                  <td>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                      <div
+                                        style={{
+                                          fontWeight: 800,
+                                          color: "#0f172a",
+                                          fontSize: "13.5px",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                          flexWrap: "wrap",
+                                        }}
+                                      >
+                                        <span>{exam.title}</span>
+                                        {exam.tag && (
+                                          <span
+                                            style={{
+                                              fontSize: "10.5px",
+                                              background: "#fef2f2",
+                                              color: "#dc2626",
+                                              border: "1px solid #fecaca",
+                                              padding: "1px 6px",
+                                              borderRadius: "4px",
+                                              fontWeight: 700,
+                                            }}
+                                          >
+                                            {exam.tag}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: "12px",
+                                          color: "#64748b",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "12px",
+                                          flexWrap: "wrap",
+                                        }}
+                                      >
+                                        <span>❓ {exam.questions} câu</span>
+                                        <span>•</span>
+                                        <span>🏫 {exam.school || "THPT Tuy Đức"}</span>
+                                      </div>
                                     </div>
-                                    <div
+                                  </td>
+                                  <td>
+                                    <span
                                       style={{
+                                        display: "inline-block",
+                                        padding: "3px 10px",
+                                        borderRadius: "6px",
                                         fontSize: "12px",
-                                        color: "#64748b",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "12px",
-                                        flexWrap: "wrap",
+                                        fontWeight: 700,
+                                        background:
+                                          exam.subject === "toan"
+                                            ? "#eff6ff"
+                                            : exam.subject === "tin"
+                                              ? "#f5f3ff"
+                                              : "#f0fdf4",
+                                        color:
+                                          exam.subject === "toan"
+                                            ? "#1d4ed8"
+                                            : exam.subject === "tin"
+                                              ? "#6d28d9"
+                                              : "#15803d",
+                                        border: `1px solid ${exam.subject === "toan"
+                                            ? "#bfdbfe"
+                                            : exam.subject === "tin"
+                                              ? "#ddd6fe"
+                                              : "#bbf7d0"
+                                          }`,
                                       }}
                                     >
-                                      <span>❓ {exam.questions} câu</span>
-                                      <span>•</span>
-                                      <span>🏫 {exam.school || "THPT Tuy Đức"}</span>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td>
-                                  <span
-                                    style={{
-                                      display: "inline-block",
-                                      padding: "3px 10px",
-                                      borderRadius: "6px",
-                                      fontSize: "12px",
-                                      fontWeight: 700,
-                                      background:
-                                        exam.subject === "toan"
-                                          ? "#eff6ff"
-                                          : exam.subject === "tin"
-                                          ? "#f5f3ff"
-                                          : "#f0fdf4",
-                                      color:
-                                        exam.subject === "toan"
-                                          ? "#1d4ed8"
-                                          : exam.subject === "tin"
-                                          ? "#6d28d9"
-                                          : "#15803d",
-                                      border: `1px solid ${
-                                        exam.subject === "toan"
-                                          ? "#bfdbfe"
-                                          : exam.subject === "tin"
-                                          ? "#ddd6fe"
-                                          : "#bbf7d0"
-                                      }`,
-                                    }}
-                                  >
-                                    {exam.subjectName || exam.subject}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#475569" }}>
-                                    ⏱️ {exam.timeMinutes} phút
-                                  </span>
-                                </td>
-                                <td style={{ textAlign: "right" }}>
-                                  <Link
-                                    href={`/mock-exams/${encodeURIComponent(exam.accessCode || exam.id)}`}
-                                    target="_blank"
-                                    style={{
-                                      display: "inline-block",
-                                      padding: "4px 9px",
-                                      background: "#eff6ff",
-                                      color: "#1d4ed8",
-                                      borderRadius: "6px",
-                                      fontSize: "12px",
-                                      fontWeight: 700,
-                                      textDecoration: "none",
-                                      marginRight: "6px",
-                                      border: "1px solid #bfdbfe",
-                                    }}
-                                    title="Xem và làm thử"
-                                  >
-                                    👁️ Xem
-                                  </Link>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenAssignHomeworkModal(exam)}
-                                    style={{
-                                      display: "inline-block",
-                                      padding: "4px 9px",
-                                      background: "#ecfdf5",
-                                      color: "#059669",
-                                      borderRadius: "6px",
-                                      fontSize: "12px",
-                                      fontWeight: 700,
-                                      border: "1px solid #a7f3d0",
-                                      cursor: "pointer",
-                                      marginRight: "6px",
-                                    }}
-                                    title="Giao bài tập này cho cả lớp hoặc từng học sinh"
-                                  >
-                                    📝 Giao bài
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className={styles.btnDanger}
-                                    onClick={() => handleDeleteExam(exam.id, exam.title)}
-                                    style={{ height: "28px", fontSize: "11.5px", padding: "0 8px" }}
-                                    title="Gỡ đề thi"
-                                  >
-                                    🗑️
-                                  </button>
-                                </td>
-                              </tr>
-                            );
+                                      {exam.subjectName || exam.subject}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#475569" }}>
+                                      ⏱️ {exam.timeMinutes} phút
+                                    </span>
+                                  </td>
+                                  <td style={{ textAlign: "right" }}>
+                                    <Link
+                                      href={`/mock-exams/${encodeURIComponent(exam.accessCode || exam.id)}`}
+                                      target="_blank"
+                                      style={{
+                                        display: "inline-block",
+                                        padding: "4px 9px",
+                                        background: "#eff6ff",
+                                        color: "#1d4ed8",
+                                        borderRadius: "6px",
+                                        fontSize: "12px",
+                                        fontWeight: 700,
+                                        textDecoration: "none",
+                                        marginRight: "6px",
+                                        border: "1px solid #bfdbfe",
+                                      }}
+                                      title="Xem và làm thử"
+                                    >
+                                      👁️ Xem
+                                    </Link>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenAssignHomeworkModal(exam)}
+                                      style={{
+                                        display: "inline-block",
+                                        padding: "4px 9px",
+                                        background: "#ecfdf5",
+                                        color: "#059669",
+                                        borderRadius: "6px",
+                                        fontSize: "12px",
+                                        fontWeight: 700,
+                                        border: "1px solid #a7f3d0",
+                                        cursor: "pointer",
+                                        marginRight: "6px",
+                                      }}
+                                      title="Giao bài tập này cho cả lớp hoặc từng học sinh"
+                                    >
+                                      📝 Giao bài
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={styles.btnDanger}
+                                      onClick={() => handleDeleteExam(exam.id, exam.title)}
+                                      style={{ height: "28px", fontSize: "11.5px", padding: "0 8px" }}
+                                      title="Gỡ đề thi"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
                             })}
                           </tbody>
                         </table>
@@ -5183,8 +5198,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               allScores.length > 0
                 ? (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(2)
                 : studentItems.filter((s) => s.scoreNum >= 0).length > 0
-                ? (studentItems.filter((s) => s.scoreNum >= 0).reduce((a, s) => a + s.scoreNum, 0) / studentItems.filter((s) => s.scoreNum >= 0).length).toFixed(2)
-                : "0.68";
+                  ? (studentItems.filter((s) => s.scoreNum >= 0).reduce((a, s) => a + s.scoreNum, 0) / studentItems.filter((s) => s.scoreNum >= 0).length).toFixed(2)
+                  : "0.68";
 
             // Tổng hợp năng lực Phần 1 (Trắc nghiệm) và Phần 2 (Đúng/Sai) của toàn lớp
             let totalTnCorrect = 0;
@@ -5788,8 +5803,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                       background: hasUnread
                                         ? "linear-gradient(135deg, #ef4444, #dc2626)"
                                         : hasEvaluated
-                                        ? "linear-gradient(135deg, #0284c7, #2563eb)"
-                                        : "linear-gradient(135deg, #10b981, #059669)",
+                                          ? "linear-gradient(135deg, #0284c7, #2563eb)"
+                                          : "linear-gradient(135deg, #10b981, #059669)",
                                       color: "#ffffff",
                                       border: "none",
                                       borderRadius: "8px",
@@ -5803,8 +5818,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                       boxShadow: hasUnread
                                         ? "0 2px 8px rgba(239, 68, 68, 0.4)"
                                         : hasEvaluated
-                                        ? "0 2px 6px rgba(37, 99, 235, 0.25)"
-                                        : "0 2px 6px rgba(5, 150, 105, 0.25)",
+                                          ? "0 2px 6px rgba(37, 99, 235, 0.25)"
+                                          : "0 2px 6px rgba(5, 150, 105, 0.25)",
                                       transition: "all 0.15s ease",
                                     }}
                                     title={`Gửi nhận xét riêng cho em ${st.studentName} (Dùng AI hoặc Tự viết)`}
@@ -5966,8 +5981,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                         background: st.evalRow?.hasUnreadStudentReply
                                           ? "linear-gradient(135deg, #ef4444, #dc2626)"
                                           : st.evalRow?.messages?.length
-                                          ? "linear-gradient(135deg, #0284c7, #2563eb)"
-                                          : "linear-gradient(135deg, #10b981, #059669)",
+                                            ? "linear-gradient(135deg, #0284c7, #2563eb)"
+                                            : "linear-gradient(135deg, #10b981, #059669)",
                                         color: "#ffffff",
                                         border: "none",
                                         borderRadius: "6px",
@@ -5983,8 +5998,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                       {st.evalRow?.hasUnreadStudentReply
                                         ? "🔔 Trả lời"
                                         : st.evalRow?.messages?.length
-                                        ? `💬 Trao đổi (${st.evalRow.messages.length})`
-                                        : "✍️ Nhận xét"}
+                                          ? `💬 Trao đổi (${st.evalRow.messages.length})`
+                                          : "✍️ Nhận xét"}
                                     </button>
                                   </div>
                                 </td>
@@ -6403,37 +6418,70 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   {documentsList.length > 0 && (
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                       {!isDocMultiSelectMode ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsDocMultiSelectMode(true);
-                            setSelectedDocIds([]);
-                          }}
-                          title="Chọn nhiều tài liệu để xóa hoặc quản lý hàng loạt"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            padding: "6px 14px",
-                            background: "#fdf4ff",
-                            border: "1.5px solid #d8b4fe",
-                            borderRadius: "8px",
-                            color: "#7e22ce",
-                            fontSize: "12.5px",
-                            fontWeight: 800,
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                            boxShadow: "0 1px 3px rgba(126, 34, 206, 0.08)",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = "#9333ea";
-                            e.currentTarget.style.background = "#fae8ff";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = "#d8b4fe";
-                            e.currentTarget.style.background = "#fdf4ff";
-                          }}
-                        >
+                        <>
+                          <button
+                            type="button"
+                            onClick={handlePurgeSampleDocuments}
+                            title="Xóa toàn bộ các tài liệu mẫu mặc định, chỉ giữ lại tài liệu do bạn tạo"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "6px 14px",
+                              background: "#fff1f2",
+                              border: "1.5px solid #fecdd3",
+                              borderRadius: "8px",
+                              color: "#e11d48",
+                              fontSize: "12.5px",
+                              fontWeight: 800,
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                              boxShadow: "0 1px 3px rgba(225, 29, 72, 0.08)",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = "#f43f5e";
+                              e.currentTarget.style.background = "#ffe4e6";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = "#fecdd3";
+                              e.currentTarget.style.background = "#fff1f2";
+                            }}
+                          >
+                            <span>🧹</span>
+                            <span>XÓA TÀI LIỆU MẪU</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsDocMultiSelectMode(true);
+                              setSelectedDocIds([]);
+                            }}
+                            title="Chọn nhiều tài liệu để xóa hoặc quản lý hàng loạt"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "6px 14px",
+                              background: "#fdf4ff",
+                              border: "1.5px solid #d8b4fe",
+                              borderRadius: "8px",
+                              color: "#7e22ce",
+                              fontSize: "12.5px",
+                              fontWeight: 800,
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                              boxShadow: "0 1px 3px rgba(126, 34, 206, 0.08)",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = "#9333ea";
+                              e.currentTarget.style.background = "#fae8ff";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = "#d8b4fe";
+                              e.currentTarget.style.background = "#fdf4ff";
+                            }}
+                          >
                           <svg
                             width="15"
                             height="15"
@@ -6449,7 +6497,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                           </svg>
                           <span>CHỌN NHIỀU</span>
                         </button>
-                      ) : (
+                      </>
+                    ) : (
                         <>
                           {/* Nút Chọn tất cả / Bỏ chọn tất cả */}
                           <button
@@ -6468,9 +6517,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               padding: "6px 12px",
                               background:
                                 selectedDocIds.length === documentsList.length ? "#eff6ff" : "#ffffff",
-                              border: `1.5px solid ${
-                                selectedDocIds.length === documentsList.length ? "#3b82f6" : "#cbd5e1"
-                              }`,
+                              border: `1.5px solid ${selectedDocIds.length === documentsList.length ? "#3b82f6" : "#cbd5e1"
+                                }`,
                               borderRadius: "8px",
                               color:
                                 selectedDocIds.length === documentsList.length ? "#1d4ed8" : "#475569",
@@ -6564,8 +6612,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         doc.assignedClasses && doc.assignedClasses.length > 0
                           ? doc.assignedClasses.join(", ")
                           : doc.assignedStudentNames && doc.assignedStudentNames.length > 0
-                          ? `${doc.assignedStudentNames.length} học sinh`
-                          : "12";
+                            ? `${doc.assignedStudentNames.length} học sinh`
+                            : "12";
 
                       const displayDate =
                         typeof doc.createdAt === "string" && doc.createdAt.includes("/")
@@ -6597,8 +6645,8 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               !isSelected && idx < documentsList.length - 1
                                 ? "1px solid #f1f5f9"
                                 : isSelected
-                                ? "1.5px solid #c084fc"
-                                : "none",
+                                  ? "1.5px solid #c084fc"
+                                  : "none",
                             cursor: isDocMultiSelectMode ? "pointer" : "default",
                             transition: "all 0.15s ease",
                           }}
@@ -7216,9 +7264,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               <button type="button" className={styles.btnSecondary} onClick={() => setShowExamPreviewModal(false)}>
                 Đóng
               </button>
-              <button 
-                type="button" 
-                className={styles.btnPrimary} 
+              <button
+                type="button"
+                className={styles.btnPrimary}
                 onClick={() => {
                   setShowExamPreviewModal(false);
                   handleCreateExam();
@@ -7238,9 +7286,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
 
         return (
           <div className={styles.modalOverlay} onClick={() => setShowPaperPreviewModal(false)}>
-            <div 
-              className={styles.modalContent} 
-              onClick={(e) => e.stopPropagation()} 
+            <div
+              className={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
               style={{ maxWidth: "1050px", width: "95%", maxHeight: "92vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", borderRadius: "16px" }}
             >
               {/* Header */}
@@ -7261,7 +7309,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   <span style={{ background: "rgba(255, 255, 255, 0.18)", padding: "4px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)" }}>
                     🔒 Học sinh không được xem trước
                   </span>
-                  <button 
+                  <button
                     onClick={() => setShowPaperPreviewModal(false)}
                     style={{ background: "transparent", border: "none", color: "white", fontSize: "22px", cursor: "pointer", padding: "0 4px", lineHeight: 1 }}
                   >✕</button>
@@ -7277,9 +7325,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                   </span>
                 </div>
                 {embedInfo.rawUrl && (
-                  <a 
-                    href={embedInfo.rawUrl} 
-                    target="_blank" 
+                  <a
+                    href={embedInfo.rawUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     style={{ display: "flex", alignItems: "center", gap: "6px", background: "#eff6ff", color: "#2563eb", padding: "5px 12px", borderRadius: "6px", border: "1px solid #bfdbfe", fontSize: "12px", fontWeight: 700, textDecoration: "none" }}
                   >
@@ -7291,14 +7339,14 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
               {/* Viewer body */}
               <div style={{ flex: 1, minHeight: "560px", maxHeight: "72vh", overflowY: "auto", background: "#334155", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative" }}>
                 {embedInfo.isGoogleDrive ? (
-                  <iframe 
+                  <iframe
                     src={embedInfo.embedUrl}
                     style={{ width: "100%", height: "100%", minHeight: "580px", border: "none" }}
                     allow="autoplay"
                     title="Google Drive Exam Preview"
                   />
                 ) : embedInfo.isPdf || localPdfPreviewUrl ? (
-                  <iframe 
+                  <iframe
                     src={localPdfPreviewUrl || embedInfo.embedUrl}
                     style={{ width: "100%", height: "100%", minHeight: "580px", border: "none", background: "#ffffff" }}
                     title="PDF Exam Preview"
@@ -7306,22 +7354,22 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 ) : localImagePreviewUrls.length > 0 ? (
                   <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", width: "100%" }}>
                     {localImagePreviewUrls.map((imgUrl, i) => (
-                      <img 
-                        key={i} 
-                        src={imgUrl} 
-                        alt={`Trang ${i + 1}`} 
-                        style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }} 
+                      <img
+                        key={i}
+                        src={imgUrl}
+                        alt={`Trang ${i + 1}`}
+                        style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}
                       />
                     ))}
                   </div>
                 ) : embedInfo.isImage ? (
-                  <img 
-                    src={embedInfo.embedUrl} 
-                    alt="Đề thi" 
-                    style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }} 
+                  <img
+                    src={embedInfo.embedUrl}
+                    alt="Đề thi"
+                    style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}
                   />
                 ) : embedInfo.embedUrl ? (
-                  <iframe 
+                  <iframe
                     src={embedInfo.embedUrl}
                     style={{ width: "100%", height: "100%", minHeight: "580px", border: "none", background: "#ffffff" }}
                     title="External Exam Preview"
@@ -7339,9 +7387,9 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 <div style={{ fontSize: "12px", color: "#64748b" }}>
                   💡 Bạn đang xem ở chế độ kiểm duyệt của Giáo viên. Học sinh chỉ được xem nội dung khi bước vào phòng thi.
                 </div>
-                <button 
-                  type="button" 
-                  className={styles.btnSecondary} 
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
                   onClick={() => setShowPaperPreviewModal(false)}
                 >
                   Đóng bản xem trước
@@ -8253,12 +8301,12 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                         selectedSubmissionDetail.score >= 9
                           ? "#15803d"
                           : selectedSubmissionDetail.score >= 8
-                          ? "#1d4ed8"
-                          : selectedSubmissionDetail.score >= 6.5
-                          ? "#7c3aed"
-                          : selectedSubmissionDetail.score >= 3.5
-                          ? "#d97706"
-                          : "#dc2626",
+                            ? "#1d4ed8"
+                            : selectedSubmissionDetail.score >= 6.5
+                              ? "#7c3aed"
+                              : selectedSubmissionDetail.score >= 3.5
+                                ? "#d97706"
+                                : "#dc2626",
                     }}
                   >
                     {selectedSubmissionDetail.score !== null
@@ -8750,7 +8798,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                               <input
                                 type="checkbox"
                                 checked={isChecked}
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 style={{ pointerEvents: "none", width: "16px", height: "16px" }}
                               />
                               <span style={{ fontSize: "13.5px", fontWeight: 800, color: isChecked ? "#065f46" : "#1e293b" }}>
@@ -8885,7 +8933,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                                       <input
                                         type="checkbox"
                                         checked={isChecked}
-                                        onChange={() => {}}
+                                        onChange={() => { }}
                                         style={{ pointerEvents: "none", width: "15px", height: "15px" }}
                                       />
                                     </td>
@@ -9504,7 +9552,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             {/* Body */}
             <form onSubmit={handleSaveCurriculumSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
               <div className={styles.modalZoomBody} style={{ padding: "20px 24px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "18px" }}>
-                
+
                 {/* 1. Tên giáo trình */}
                 <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 800, color: "#1e293b", marginBottom: "6px" }}>
@@ -9694,7 +9742,7 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                             cursor: "pointer",
                           }}
                         >
-                          <input type="checkbox" checked={isChecked} onChange={() => {}} style={{ pointerEvents: "none" }} />
+                          <input type="checkbox" checked={isChecked} onChange={() => { }} style={{ pointerEvents: "none" }} />
                           <span style={{ fontSize: "13px", fontWeight: isChecked ? 800 : 600, color: isChecked ? "#1d4ed8" : "#334155" }}>
                             Lớp {cls.name}
                           </span>
@@ -10138,128 +10186,128 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
                 {(viewingExamVariants.variants && viewingExamVariants.variants.length > 0
                   ? viewingExamVariants.variants
                   : [
-                      {
-                        code: viewingExamVariants.accessCode || "1024",
-                        variantNumber: 1,
-                        isOriginal: true,
-                        answerKey: viewingExamVariants.answerKey || {},
-                      },
-                    ]
+                    {
+                      code: viewingExamVariants.accessCode || "1024",
+                      variantNumber: 1,
+                      isOriginal: true,
+                      answerKey: viewingExamVariants.answerKey || {},
+                    },
+                  ]
                 ).map((variant, vIdx) => (
+                <div
+                  key={variant.code || vIdx}
+                  style={{
+                    border: "1.5px solid #cbd5e1",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                    background: "#ffffff",
+                  }}
+                >
                   <div
-                    key={variant.code || vIdx}
                     style={{
-                      border: "1.5px solid #cbd5e1",
-                      borderRadius: "10px",
-                      overflow: "hidden",
-                      background: "#ffffff",
+                      background: variant.isOriginal ? "#eff6ff" : "#f8fafc",
+                      borderBottom: "1px solid #e2e8f0",
+                      padding: "10px 16px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                     }}
                   >
-                    <div
-                      style={{
-                        background: variant.isOriginal ? "#eff6ff" : "#f8fafc",
-                        borderBottom: "1px solid #e2e8f0",
-                        padding: "10px 16px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span
-                          style={{
-                            background: variant.isOriginal ? "#2563eb" : "#475569",
-                            color: "#ffffff",
-                            padding: "2px 8px",
-                            borderRadius: "5px",
-                            fontWeight: 800,
-                            fontSize: "12px",
-                          }}
-                        >
-                          MÃ ĐỀ {variant.variantNumber || vIdx + 1}
-                        </span>
-                        <code
-                          style={{
-                            fontSize: "18px",
-                            fontWeight: 900,
-                            color: "#1d4ed8",
-                            letterSpacing: "3px",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          {variant.code}
-                        </code>
-                        {variant.isOriginal ? (
-                          <span style={{ fontSize: "11px", background: "#dbeafe", color: "#1e40af", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>
-                            ĐỀ GỐC
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: "11px", background: "#fef3c7", color: "#b45309", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>
-                            ĐỀ TRỘN CÂU HỎI
-                          </span>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const text = `=== MÃ ĐỀ: ${variant.code} ===\nPHẦN 1: ${variant.answerKey?.part1 || "Không có"}\nPHẦN 2: ${variant.answerKey?.part2 || "Không có"}\nPHẦN 3: ${variant.answerKey?.part3 || "Không có"}`;
-                          navigator.clipboard.writeText(text);
-                          showToast(`📋 Đã sao chép đáp án Mã đề ${variant.code}!`);
-                        }}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span
                         style={{
-                          background: "#ffffff",
-                          border: "1px solid #cbd5e1",
-                          borderRadius: "6px",
-                          padding: "4px 10px",
+                          background: variant.isOriginal ? "#2563eb" : "#475569",
+                          color: "#ffffff",
+                          padding: "2px 8px",
+                          borderRadius: "5px",
+                          fontWeight: 800,
                           fontSize: "12px",
-                          fontWeight: 700,
-                          color: "#334155",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
                         }}
                       >
-                        <span>📋</span> Sao chép đáp án
-                      </button>
-                    </div>
-
-                    <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                      {variant.answerKey?.part1 && (
-                        <div>
-                          <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#2563eb", marginBottom: "3px" }}>
-                            PHẦN I (TRẮC NGHIỆM):
-                          </div>
-                          <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", fontSize: "12.5px", fontFamily: "monospace", color: "#334155", border: "1px solid #e2e8f0" }}>
-                            {variant.answerKey.part1}
-                          </div>
-                        </div>
-                      )}
-
-                      {variant.answerKey?.part2 && (
-                        <div>
-                          <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#7c3aed", marginBottom: "3px" }}>
-                            PHẦN II (ĐÚNG / SAI):
-                          </div>
-                          <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", fontSize: "12.5px", fontFamily: "monospace", color: "#334155", border: "1px solid #e2e8f0" }}>
-                            {variant.answerKey.part2}
-                          </div>
-                        </div>
-                      )}
-
-                      {variant.answerKey?.part3 && (
-                        <div>
-                          <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#d97706", marginBottom: "3px" }}>
-                            PHẦN III (TRẢ LỜI NGẮN):
-                          </div>
-                          <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", fontSize: "12.5px", fontFamily: "monospace", color: "#334155", border: "1px solid #e2e8f0" }}>
-                            {variant.answerKey.part3}
-                          </div>
-                        </div>
+                        MÃ ĐỀ {variant.variantNumber || vIdx + 1}
+                      </span>
+                      <code
+                        style={{
+                          fontSize: "18px",
+                          fontWeight: 900,
+                          color: "#1d4ed8",
+                          letterSpacing: "3px",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {variant.code}
+                      </code>
+                      {variant.isOriginal ? (
+                        <span style={{ fontSize: "11px", background: "#dbeafe", color: "#1e40af", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>
+                          ĐỀ GỐC
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: "11px", background: "#fef3c7", color: "#b45309", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>
+                          ĐỀ TRỘN CÂU HỎI
+                        </span>
                       )}
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = `=== MÃ ĐỀ: ${variant.code} ===\nPHẦN 1: ${variant.answerKey?.part1 || "Không có"}\nPHẦN 2: ${variant.answerKey?.part2 || "Không có"}\nPHẦN 3: ${variant.answerKey?.part3 || "Không có"}`;
+                        navigator.clipboard.writeText(text);
+                        showToast(`📋 Đã sao chép đáp án Mã đề ${variant.code}!`);
+                      }}
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "6px",
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "#334155",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <span>📋</span> Sao chép đáp án
+                    </button>
                   </div>
+
+                  <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {variant.answerKey?.part1 && (
+                      <div>
+                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#2563eb", marginBottom: "3px" }}>
+                          PHẦN I (TRẮC NGHIỆM):
+                        </div>
+                        <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", fontSize: "12.5px", fontFamily: "monospace", color: "#334155", border: "1px solid #e2e8f0" }}>
+                          {variant.answerKey.part1}
+                        </div>
+                      </div>
+                    )}
+
+                    {variant.answerKey?.part2 && (
+                      <div>
+                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#7c3aed", marginBottom: "3px" }}>
+                          PHẦN II (ĐÚNG / SAI):
+                        </div>
+                        <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", fontSize: "12.5px", fontFamily: "monospace", color: "#334155", border: "1px solid #e2e8f0" }}>
+                          {variant.answerKey.part2}
+                        </div>
+                      </div>
+                    )}
+
+                    {variant.answerKey?.part3 && (
+                      <div>
+                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#d97706", marginBottom: "3px" }}>
+                          PHẦN III (TRẢ LỜI NGẮN):
+                        </div>
+                        <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", fontSize: "12.5px", fontFamily: "monospace", color: "#334155", border: "1px solid #e2e8f0" }}>
+                          {variant.answerKey.part3}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 ))}
               </div>
             </div>

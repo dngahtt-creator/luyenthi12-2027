@@ -368,8 +368,8 @@ export default function FloatingQAWidget({
     role === "student"
       ? studentPresets
       : activeEval?.studentId === "ALL"
-      ? teacherBroadcastPresets
-      : teacherIndividualPresets;
+        ? teacherBroadcastPresets
+        : teacherIndividualPresets;
 
   const positionStyles: React.CSSProperties = {
     position: "fixed",
@@ -495,9 +495,8 @@ export default function FloatingQAWidget({
                     {role === "student"
                       ? `GV: ${teacherName || "Phụ trách"} • Mã: ${teacherCode || "..."}`
                       : activeEval?.studentId === "ALL"
-                      ? `📢 Gửi đến: TẤT CẢ HỌC SINH • Mã GV: ${teacherCode || "..."}`
-                      : `👤 Gửi tới: ${activeEval?.studentName || "Học sinh"}${
-                          activeEval?.studentClass ? ` (${activeEval.studentClass})` : ""
+                        ? `📢 Gửi đến: TẤT CẢ HỌC SINH • Mã GV: ${teacherCode || "..."}`
+                        : `👤 Gửi tới: ${activeEval?.studentName || "Học sinh"}${activeEval?.studentClass ? ` (${activeEval.studentClass})` : ""
                         } • Mã GV: ${teacherCode || "..."}`}
                   </div>
                 </div>
@@ -776,9 +775,8 @@ export default function FloatingQAWidget({
                     {role === "student"
                       ? "Em có thể đặt câu hỏi hoặc dán ảnh bài tập (Ctrl+V) gửi tới giáo viên ngay bên dưới!"
                       : activeEval?.studentId === "ALL"
-                      ? "Thầy/Cô có thể gửi thông báo, dặn dò hoặc dán ảnh bài tập gửi tới TOÀN BỘ HỌC SINH tại đây!"
-                      : `Chưa có câu hỏi từ học sinh ${
-                          activeEval?.studentName || ""
+                        ? "Thầy/Cô có thể gửi thông báo, dặn dò hoặc dán ảnh bài tập gửi tới TOÀN BỘ HỌC SINH tại đây!"
+                        : `Chưa có câu hỏi từ học sinh ${activeEval?.studentName || ""
                         }. Thầy/Cô có thể gửi tin nhắn hoặc dặn dò riêng cho em.`}
                   </p>
                 </div>
@@ -981,8 +979,8 @@ export default function FloatingQAWidget({
                   role === "student"
                     ? "Nhập câu hỏi... (Dán ảnh trực tiếp Ctrl+V)"
                     : activeEval?.studentId === "ALL"
-                    ? "Nhập thông báo gửi đến TẤT CẢ HỌC SINH (Dán ảnh Ctrl+V)..."
-                    : `Nhập tin nhắn riêng cho học sinh ${activeEval?.studentName || ""}... (Dán ảnh Ctrl+V)`
+                      ? "Nhập thông báo gửi đến TẤT CẢ HỌC SINH (Dán ảnh Ctrl+V)..."
+                      : `Nhập tin nhắn riêng cho học sinh ${activeEval?.studentName || ""}... (Dán ảnh Ctrl+V)`
                 }
                 style={{
                   width: "100%",
@@ -1054,8 +1052,8 @@ export default function FloatingQAWidget({
                   {isSubmitting
                     ? "..."
                     : role !== "student" && activeEval?.studentId === "ALL"
-                    ? "📢 Gửi tất cả"
-                    : "🚀 Gửi"}
+                      ? "📢 Gửi tất cả"
+                      : "🚀 Gửi"}
                 </button>
               </div>
             </form>
