@@ -182,7 +182,7 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
                 avatarUrl: u.avatarUrl,
               };
             }
-          } catch {}
+          } catch { }
         }
         return DEFAULT_TEACHER;
       }
@@ -205,7 +205,7 @@ export function getCurrentAuthUser(): CurrentAuthUser | null {
                 avatarUrl: u.avatarUrl,
               };
             }
-          } catch {}
+          } catch { }
         }
         return DEFAULT_SUPER_ADMIN;
       }

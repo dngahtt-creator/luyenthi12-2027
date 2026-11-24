@@ -2700,6 +2700,97 @@ export default function AdminPage({ initialTab = "config" }: { initialTab?: Admi
             <span>Firebase & Cloudinary: Hoạt động</span>
           </div>
 
+          {/* Phân định Cổng rõ ràng: Cổng Super Admin vs Cổng Giáo Viên độc lập */}
+          {isSuperAdmin ? (
+            <>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                  border: "1.5px solid #93c5fd",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  color: "#1e40af",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  letterSpacing: "0.2px",
+                }}
+                title="Cổng Super Admin: Toàn quyền quản trị hệ thống"
+              >
+                <span>👑</span>
+                <span>CỔNG SUPER ADMIN</span>
+              </div>
+              <a
+                href="/admin?portal=teacher"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#f0fdf4",
+                  border: "1px solid #86efac",
+                  borderRadius: "8px",
+                  padding: "5px 10px",
+                  color: "#15803d",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+                title="Mở thêm Cổng Giáo Viên trên tab mới (Các tab hoàn toàn độc lập, không ảnh hưởng nhau)"
+              >
+                <span>👨‍🏫</span>
+                <span>Mở Cổng Giáo Viên (Tab mới) ↗</span>
+              </a>
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
+                  border: "1.5px solid #6ee7b7",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  color: "#065f46",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  letterSpacing: "0.2px",
+                }}
+                title="Cổng Giáo Viên: 4 quyền chuyên môn độc lập"
+              >
+                <span>👨‍🏫</span>
+                <span>CỔNG GIÁO VIÊN</span>
+              </div>
+              <a
+                href="/admin?portal=super_admin"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#eff6ff",
+                  border: "1px solid #93c5fd",
+                  borderRadius: "8px",
+                  padding: "5px 10px",
+                  color: "#1d4ed8",
+                  fontSize: "11.5px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+                title="Mở thêm Cổng Super Admin trên tab mới (Các tab hoàn toàn độc lập, không ảnh hưởng nhau)"
+              >
+                <span>👑</span>
+                <span>Mở Cổng Super Admin (Tab mới) ↗</span>
+              </a>
+            </>
+          )}
+
           <div className={styles.userCard}>
             <div
               className={styles.userAvatar}

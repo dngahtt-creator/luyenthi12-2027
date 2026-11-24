@@ -872,7 +872,7 @@ export default function StudentPortalPage() {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f8fafc" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "36px", marginBottom: "12px" }}>🎒</div>
+          <div style={{ fontSize: "36px", marginBottom: "12px" }}>🎓</div>
           <div style={{ fontSize: "16px", fontWeight: 700, color: "#1e40af" }}>Đang tải Cổng Học Sinh...</div>
         </div>
       </div>
@@ -1060,7 +1060,7 @@ export default function StudentPortalPage() {
                 }}
                 title="Bấm để mở cổng vào học"
               >
-                <span style={{ fontSize: "16px" }}>🎒</span>
+                <span style={{ fontSize: "16px" }}>🎓</span>
                 <span>VÀO HỌC</span>
               </button>
             )}
@@ -1086,7 +1086,7 @@ export default function StudentPortalPage() {
               margin: "36px auto",
             }}
           >
-            <div style={{ fontSize: "56px", marginBottom: "16px" }}>🎒</div>
+            <div style={{ fontSize: "56px", marginBottom: "16px" }}>🎓</div>
             <h2 style={{ fontSize: "21px", fontWeight: 800, color: "#1e293b", marginBottom: "10px" }}>
               CỔNG HỌC TẬP & THI TRỰC TUYẾN DÀNH CHO HỌC SINH
             </h2>
@@ -1130,7 +1130,7 @@ export default function StudentPortalPage() {
                 transition: "all 0.15s ease",
               }}
             >
-              <span>🎒</span>
+              <span>🎓</span>
               <span>VÀO HỌC NGAY</span>
             </button>
           </div>

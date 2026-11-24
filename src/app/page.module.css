@@ -330,18 +330,18 @@
   z-index: 2;
 }
 
-/* Vivid Banner Card Feature With Deep Navy Dark Theme & Cute Floating Subject Icons */
+/* Vivid Banner Card Feature With Light Blue & Cute Floating Subject Icons */
 .vividBannerWrapper {
   margin-bottom: 45px;
   border-radius: 26px;
   overflow: hidden;
-  background: linear-gradient(135deg, #0a1936 0%, #0e275d 30%, #153e90 70%, #081126 100%);
+  background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 25%, #2563eb 75%, #1d4ed8 100%);
   position: relative;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
   box-shadow:
-    0 24px 60px -15px rgba(2, 6, 23, 0.55),
-    0 6px 24px rgba(15, 23, 42, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 24px 60px -15px rgba(2, 132, 199, 0.38),
+    0 6px 24px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
@@ -351,7 +351,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent 5%, #38bdf8 30%, #60a5fa 70%, transparent 95%);
+  background: linear-gradient(90deg, transparent 5%, #ffffff 30%, #e0f2fe 70%, transparent 95%);
   z-index: 5;
   opacity: 0.85;
 }
@@ -363,15 +363,15 @@
   height: calc(100% + 30px);
   object-fit: cover;
   object-position: center 25%;
-  opacity: 0.18;
-  filter: brightness(0.9) contrast(1.15);
+  opacity: 0.14;
+  filter: brightness(1.1) contrast(1.05);
   display: block;
   will-change: transform;
   transition: transform 0.15s ease-out;
 }
 
 .vividBannerWrapper:hover .bannerImg {
-  filter: brightness(0.95) contrast(1.2) saturate(1.2);
+  filter: brightness(1.15) contrast(1.1) saturate(1.22);
 }
 
 .bannerOverlay {
@@ -383,9 +383,9 @@
   color: #ffffff;
   background: linear-gradient(
     135deg,
-    rgba(10, 25, 54, 0.55) 0%,
-    rgba(14, 39, 93, 0.45) 50%,
-    rgba(8, 17, 38, 0.75) 100%
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(37, 99, 235, 0.22) 50%,
+    rgba(29, 78, 216, 0.35) 100%
   );
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
