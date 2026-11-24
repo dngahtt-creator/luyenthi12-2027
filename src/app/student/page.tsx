@@ -167,7 +167,7 @@ export default function StudentPortalPage() {
                   parsed.teacherName = teacherObj.fullName;
                   try {
                     localStorage.setItem("student_portal_session", JSON.stringify(parsed));
-                  } catch {}
+                  } catch { }
                 }
               }
               setCurrentSession(parsed);
@@ -181,7 +181,7 @@ export default function StudentPortalPage() {
               setInputTeacherCode(""); // Mã GV lúc nào cũng phải nhập lại
               const subs = await getStudentSubmissions(parsed.studentId, parsed.studentName);
               setSubmissionsList(subs);
-              const evals = await getEvaluationsForStudent(parsed.studentId, parsed.studentName);
+              const evals = await getEvaluationsForStudent(parsed.studentId, parsed.studentName, parsed.teacherCode);
               setStudentEvaluations(evals);
               const currs = await getCurriculumsForClass(parsed.classId, parsed.className);
               setStudentCurriculums(currs);
@@ -216,7 +216,11 @@ export default function StudentPortalPage() {
   useEffect(() => {
     if (!currentSession) return;
     const fetchEvals = async () => {
-      const evals = await getEvaluationsForStudent(currentSession.studentId, currentSession.studentName);
+      const evals = await getEvaluationsForStudent(
+        currentSession.studentId,
+        currentSession.studentName,
+        currentSession.teacherCode
+      );
       setStudentEvaluations(evals);
     };
     const fetchCurrs = async () => {
@@ -865,12 +869,12 @@ export default function StudentPortalPage() {
     currentSession?.teacherName && currentSession.teacherName !== "FC ZO ZO"
       ? currentSession.teacherName
       : currentSession?.teacherCode
-      ? (currentSession.teacherCode === "571024" || currentSession.teacherCode === "5710"
+        ? (currentSession.teacherCode === "571024" || currentSession.teacherCode === "5710"
           ? "Đặng Anh Thư"
           : currentSession.teacherCode === "276648" || currentSession.teacherCode === "628842"
-          ? "sogaminh123"
-          : `Thầy/Cô (Mã: ${currentSession.teacherCode})`)
-      : "Giáo viên bộ môn";
+            ? "sogaminh123"
+            : `Thầy/Cô (Mã: ${currentSession.teacherCode})`)
+        : "Giáo viên bộ môn";
 
   return (
     <div className={styles.container}>
@@ -928,8 +932,8 @@ export default function StudentPortalPage() {
                 >
                   {currentSession?.className
                     ? (currentSession.className.toLowerCase().includes("lớp")
-                        ? currentSession.className
-                        : `Lớp: ${currentSession.className}`)
+                      ? currentSession.className
+                      : `Lớp: ${currentSession.className}`)
                     : `Lớp: ${studentGrade}A`}
                 </div>
               </div>
@@ -1498,12 +1502,12 @@ export default function StudentPortalPage() {
                         <div className={styles.badgeRow}>
                           <span
                             className={`${styles.subjectBadge} ${exam.subject === "toan"
-                                ? styles.subjectToan
-                                : exam.subject === "ly"
-                                  ? styles.subjectLy
-                                  : exam.subject === "hoa"
-                                    ? styles.subjectHoa
-                                    : styles.subjectOther
+                              ? styles.subjectToan
+                              : exam.subject === "ly"
+                                ? styles.subjectLy
+                                : exam.subject === "hoa"
+                                  ? styles.subjectHoa
+                                  : styles.subjectOther
                               }`}
                           >
                             {exam.subjectName || "Môn học"}
@@ -2793,7 +2797,11 @@ export default function StudentPortalPage() {
         evaluations={studentEvaluations}
         onRefreshEvaluations={async () => {
           if (currentSession) {
-            const refreshed = await getEvaluationsForStudent(currentSession.studentId, currentSession.studentName);
+            const refreshed = await getEvaluationsForStudent(
+              currentSession.studentId,
+              currentSession.studentName,
+              currentSession.teacherCode
+            );
             setStudentEvaluations(refreshed);
           }
         }}

@@ -10475,6 +10475,11 @@ service cloud.firestore {
         teacherCode={currentAdminUser.teacherCode}
         teacherName={currentAdminUser.fullName}
         evaluations={teacherEvaluations}
+        allStudents={allStudentsList.map((s) => ({
+          id: s.id,
+          fullName: s.fullName,
+          className: s.className,
+        }))}
         onRefreshEvaluations={fetchEvaluations}
         defaultPosition="bottom-right"
       />

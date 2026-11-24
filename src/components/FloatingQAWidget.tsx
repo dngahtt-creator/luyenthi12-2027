@@ -7,7 +7,15 @@ import {
   createOrSendStudentQuestion,
   sendTeacherReply,
   sendStudentReply,
+  sendTeacherBroadcastMessage,
+  saveTeacherEvaluation,
 } from "@/lib/feedbackService";
+
+export interface StudentSelectOption {
+  id: string;
+  fullName: string;
+  className?: string;
+}
 
 export interface FloatingQAWidgetProps {
   role: "student" | "teacher" | "admin";
@@ -17,6 +25,7 @@ export interface FloatingQAWidgetProps {
   teacherCode?: string;
   teacherName?: string;
   evaluations: StudentEvaluation[];
+  allStudents?: StudentSelectOption[];
   onRefreshEvaluations?: () => void;
   defaultPosition?: "bottom-right" | "bottom-left";
 }
@@ -29,6 +38,7 @@ export default function FloatingQAWidget({
   teacherCode,
   teacherName,
   evaluations,
+  allStudents,
   onRefreshEvaluations,
   defaultPosition = "bottom-right",
 }: FloatingQAWidgetProps) {
@@ -42,6 +52,7 @@ export default function FloatingQAWidget({
   });
 
   const [selectedEvalId, setSelectedEvalId] = useState<string>("");
+  const [selectedNewStudent, setSelectedNewStudent] = useState<StudentSelectOption | null>(null);
   const [inputText, setInputText] = useState<string>("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -63,7 +74,20 @@ export default function FloatingQAWidget({
     if (role === "student") {
       const cleanName = (currentUserName || "").trim().toLowerCase();
       const cleanId = (currentUserId || "").trim().toLowerCase();
+      const cleanTeacherCode = (teacherCode || "").trim();
       return evaluations.filter((e) => {
+        const isBroadcast =
+          e.studentId === "ALL" ||
+          (e.studentId || "").toLowerCase() === "all" ||
+          (e.studentName || "").toLowerCase().includes("tất cả");
+
+        if (isBroadcast) {
+          if (cleanTeacherCode && e.teacherCode && e.teacherCode !== cleanTeacherCode) {
+            return false;
+          }
+          return true;
+        }
+
         const evId = (e.studentId || "").trim().toLowerCase();
         const evName = (e.studentName || "").trim().toLowerCase();
         return (cleanId && evId === cleanId) || (cleanName && evName === cleanName);
@@ -80,28 +104,124 @@ export default function FloatingQAWidget({
     return evaluations;
   }, [role, currentUserName, currentUserId, teacherCode, evaluations]);
 
+  // Broadcast evaluation
+  const broadcastEval = useMemo(() => {
+    return filteredEvaluations.find(
+      (e) =>
+        e.studentId === "ALL" ||
+        (e.studentId || "").toLowerCase() === "all" ||
+        (e.studentName || "").toLowerCase().includes("tất cả")
+    );
+  }, [filteredEvaluations]);
+
+  // Individual student evaluations (excluding broadcast)
+  const individualStudentEvals = useMemo(() => {
+    return filteredEvaluations.filter(
+      (e) =>
+        e.studentId !== "ALL" &&
+        (e.studentId || "").toLowerCase() !== "all" &&
+        !(e.studentName || "").toLowerCase().includes("tất cả")
+    );
+  }, [filteredEvaluations]);
+
   // Unread badge counter
   const unreadCount = useMemo(() => {
     if (role === "student") {
       return filteredEvaluations.filter((e) => e.hasUnreadTeacherReply).length;
     } else {
-      return filteredEvaluations.filter((e) => e.hasUnreadStudentReply).length;
+      return individualStudentEvals.filter((e) => e.hasUnreadStudentReply).length;
     }
-  }, [role, filteredEvaluations]);
+  }, [role, filteredEvaluations, individualStudentEvals]);
 
   // Active evaluation being viewed
-  const activeEval = useMemo(() => {
-    if (filteredEvaluations.length === 0) return null;
+  const activeEval = useMemo<StudentEvaluation | null>(() => {
+    if (role === "student") {
+      if (selectedEvalId === "ALL") {
+        return broadcastEval || null;
+      }
+      if (selectedEvalId) {
+        const found = filteredEvaluations.find((e) => e.id === selectedEvalId);
+        if (found) return found;
+      }
+      // Ưu tiên hội thoại riêng của học sinh
+      const personal =
+        individualStudentEvals.find((e) => e.hasUnreadTeacherReply) ||
+        individualStudentEvals[0];
+      if (personal) return personal;
+      return broadcastEval || filteredEvaluations[0] || null;
+    }
+
+    // Role !== "student" (Teacher / Admin)
+    if (selectedEvalId === "ALL") {
+      if (broadcastEval) return broadcastEval;
+      return {
+        id: `eval_broadcast_${teacherCode || "all"}`,
+        studentId: "ALL",
+        studentName: "Tất cả học sinh",
+        studentClass: "Toàn bộ học sinh",
+        teacherCode: teacherCode || "",
+        teacherName: currentUserName,
+        status: "active",
+        hasUnreadStudentReply: false,
+        hasUnreadTeacherReply: false,
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    if (selectedEvalId.startsWith("NEW_") && selectedNewStudent) {
+      return {
+        id: selectedEvalId,
+        studentId: selectedNewStudent.id,
+        studentName: selectedNewStudent.fullName,
+        studentClass: selectedNewStudent.className || "",
+        teacherCode: teacherCode || "",
+        teacherName: currentUserName,
+        status: "active",
+        hasUnreadStudentReply: false,
+        hasUnreadTeacherReply: false,
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
     if (selectedEvalId) {
       const found = filteredEvaluations.find((e) => e.id === selectedEvalId);
       if (found) return found;
     }
-    // Default to the one with unread or the first one
-    const unread = filteredEvaluations.find((e) =>
-      role === "student" ? e.hasUnreadTeacherReply : e.hasUnreadStudentReply
-    );
-    return unread || filteredEvaluations[0];
-  }, [filteredEvaluations, selectedEvalId, role]);
+
+    // Default cho Giáo viên: Nếu có HS chưa đọc thì chọn HS đó, hoặc HS đầu tiên, hoặc Thông báo chung
+    const unread = individualStudentEvals.find((e) => e.hasUnreadStudentReply);
+    if (unread) return unread;
+    if (individualStudentEvals.length > 0) return individualStudentEvals[0];
+    if (broadcastEval) return broadcastEval;
+
+    return {
+      id: `eval_broadcast_${teacherCode || "all"}`,
+      studentId: "ALL",
+      studentName: "Tất cả học sinh",
+      studentClass: "Toàn bộ học sinh",
+      teacherCode: teacherCode || "",
+      teacherName: currentUserName,
+      status: "active",
+      hasUnreadStudentReply: false,
+      hasUnreadTeacherReply: false,
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }, [
+    role,
+    selectedEvalId,
+    selectedNewStudent,
+    broadcastEval,
+    individualStudentEvals,
+    filteredEvaluations,
+    teacherCode,
+    currentUserName,
+  ]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -172,15 +292,43 @@ export default function FloatingQAWidget({
         });
       } else {
         // Teacher / Admin
-        if (activeEval) {
-          await sendTeacherReply(
-            activeEval.id,
-            inputText.trim() || (selectedImage ? "Đã gửi một hình ảnh" : ""),
-            currentUserName,
-            selectedImage || undefined
-          );
+        const isBroadcast = activeEval?.studentId === "ALL";
+
+        if (isBroadcast) {
+          // Gửi thông báo đến TẤT CẢ HỌC SINH
+          await sendTeacherBroadcastMessage({
+            teacherName: currentUserName,
+            teacherCode: teacherCode || "",
+            content: inputText.trim() || (selectedImage ? "Đã gửi một hình ảnh" : ""),
+            imageUrl: selectedImage || undefined,
+          });
+        } else if (activeEval) {
+          if (
+            activeEval.id.startsWith("NEW_") ||
+            !filteredEvaluations.some((ev) => ev.id === activeEval.id)
+          ) {
+            // Cuộc trò chuyện mới với học sinh được chọn từ danh sách
+            await saveTeacherEvaluation({
+              studentId: activeEval.studentId,
+              studentName: activeEval.studentName,
+              studentClass: activeEval.studentClass || "",
+              teacherCode: teacherCode || "",
+              teacherName: currentUserName,
+              content: inputText.trim() || (selectedImage ? "Đã gửi một hình ảnh" : ""),
+              imageUrl: selectedImage || undefined,
+            });
+            setSelectedNewStudent(null);
+          } else {
+            // Trả lời trong hội thoại hiện có của học sinh
+            await sendTeacherReply(
+              activeEval.id,
+              inputText.trim() || (selectedImage ? "Đã gửi một hình ảnh" : ""),
+              currentUserName,
+              selectedImage || undefined
+            );
+          }
         } else {
-          alert("Vui lòng chọn học sinh cần trả lời!");
+          alert("Vui lòng chọn học sinh hoặc chọn Tất cả học sinh cần gửi tin nhắn!");
           setIsSubmitting(false);
           return;
         }
@@ -204,13 +352,24 @@ export default function FloatingQAWidget({
     "Em cảm ơn cô nhiều ạ!",
   ];
 
-  const teacherPresets = [
+  const teacherBroadcastPresets = [
+    "Các em chú ý hoàn thành bài tập đúng hạn nhé!",
+    "Thầy/Cô vừa cập nhật tài liệu ôn tập mới, cả lớp vào xem nhé!",
+    "Chúc các em ôn tập tốt và đạt kết quả cao trong kỳ thi sắp tới!",
+  ];
+
+  const teacherIndividualPresets = [
     "Em chú ý kiểm tra lại điều kiện xác định và áp dụng công thức nhé!",
     "Rất khen ngợi tinh thần tự giác của em! Lời giải rất chuẩn xác.",
     "Câu này em biến đổi cẩn thận dấu âm ở bước thứ 2 nhé.",
   ];
 
-  const presets = role === "student" ? studentPresets : teacherPresets;
+  const presets =
+    role === "student"
+      ? studentPresets
+      : activeEval?.studentId === "ALL"
+      ? teacherBroadcastPresets
+      : teacherIndividualPresets;
 
   const positionStyles: React.CSSProperties = {
     position: "fixed",
@@ -335,7 +494,11 @@ export default function FloatingQAWidget({
                   >
                     {role === "student"
                       ? `GV: ${teacherName || "Phụ trách"} • Mã: ${teacherCode || "..."}`
-                      : `GV: ${currentUserName} • Mã: ${teacherCode || "..."}`}
+                      : activeEval?.studentId === "ALL"
+                      ? `📢 Gửi đến: TẤT CẢ HỌC SINH • Mã GV: ${teacherCode || "..."}`
+                      : `👤 Gửi tới: ${activeEval?.studentName || "Học sinh"}${
+                          activeEval?.studentClass ? ` (${activeEval.studentClass})` : ""
+                        } • Mã GV: ${teacherCode || "..."}`}
                   </div>
                 </div>
               </div>
@@ -381,8 +544,8 @@ export default function FloatingQAWidget({
               </div>
             </div>
 
-            {/* 2. FOR TEACHER: STUDENT SELECTOR IF MULTIPLE */}
-            {role !== "student" && filteredEvaluations.length > 0 && (
+            {/* 2. CHO GIÁO VIÊN: THANH CHỌN GỬI ĐẾN TỪNG HỌC SINH HOẶC TẤT CẢ */}
+            {role !== "student" && (
               <div
                 style={{
                   background: "#f8fafc",
@@ -397,13 +560,55 @@ export default function FloatingQAWidget({
                 <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 700, flexShrink: 0 }}>
                   Học sinh:
                 </span>
-                {filteredEvaluations.map((ev) => {
+
+                {/* NÚT CHỌN: TẤT CẢ HỌC SINH */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedEvalId("ALL");
+                    setSelectedNewStudent(null);
+                  }}
+                  style={{
+                    background:
+                      activeEval?.studentId === "ALL"
+                        ? "linear-gradient(135deg, #4f46e5, #4338ca)"
+                        : "#ffffff",
+                    color: activeEval?.studentId === "ALL" ? "#ffffff" : "#4338ca",
+                    border:
+                      activeEval?.studentId === "ALL"
+                        ? "1px solid #3730a3"
+                        : "1.5px solid #c7d2fe",
+                    borderRadius: "14px",
+                    padding: "3px 10px",
+                    fontSize: "11.5px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    boxShadow:
+                      activeEval?.studentId === "ALL"
+                        ? "0 2px 4px rgba(79, 70, 229, 0.25)"
+                        : "none",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span>📢</span>
+                  <span>Tất cả HS</span>
+                </button>
+
+                {/* CÁC NÚT TỪNG HỌC SINH CỤ THỂ */}
+                {individualStudentEvals.map((ev) => {
                   const isSelected = activeEval?.id === ev.id;
                   return (
                     <button
                       key={ev.id}
                       type="button"
-                      onClick={() => setSelectedEvalId(ev.id)}
+                      onClick={() => {
+                        setSelectedEvalId(ev.id);
+                        setSelectedNewStudent(null);
+                      }}
                       style={{
                         background: isSelected ? "#2563eb" : "#ffffff",
                         color: isSelected ? "#ffffff" : "#334155",
@@ -417,6 +622,7 @@ export default function FloatingQAWidget({
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "4px",
+                        flexShrink: 0,
                       }}
                     >
                       <span>{ev.studentName}</span>
@@ -433,6 +639,107 @@ export default function FloatingQAWidget({
                     </button>
                   );
                 })}
+
+                {/* NÚT / DROPDOWN CHỌN HỌC SINH KHÁC TỪ DANH SÁCH LỚP */}
+                {allStudents && allStudents.length > 0 && (
+                  <div style={{ flexShrink: 0 }}>
+                    <select
+                      value={selectedNewStudent ? selectedNewStudent.id : ""}
+                      onChange={(e) => {
+                        const studentId = e.target.value;
+                        if (!studentId) return;
+                        const existing = individualStudentEvals.find(
+                          (ev) =>
+                            ev.studentId === studentId ||
+                            ev.studentName.toLowerCase() === studentId.toLowerCase()
+                        );
+                        if (existing) {
+                          setSelectedEvalId(existing.id);
+                          setSelectedNewStudent(null);
+                        } else {
+                          const st = allStudents.find((s) => s.id === studentId);
+                          if (st) {
+                            setSelectedNewStudent(st);
+                            setSelectedEvalId("NEW_" + st.id);
+                          }
+                        }
+                      }}
+                      style={{
+                        background: "#ffffff",
+                        color: "#2563eb",
+                        border: "1px dashed #2563eb",
+                        borderRadius: "14px",
+                        padding: "3px 8px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">➕ Chọn HS khác...</option>
+                      {allStudents
+                        .filter(
+                          (st) => !individualStudentEvals.some((ev) => ev.studentId === st.id)
+                        )
+                        .map((st) => (
+                          <option key={st.id} value={st.id}>
+                            {st.fullName} {st.className ? `(${st.className})` : ""}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CHO HỌC SINH: CHUYỂN ĐỔI GIỮA HỎI BÀI RIÊNG VÀ THÔNG BÁO CHUNG */}
+            {role === "student" && broadcastEval && broadcastEval.messages.length > 0 && (
+              <div
+                style={{
+                  background: "#f8fafc",
+                  padding: "6px 12px",
+                  borderBottom: "1px solid #e2e8f0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvalId("")}
+                  style={{
+                    background: activeEval?.studentId !== "ALL" ? "#2563eb" : "#ffffff",
+                    color: activeEval?.studentId !== "ALL" ? "#ffffff" : "#334155",
+                    border: activeEval?.studentId !== "ALL" ? "1px solid #1d4ed8" : "1px solid #cbd5e1",
+                    borderRadius: "14px",
+                    padding: "3px 10px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  💬 Hỏi bài Thầy/Cô
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvalId("ALL")}
+                  style={{
+                    background: activeEval?.studentId === "ALL" ? "#4f46e5" : "#ffffff",
+                    color: activeEval?.studentId === "ALL" ? "#ffffff" : "#4338ca",
+                    border: activeEval?.studentId === "ALL" ? "1px solid #3730a3" : "1px solid #c7d2fe",
+                    borderRadius: "14px",
+                    padding: "3px 10px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <span>📢</span>
+                  <span>Thông báo chung ({broadcastEval.messages.length})</span>
+                </button>
               </div>
             )}
 
@@ -457,14 +764,22 @@ export default function FloatingQAWidget({
                     color: "#64748b",
                   }}
                 >
-                  <div style={{ fontSize: "36px", marginBottom: "8px" }}>💬</div>
+                  <div style={{ fontSize: "36px", marginBottom: "8px" }}>
+                    {activeEval?.studentId === "ALL" ? "📢" : "💬"}
+                  </div>
                   <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#1e293b" }}>
-                    Chưa có tin nhắn nào
+                    {activeEval?.studentId === "ALL"
+                      ? "Chưa có thông báo chung nào"
+                      : "Chưa có tin nhắn nào"}
                   </div>
                   <p style={{ fontSize: "12px", margin: "4px 0 0 0" }}>
                     {role === "student"
                       ? "Em có thể đặt câu hỏi hoặc dán ảnh bài tập (Ctrl+V) gửi tới giáo viên ngay bên dưới!"
-                      : "Chưa có học sinh nào đặt câu hỏi."}
+                      : activeEval?.studentId === "ALL"
+                      ? "Thầy/Cô có thể gửi thông báo, dặn dò hoặc dán ảnh bài tập gửi tới TOÀN BỘ HỌC SINH tại đây!"
+                      : `Chưa có câu hỏi từ học sinh ${
+                          activeEval?.studentName || ""
+                        }. Thầy/Cô có thể gửi tin nhắn hoặc dặn dò riêng cho em.`}
                   </p>
                 </div>
               ) : (
@@ -665,7 +980,9 @@ export default function FloatingQAWidget({
                 placeholder={
                   role === "student"
                     ? "Nhập câu hỏi... (Dán ảnh trực tiếp Ctrl+V)"
-                    : "Nhập lời giải đáp... (Dán ảnh Ctrl+V)"
+                    : activeEval?.studentId === "ALL"
+                    ? "Nhập thông báo gửi đến TẤT CẢ HỌC SINH (Dán ảnh Ctrl+V)..."
+                    : `Nhập tin nhắn riêng cho học sinh ${activeEval?.studentName || ""}... (Dán ảnh Ctrl+V)`
                 }
                 style={{
                   width: "100%",
@@ -718,7 +1035,10 @@ export default function FloatingQAWidget({
                   type="submit"
                   disabled={isSubmitting}
                   style={{
-                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    background:
+                      role !== "student" && activeEval?.studentId === "ALL"
+                        ? "linear-gradient(135deg, #4f46e5, #4338ca)"
+                        : "linear-gradient(135deg, #2563eb, #1d4ed8)",
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "6px",
@@ -731,7 +1051,11 @@ export default function FloatingQAWidget({
                     gap: "4px",
                   }}
                 >
-                  {isSubmitting ? "..." : "🚀 Gửi"}
+                  {isSubmitting
+                    ? "..."
+                    : role !== "student" && activeEval?.studentId === "ALL"
+                    ? "📢 Gửi tất cả"
+                    : "🚀 Gửi"}
                 </button>
               </div>
             </form>
@@ -752,36 +1076,20 @@ export default function FloatingQAWidget({
             alignItems: "center",
             justifyContent: "center",
             padding: "20px",
+            cursor: "zoom-out",
           }}
         >
-          <div style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh" }}>
-            <img
-              src={previewZoomImage}
-              alt="Phóng to"
-              style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: "10px", objectFit: "contain" }}
-            />
-            <button
-              type="button"
-              onClick={() => setPreviewZoomImage(null)}
-              style={{
-                position: "absolute",
-                top: "-12px",
-                right: "-12px",
-                background: "#ffffff",
-                color: "#0f172a",
-                border: "none",
-                borderRadius: "50%",
-                width: "32px",
-                height: "32px",
-                fontSize: "16px",
-                fontWeight: 900,
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-              }}
-            >
-              ✕
-            </button>
-          </div>
+          <img
+            src={previewZoomImage}
+            alt="Phóng to"
+            style={{
+              maxWidth: "95vw",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              borderRadius: "8px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+            }}
+          />
         </div>
       )}
     </>

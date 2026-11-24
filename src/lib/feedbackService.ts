@@ -165,15 +165,31 @@ export function subscribeEvaluations(callback: (list: StudentEvaluation[]) => vo
 // 2. LẤY ĐÁNH GIÁ CỦA HỌC SINH CỤ THỂ (DÀNH CHO TRANG HỌC SINH)
 export async function getEvaluationsForStudent(
   studentId?: string,
-  studentName?: string
+  studentName?: string,
+  teacherCode?: string
 ): Promise<StudentEvaluation[]> {
   const all = await getAllEvaluations();
   const cleanId = (studentId || "").trim().toLowerCase();
   const cleanName = (studentName || "").trim().toLowerCase();
+  const cleanTeacherCode = (teacherCode || "").trim();
 
   return all.filter((ev) => {
     const evStudentId = (ev.studentId || "").trim().toLowerCase();
     const evStudentName = (ev.studentName || "").trim().toLowerCase();
+    const evTeacherCode = (ev.teacherCode || "").trim();
+
+    // Tin nhắn thông báo chung gửi đến TẤT CẢ HỌC SINH
+    const isBroadcast =
+      ev.studentId === "ALL" ||
+      evStudentId === "all" ||
+      evStudentName.includes("tất cả");
+
+    if (isBroadcast) {
+      if (cleanTeacherCode && evTeacherCode && cleanTeacherCode !== evTeacherCode) {
+        return false;
+      }
+      return true;
+    }
 
     if (cleanId && evStudentId && cleanId === evStudentId) return true;
     if (cleanName && evStudentName && cleanName === evStudentName) return true;
@@ -472,6 +488,112 @@ export async function sendTeacherReply(
   }
 
   return updatedEval;
+}
+
+// 5.1 GIÁO VIÊN GỬI THÔNG BÁO / TIN NHẮN TỚI TẤT CẢ HỌC SINH (BROADCAST)
+export async function sendTeacherBroadcastMessage(params: {
+  teacherName: string;
+  teacherCode?: string;
+  content: string;
+  imageUrl?: string;
+  isAiGenerated?: boolean;
+}): Promise<StudentEvaluation> {
+  const currentList = await getAllEvaluations();
+  const cleanTeacherCode = (params.teacherCode || "").trim();
+  const cleanTeacherName = (params.teacherName || "").trim() || "Giáo viên";
+
+  const broadcastId = `eval_broadcast_${cleanTeacherCode || "all"}`;
+  const broadcastEval = currentList.find(
+    (e) =>
+      e.id === broadcastId ||
+      (e.studentId === "ALL" && (!cleanTeacherCode || e.teacherCode === cleanTeacherCode))
+  );
+
+  const newMessage: StudentFeedbackMessage = {
+    id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+    sender: "teacher",
+    senderName: `${cleanTeacherName} (Giáo viên)`,
+    content: params.content.trim(),
+    imageUrl: params.imageUrl || undefined,
+    timestamp: new Date().toISOString(),
+    formattedTime: getFormattedCurrentTime(),
+    isAiGenerated: Boolean(params.isAiGenerated),
+  };
+
+  let targetBroadcast: StudentEvaluation;
+  if (broadcastEval) {
+    targetBroadcast = {
+      ...broadcastEval,
+      teacherCode: cleanTeacherCode || broadcastEval.teacherCode,
+      teacherName: cleanTeacherName,
+      status: "active",
+      hasUnreadTeacherReply: true,
+      hasUnreadStudentReply: false,
+      messages: [...broadcastEval.messages, newMessage],
+      updatedAt: new Date().toISOString(),
+    };
+  } else {
+    targetBroadcast = {
+      id: broadcastId,
+      studentId: "ALL",
+      studentName: "Tất cả học sinh",
+      studentClass: "Toàn bộ học sinh",
+      teacherCode: cleanTeacherCode,
+      teacherName: cleanTeacherName,
+      status: "active",
+      hasUnreadStudentReply: false,
+      hasUnreadTeacherReply: true,
+      messages: [newMessage],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  // Đẩy tin nhắn chung vào Firestore cho kênh broadcast
+  try {
+    const docRef = doc(db, "student_evaluations", targetBroadcast.id);
+    await setDoc(docRef, {
+      ...targetBroadcast,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.warn("Firestore save broadcast evaluation:", err);
+  }
+
+  // Đồng thời cập nhật danh sách và chèn tin thông báo vào các cuộc trò chuyện cá nhân của GV
+  let updatedList = currentList.map((ev) => {
+    if (ev.id === targetBroadcast.id) return targetBroadcast;
+    if (
+      ev.studentId !== "ALL" &&
+      (!cleanTeacherCode || !ev.teacherCode || ev.teacherCode === cleanTeacherCode)
+    ) {
+      return {
+        ...ev,
+        hasUnreadTeacherReply: true,
+        messages: [
+          ...ev.messages,
+          {
+            ...newMessage,
+            id: "msg_bc_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+            content: `📢 [THÔNG BÁO CHUNG CHO CẢ LỚP]:\n${newMessage.content}`,
+          },
+        ],
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    return ev;
+  });
+
+  if (!broadcastEval) {
+    updatedList = [targetBroadcast, ...updatedList];
+  }
+
+  if (typeof window !== "undefined") {
+    localStorage.setItem(LOCAL_EVALUATIONS_KEY, JSON.stringify(updatedList));
+    broadcastEvaluationUpdate();
+  }
+
+  return targetBroadcast;
 }
 
 // 6. XÓA BẢN ĐÁNH GIÁ
